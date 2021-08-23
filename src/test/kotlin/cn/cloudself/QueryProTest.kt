@@ -6,7 +6,7 @@ import cn.cloudself.query.UserQueryPro
 import cn.cloudself.query.UserQueryProEx
 import org.junit.Test
 
-class Test {
+class QueryProTest {
     @Suppress("UNUSED_VARIABLE")
     @Test
     fun test() {
