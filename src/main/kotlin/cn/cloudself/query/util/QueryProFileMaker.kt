@@ -1,30 +1,28 @@
 package cn.cloudself.query.util
 
+import freemarker.template.Configuration
 import java.io.File
+import java.math.BigDecimal
+import java.nio.file.OpenOption
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+import java.sql.DriverManager
+import java.sql.ResultSet
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.outputStream
 
+data class JavaFilePath(
+    val templateName: String,
+    val dir: Path,
+    val packagePath: String
+)
 /**
  * 文件位置解析器，即指示生成的文件应该放在哪里。<br/>
- * 函数参数：filename: 模板文件的名称 DaoKt, EntityKt, DaoJava, EntityJava, SingleFileKt, SingleFileJava等。<br/>
+ * 函数参数templateName: 模板文件的名称 DaoKt, EntityKt, DaoJava, EntityJava, SingleFileKt, SingleFileJava等。<br/>
  * 需要返回的是：生成的文件应该放在哪个文件夹里面。
  */
-typealias FilePathResolver = (filename: String) -> Path
-
-typealias JavaName = String
-/**
- * 将数据库名称转为Java名称
- * 一般数据库名称是下_划_线式的, Java类名是驼峰式的, 建议转换
- * 函数参数: dbName 数据库中的名称, type 表或列
- * 需要返回的是
- */
-typealias NameConverter = (dbName: String, toType: JavaNameType) -> JavaName
-
-enum class JavaNameType {
-    ClassName,
-    @Suppress("EnumEntryName")
-    propertyName,
-}
+typealias FilePathResolver = (templateName: String) -> JavaFilePath
 
 /**
  * 用于生成 [FilePathResolver]
@@ -99,15 +97,15 @@ class PathFrom private constructor() {
      */
     fun daoPackage(daoPackage: String) = this.also { this.daoPackage = daoPackage }
 
-    fun getResolver(): FilePathResolver = { filename ->
+    fun getResolver(): FilePathResolver = { templateName ->
         val workspace = System.getProperty("user.dir")
         val entityOrDao = when {
             abs -> ""
-            filename.startsWith("Entity") -> entityPackage
+            templateName.startsWith("Entity") -> entityPackage
             else -> daoPackage
         }
-        val packagePath = packageNameToPath(packageName + entityOrDao)
-        Path(workspace, subModuleName, "src", "main", lang, packagePath)
+        val packagePath = "$packageName.$entityOrDao"
+        JavaFilePath(templateName, Path(workspace, subModuleName, "src", "main", lang, packageNameToPath(packagePath)), packagePath)
     }
 
     private fun packageNameToPath(packageName: String) = packageName.replace(".", File.separator)
@@ -172,6 +170,26 @@ class DbInfoBuilder constructor(
     }
 }
 
+data class ConvertInfo constructor(
+    val name: String,
+    val toType: JavaNameType,
+    val templateName: String
+)
+typealias JavaName = String
+/**
+ * 将数据库名称转为Java名称
+ * 一般数据库名称是下_划_线式的, Java类名是驼峰式的, 建议转换
+ * 函数参数: dbName 数据库中的名称, type 表或列
+ * 需要返回的是
+ */
+typealias NameConverter = (convertInfo: ConvertInfo) -> JavaName
+
+enum class JavaNameType {
+    ClassName,
+    @Suppress("EnumEntryName")
+    propertyName,
+}
+
 val matchFirst_ = "[^_]+_".toRegex()
 
 /**
@@ -191,41 +209,97 @@ class DbNameToJava private constructor() {
         fun createDefault() = DbNameToJava()
     }
 
-    private var preHandles = mutableListOf<(String) -> String>()
-    private var preHandle = {db_name: String ->
-        var result = db_name
+    private var preHandles = mutableListOf<NameConverter>()
+    private var postHandles = mutableListOf<NameConverter>()
+
+    private var preHandle = {convertInfo: ConvertInfo ->
+        var name = convertInfo.name
         for (preHandle in preHandles) {
-            result = preHandle(result)
+            name = preHandle(convertInfo.copy(name = name))
         }
-        result
+        name
     }
-    private var toClassName = {db_name: String ->
-        preHandle(db_name).split("_")
+
+    private var postHandle = {convertInfo: ConvertInfo ->
+        var tName = convertInfo.name
+        for (postHandle in postHandles) {
+            tName = postHandle(convertInfo.copy(name = tName))
+        }
+        tName
+    }
+
+    fun addPrefixBeforeConvertToClassName(prefix: String) = this.also { preHandles.add { prefix + it.name } }
+
+    fun removePrefixBeforeConvertToClassName() = this.also { preHandles.add { it.name.replace(matchFirst_, "") } }
+
+    fun addSuffixToEntity(suffix: String) = this.also {
+        postHandles.add {
+            if (it.templateName.startsWith("Entity") && it.toType == JavaNameType.ClassName)
+                it.name + suffix
+            else
+                it.name
+        }
+    }
+
+    fun addPreHandle(preHandle: NameConverter) = this.also { preHandles.add(preHandle) }
+
+    fun addPostHandle(postHandle: NameConverter) = this.also { postHandles.add(postHandle) }
+
+    fun getConverter(): NameConverter = { convertInfo ->
+        preHandle(convertInfo)
+            .split("_")
             .joinToString("") { s -> if (s.isEmpty()) "" else s[0].uppercaseChar() + s.substring(1) }
-    }
-    @Suppress("PrivatePropertyName")
-    private var to_propertyName = {db_name: String -> toClassName(db_name).let { it[0].uppercaseChar() + it.substring(1) }}
-
-    fun addPrefixBeforeConvertToClassName(prefix: String) = this.also { preHandles.add { prefix + it } }
-
-    fun removePrefixBeforeConvertToClassName() = this.also { preHandles.add { it.replace(matchFirst_, "") } }
-
-    fun addPreHandle(preHandle: (String) -> String) = this.also { preHandles.add(preHandle) }
-
-    fun getConverter(): NameConverter = { db_name, toType ->
-        when (toType) {
-            JavaNameType.ClassName -> {
-                toClassName(db_name)
+            .let {
+                if (convertInfo.toType == JavaNameType.propertyName) {
+                    it[0].lowercaseChar() + it.substring(1)
+                } else {
+                    if (convertInfo.templateName.startsWith("Entity")) {
+                        it
+                    } else {
+                        it + "QueryPro"
+                    }
+                }
             }
-            JavaNameType.propertyName -> {
-                to_propertyName(db_name)
-            }
-        }
+            .let { postHandle(convertInfo.copy(name = it)) }
     }
 }
 
+data class TemplateModelColumn(
+    var db_name: String,
+    var ktTypeStr: String,
+    var javaTypeStr: String,
+    var remark: String?,
+
+    var propertyName: String? = null,
+)
+
+data class ModelId(
+    val column: String,
+    var autoIncrement: Boolean = false
+)
+
+data class TemplateModel(
+    var db_name: String,
+    var remark: String?,
+    var id: ModelId?,
+    var hasBigDecimal: Boolean,
+    var hasDate: Boolean,
+
+    var _ClassName: String? = null,
+    var packagePath: String? = null,
+    var noArgMode: Boolean? = null,
+    var columns: List<TemplateModelColumn> = listOf()
+)
+
+class KtJavaType constructor(
+    val ktType: String,
+    val javaType: String,
+) {
+    constructor(type: String) : this(type, type)
+}
+
 class QueryProFileMaker private constructor(
-    private val templateFileNameAndPaths: List<Pair<String, Path>>
+    private val templateFileNameAndPaths: List<JavaFilePath>
 ) {
     companion object {
         /**
@@ -234,7 +308,7 @@ class QueryProFileMaker private constructor(
          * @sample cn.cloudself.samples.QueryProFileMakerSample.singleFileMode
          */
         fun singleFileMode(filePathResolver: FilePathResolver) =
-            QueryProFileMaker(listOf("SingleFileKt.ftl".let { Pair(it, filePathResolver(it.dropLast(4))) }))
+            QueryProFileMaker(listOf(filePathResolver("SingleFileKt.ftl")))
 
         /**
          * 生成entity和dao至两个文件
@@ -243,8 +317,8 @@ class QueryProFileMaker private constructor(
          */
         fun entityAndDaoMode(filePathResolver: FilePathResolver) =
             QueryProFileMaker(listOf(
-                "DaoKt.ftl".let { Pair(it, filePathResolver(it.dropLast(4))) },
-                "EntityKt.ftl".let { Pair(it, filePathResolver(it.dropLast(4))) }
+                filePathResolver("DaoKt.ftl"),
+                filePathResolver("EntityKt.ftl")
             ))
 
         /**
@@ -254,15 +328,39 @@ class QueryProFileMaker private constructor(
          */
         fun javaEntityAndDaoMode(filePathResolver: FilePathResolver) =
             QueryProFileMaker(listOf(
-                "DaoJava.ftl".let { Pair(it, filePathResolver(it.dropLast(4))) },
-                "EntityJava.ftl".let { Pair(it, filePathResolver(it.dropLast(4))) }
+                filePathResolver("DaoJava.ftl"),
+                filePathResolver("EntityJava.ftl")
             ))
     }
 
+    private var debug = false
     private var db: DbInfo? = null
     private var tables: Array<out String> = arrayOf("*")
     private var replaceMode = false
+    private var ktNoArgMode = true
+    private var entityFileTemplatePath: String? = null
+    private val dbMetaTypeMapKtJavaType = mutableMapOf(
+        "BIGINT" to KtJavaType("Long"),
+        "VARCHAR" to KtJavaType("String"),
+        "CHAR" to KtJavaType("String"),
+        "BIT" to KtJavaType("Boolean"),
+        "TINYINT" to KtJavaType("Short"),
+        "DATETIME" to KtJavaType("Date"),
+        "DECIMAL" to KtJavaType("BigDecimal"),
+        "DOUBLE" to KtJavaType("Double"),
+        "INT" to KtJavaType("Int", "Integer"),
+    )
+    private val ktKeywords = arrayOf(
+        "as", "break", "class", "continue", "do", "else", "false", "for", "fun", "if", "in", "interface", "is", "null",
+        "object", "package", "return", "super", "this", "throw", "true", "try", "typealias", "typeof", "val", "var",
+        "when", "while",
+    )
     private var nameConverter = DbNameToJava.createDefault().getConverter()
+
+    /**
+     * 显示更多输出
+     */
+    fun debug() = this.also { this.debug = true }
 
     /**
      * 指定db
@@ -284,13 +382,156 @@ class QueryProFileMaker private constructor(
     fun replaceMode(replaceMode: Boolean = true) = this.also { this.replaceMode = replaceMode }
 
     /**
+     * 关闭Kotlin的no-arg模式
+     *
+     * kotlin data class配合一些插件，如kotlin-maven-noarg 会自动为data class生成无参构造函数，
+     * 如果没有使用这些插件，可以使用该方法显示指定所有参数的默认值，这样Kotlin就会自动生成默认的无参构造函数
+     */
+    fun disableKtNoArgMode(disableKtNoArgMode: Boolean = true) = this.also { this.ktNoArgMode = !disableKtNoArgMode }
+
+    /**
      * 自定义名称转换器(用于转换数据库table, column名称至java类名，属性名)
      * @param nameConverter [NameConverter]
      * @see [DbNameToJava.createDefault]
      */
     fun dbJavaNameConverter(nameConverter: NameConverter) = this.also { this.nameConverter = nameConverter }
 
+    /**
+     * 自定义entity的模板
+     */
+    fun entityFileTemplatePath(path: String) = this.also { this.entityFileTemplatePath = path }
+
     fun create() {
-        println(templateFileNameAndPaths)
+        val modelsFromDb = getModelsFromDb().debugPrint()
+
+        for ((db_name, model) in modelsFromDb) {
+            for (javaFilePath in templateFileNameAndPaths) {
+                javaFilePath.debugPrint()
+                val templateName = javaFilePath.templateName
+
+                val noExtTemplateName = templateName.substring(0, templateName.lastIndexOf("."))
+                val areKt = noExtTemplateName.endsWith("Kt")
+
+                val ext = if (areKt) ".kt" else ".java"
+
+                @Suppress("LocalVariableName") val ClassName = nameConverter(ConvertInfo(db_name, JavaNameType.ClassName, templateName))
+
+                val data = mutableMapOf<String, Any>("m" to model)
+
+                model._ClassName = ClassName
+                model.packagePath = javaFilePath.packagePath
+                model.noArgMode = ktNoArgMode
+                for (column in model.columns) {
+                    val propertyName =
+                        nameConverter(ConvertInfo(column.db_name, JavaNameType.propertyName, templateName))
+                    column.propertyName =
+                        if (areKt && ktKeywords.contains(propertyName)) {
+                            "`$propertyName`"
+                        } else {
+                            propertyName
+                        }
+                }
+
+                val configuration = Configuration(Configuration.VERSION_2_3_31)
+                configuration.setClassLoaderForTemplateLoading(QueryProFileMaker::class.java.classLoader, "templates")
+                val template = configuration.getTemplate(templateName)
+
+                javaFilePath.dir.createDirectories()
+                val filePath = Path(javaFilePath.dir.toAbsolutePath().toString(), ClassName + ext)
+                val openOptions = mutableListOf<OpenOption>(StandardOpenOption.CREATE)
+                if (replaceMode) {
+                    openOptions.add(StandardOpenOption.TRUNCATE_EXISTING)
+                }
+                val writer = filePath.outputStream(*openOptions.toTypedArray()).writer()
+                template.process(data, writer)
+            }
+        }
     }
+
+    private fun getModelsFromDb(): MutableMap<String, TemplateModel> {
+        return db?.let { db ->
+            Class.forName(db.driver)
+            val connection = DriverManager.getConnection(db.url, db.username, db.password)
+            val metaData = connection.metaData
+            val catalog = connection.catalog
+            val schema = connection.schema
+            // metadata https://dev.mysql.com/doc/refman/8.0/en/show-columns.html
+            val tableSet = metaData.getTables(catalog, schema, null, arrayOf("TABLE", "VIEW"))
+
+            val tableNameMapTemplateModel = mutableMapOf<String, TemplateModel>()
+            while (tableSet.next()) {
+                val tableName = tableSet.getString("TABLE_NAME")
+                val tableRemark = tableSet.getString("REMARKS")
+
+                val modelColumns = mutableListOf<TemplateModelColumn>()
+
+                /**
+                 * 获取主键
+                 */
+                var id: ModelId? = null
+                var idDefined = false
+                val primaryKeys = metaData.getPrimaryKeys(catalog, schema, tableName)
+                while (primaryKeys.next()) {
+                    if (idDefined) {
+                        id = null
+                        println("[WARN] 目前仍不支持复合主键")
+                    } else {
+                        val columnName = primaryKeys.getString("COLUMN_NAME")
+                        id = ModelId(columnName)
+                        idDefined = true
+                    }
+                }
+
+                val columnSet = metaData.getColumns(catalog, schema, tableName, null)
+                while (columnSet.next()) {
+                    val columnName = columnSet.getString("COLUMN_NAME") ?: throw RuntimeException("找不到列名")
+                    val typeName = columnSet.getString("TYPE_NAME")
+                    val remarks = columnSet.getString("REMARKS")
+
+                    val ktJavaType = dbMetaTypeMapKtJavaType[typeName]
+                        ?: dbMetaTypeMapKtJavaType[typeName.replace(" UNSIGNED", "")]
+
+                    if (id?.column == columnName) {
+                        id.autoIncrement = columnSet.getString("IS_AUTOINCREMENT") == "YES"
+                    }
+
+                    modelColumns.add(TemplateModelColumn(
+                        db_name = columnName,
+                        ktTypeStr = ktJavaType?.ktType ?: throw RuntimeException("找不到数据库类型${typeName}对应的kt类型, 列名$columnName"),
+                        javaTypeStr = ktJavaType.javaType,
+                        remark = remarks
+                    ))
+                }
+
+                val templateModel = TemplateModel(
+                    db_name = tableName,
+                    remark = tableRemark,
+                    columns = modelColumns,
+                    id = id,
+                    hasBigDecimal = modelColumns.find { it.ktTypeStr == "BigDecimal" } != null,
+                    hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null
+                )
+                tableNameMapTemplateModel[tableName] = templateModel
+            }
+            return@let tableNameMapTemplateModel
+        } ?: throw RuntimeException("db信息没有注册，参考，需使用.db方法注册")
+    }
+
+    private fun <T> T.debugPrint(): T {
+        if (debug) {
+            println(this)
+        }
+        return this
+    }
+}
+
+@Suppress("unused")
+private fun ResultSet.print() {
+    val metaData = this.metaData
+    for (i in 1..metaData.columnCount) {
+        val columnName = metaData.getColumnName(i)
+        val data = this.getString(columnName)
+        println("$columnName:\t $data")
+    }
+    println("\n")
 }

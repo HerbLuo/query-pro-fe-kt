@@ -112,7 +112,7 @@ class QueryProFileMakerDbJavaNameConverterSample {
                     /* 往生成的Java类名中添加Zz前缀，例如 表user_info对应的JavaBean文件为ZzUserInfo.java */
                     .addPrefixBeforeConvertToClassName("zz_")
                     /* 加一些逻辑在转换前执行 */
-                    .addPreHandle { if (it.startsWith("view_")) it.replace("view_", "") + "_view" else it }
+//                    .addPreHandle { if (it.startsWith("view_")) it.replace("view_", "") + "_view" else it }
                     .getConverter()
             )
             .create()
@@ -143,15 +143,19 @@ class QueryProFileMakerSample {
         QueryProFileMaker
             /* 将entity文件生成至 <project>/src/main/kotlin/cn/cloudself/foo/entity下 */
             /* 将dao文件生成至 <project>/src/main/kotlin/cn/cloudself/foo/dao/zz下 */
-            .entityAndDaoMode(PathFrom.ktPackage("cn.cloudself.foo"))
+            .entityAndDaoMode(PathFrom.ktPackage("cn.cloudself.demo"))
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
             .tables("user", "setting")
-            /* 给ClassName添加前缀，注意要使用和数据库表名一样的命名风格，该步骤是在下划线转驼峰之前进行的 */
-            .dbJavaNameConverter(DbNameToJava.createDefault().addPrefixBeforeConvertToClassName("zz_").getConverter())
+            /* 给Entity添加后缀，该步骤是在下划线转驼峰之后进行的 */
+            .dbJavaNameConverter(DbNameToJava.createDefault().addSuffixToEntity("Entity").getConverter())
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
             .replaceMode()
+            /* 为Entity显示指定所有构造函数参数的默认值, 以便Kotlin自动生成默认的无参构造函数 */
+            .disableKtNoArgMode()
+            /* 显示更多输出 */
+            .debug()
             .create()
     }
 
