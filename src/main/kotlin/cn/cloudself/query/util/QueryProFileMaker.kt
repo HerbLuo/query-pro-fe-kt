@@ -285,6 +285,8 @@ data class TemplateModel(
     var hasBigDecimal: Boolean,
     var hasDate: Boolean,
 
+    var entityPackage: String? = null,
+    var _EntityName: String? = null,
     var _ClassName: String? = null,
     var packagePath: String? = null,
     var noArgMode: Boolean? = null,
@@ -405,6 +407,8 @@ class QueryProFileMaker private constructor(
         val modelsFromDb = getModelsFromDb().debugPrint()
 
         for ((db_name, model) in modelsFromDb) {
+            val entityFilePath = templateFileNameAndPaths.find { it.templateName.startsWith("Entity") }
+
             for (javaFilePath in templateFileNameAndPaths) {
                 javaFilePath.debugPrint()
                 val templateName = javaFilePath.templateName
@@ -417,6 +421,11 @@ class QueryProFileMaker private constructor(
                 @Suppress("LocalVariableName") val ClassName = nameConverter(ConvertInfo(db_name, JavaNameType.ClassName, templateName))
 
                 val data = mutableMapOf<String, Any>("m" to model)
+
+                model._EntityName = nameConverter(ConvertInfo(db_name, JavaNameType.ClassName, "EntityKt.ftl"))
+                if (entityFilePath != null) {
+                    model.entityPackage = entityFilePath.packagePath
+                }
 
                 model._ClassName = ClassName
                 model.packagePath = javaFilePath.packagePath

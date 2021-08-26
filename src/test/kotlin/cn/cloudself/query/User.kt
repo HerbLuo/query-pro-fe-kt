@@ -14,33 +14,33 @@ class ImplUserQueryPro {
 
     abstract class CommonField constructor(queryStructure: QueryStructure)
         : QueryField<User, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField>(queryStructure) {
-        override val clazz = User::class.java
-        override val createWhereField: CreateQueryField<WhereField> = { queryStructure -> WhereField(queryStructure) }
-        override val createOrderByField: CreateQueryField<OrderByField> = { queryStructure -> OrderByField(queryStructure) }
-        override val createColumnLimiterField: CreateQueryField<ColumnLimiterField> =
+        override val _clazz = User::class.java
+        override val create_where_field: CreateQueryField<WhereField> = { queryStructure -> WhereField(queryStructure) }
+        override val create_order_by_field: CreateQueryField<OrderByField> = { queryStructure -> OrderByField(queryStructure) }
+        override val create_column_limiter_field: CreateQueryField<ColumnLimiterField> =
             { queryStructure -> ColumnLimiterField(queryStructure) }
-        override val createColumnsLimiterField: CreateQueryField<ColumnsLimiterField> =
+        override val create_columns_limiter_field: CreateQueryField<ColumnsLimiterField> =
             { queryStructure -> ColumnsLimiterField(queryStructure) }
     }
 
     class WhereField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
-        override val type = QueryFieldType.WHERE_FIELD
+        override val field_type = QueryFieldType.WHERE_FIELD
 
-        val id = QueryKeywords(createField("id"), queryStructure, createWhereField)
-        val name = QueryKeywords(createField("name"), queryStructure, createWhereField)
-        val age = QueryKeywords(createField("age"), queryStructure, createWhereField)
+        val id = QueryKeywords(createField("id"), queryStructure, create_where_field)
+        val name = QueryKeywords(createField("name"), queryStructure, create_where_field)
+        val age = QueryKeywords(createField("age"), queryStructure, create_where_field)
     }
 
     class OrderByField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
-        override val type = QueryFieldType.ORDER_BY_FIELD
+        override val field_type = QueryFieldType.ORDER_BY_FIELD
 
-        fun id() = QueryOrderByKeywords(createField("id"), queryStructure, createOrderByField)
-        fun name() = QueryOrderByKeywords(createField("name"), queryStructure, createOrderByField)
-        fun age() = QueryOrderByKeywords(createField("age"), queryStructure, createOrderByField)
+        fun id() = QueryOrderByKeywords(createField("id"), queryStructure, create_order_by_field)
+        fun name() = QueryOrderByKeywords(createField("name"), queryStructure, create_order_by_field)
+        fun age() = QueryOrderByKeywords(createField("age"), queryStructure, create_order_by_field)
     }
 
     class ColumnLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
-        override val type = QueryFieldType.OTHER_FIELD
+        override val field_type = QueryFieldType.OTHER_FIELD
 
         fun id() = getColumn(createField("id"), Long::class.java)
         fun name() = getColumn(createField("name"), String::class.java)
@@ -48,7 +48,7 @@ class ImplUserQueryPro {
     }
 
     class ColumnsLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
-        override val type = QueryFieldType.OTHER_FIELD
+        override val field_type = QueryFieldType.OTHER_FIELD
 
         fun id() = ColumnsLimiterField(queryStructure.copy(fields = queryStructure.fields + createField("id")))
         fun name() = ColumnsLimiterField(queryStructure.copy(fields = queryStructure.fields + createField("name")))

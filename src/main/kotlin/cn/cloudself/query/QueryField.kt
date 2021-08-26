@@ -8,6 +8,7 @@ enum class QueryFieldType {
 
 typealias CreateQueryField<F> = (queryStructure: QueryStructure) -> F
 
+@Suppress("PropertyName")
 abstract class FinalQueryField<
         T,
         WHERE_FIELD: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
@@ -15,18 +16,18 @@ abstract class FinalQueryField<
         COLUMN_LIMITER_FILED: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
         COLUMNS_LIMITER_FILED: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
 > constructor(private val queryStructure: QueryStructure) {
-    protected abstract val clazz: Class<T>
-    protected abstract val createField: CreateQueryField<FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>>
-    protected abstract val createColumnLimiterField: CreateQueryField<COLUMN_LIMITER_FILED>
-    protected abstract val createColumnsLimiterField: CreateQueryField<COLUMNS_LIMITER_FILED>
+    protected abstract val _clazz: Class<T>
+    protected abstract val create_field: CreateQueryField<FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>>
+    protected abstract val create_column_limiter_field: CreateQueryField<COLUMN_LIMITER_FILED>
+    protected abstract val create_columns_limiter_field: CreateQueryField<COLUMNS_LIMITER_FILED>
 
     fun limit(limit: Int): FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
-        return createField(queryStructure.copy(limit = limit))
+        return create_field(queryStructure.copy(limit = limit))
     }
 
     protected open fun <T>getColumn(field: Field, clazz: Class<T>): List<T?> {
         val newQueryStructure = queryStructure.copy(fields = queryStructure.fields + field)
-        val rows = createField(newQueryStructure).runAsMap()
+        val rows = create_field(newQueryStructure).runAsMap()
         return rows.map {
             val f = it[field.column]
             if (f != null && clazz.isInstance(f)) {
@@ -39,20 +40,20 @@ abstract class FinalQueryField<
     }
 
     fun columnsLimiter(): COLUMNS_LIMITER_FILED {
-        return createColumnsLimiterField(queryStructure)
+        return create_columns_limiter_field(queryStructure)
     }
 
     fun columnLimiter(): COLUMN_LIMITER_FILED {
-        return createColumnLimiterField(queryStructure)
+        return create_column_limiter_field(queryStructure)
     }
 
     fun runLimit1(): T? {
-        val results = createField(queryStructure.copy(limit = 1)).run()
+        val results = create_field(queryStructure.copy(limit = 1)).run()
         return if (results.isEmpty()) null else results[0]
     }
 
     fun run(): List<T> {
-        return QueryStructureResolver.resolve(queryStructure, clazz)
+        return QueryStructureResolver.resolve(queryStructure, _clazz)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
@@ -65,6 +66,7 @@ abstract class FinalQueryField<
     }
 }
 
+@Suppress("PropertyName")
 abstract class QueryField<
         T,
         WHERE_FIELD: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
@@ -73,34 +75,34 @@ abstract class QueryField<
         COLUMNS_LIMITER_FILED: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
 > constructor(protected val queryStructure: QueryStructure)
     : FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>(queryStructure) {
-    protected abstract val type: QueryFieldType
-    protected abstract val createWhereField: CreateQueryField<WHERE_FIELD>
-    protected abstract val createOrderByField: CreateQueryField<ORDER_BY_FIELD>
-    override val createField = { qs: QueryStructure -> createWhereField(qs) }
+    protected abstract val field_type: QueryFieldType
+    protected abstract val create_where_field: CreateQueryField<WHERE_FIELD>
+    protected abstract val create_order_by_field: CreateQueryField<ORDER_BY_FIELD>
+    override val create_field = { qs: QueryStructure -> create_where_field(qs) }
 
-    fun customColumn(column: String) = QueryKeywords(Field(column = column), queryStructure, createWhereField)
+    fun customColumn(column: String) = QueryKeywords(Field(column = column), queryStructure, create_where_field)
 
     fun and(): WHERE_FIELD {
-        if (type != QueryFieldType.WHERE_FIELD) {
-            throw RuntimeException("$type can not call and, usage: .orderBy().id.desc().name.asc()")
+        if (field_type != QueryFieldType.WHERE_FIELD) {
+            throw RuntimeException("$field_type can not call and, usage: .orderBy().id.desc().name.asc()")
         }
         @Suppress("UNCHECKED_CAST")
         return this as WHERE_FIELD
     }
 
     fun or(factor: ((f: WHERE_FIELD) -> WHERE_FIELD)? = null): WHERE_FIELD {
-        if (type != QueryFieldType.WHERE_FIELD) {
-            throw RuntimeException("$type can not call and, usage: .orderBy().id.desc().name.asc()")
+        if (field_type != QueryFieldType.WHERE_FIELD) {
+            throw RuntimeException("$field_type can not call and, usage: .orderBy().id.desc().name.asc()")
         }
 
         if (factor == null) {
-            return createWhereField(queryStructure.copy(where = queryStructure.where + WhereClause(operator = "or")))
+            return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = "or")))
         }
 
         val vTempQueryStructure = QueryStructure(from = QueryStructureFrom("v_temp"))
-        val orWhereClauses = factor(createWhereField(vTempQueryStructure)).queryStructure.where
+        val orWhereClauses = factor(create_where_field(vTempQueryStructure)).queryStructure.where
         val newWhereClause = queryStructure.where + WhereClause(operator = "or", value = orWhereClauses)
-        return createWhereField(queryStructure.copy(where = newWhereClause))
+        return create_where_field(queryStructure.copy(where = newWhereClause))
     }
 
     fun andForeignField(vararg fields: QueryField<*, *, *, *, *>): WHERE_FIELD {
@@ -108,10 +110,10 @@ abstract class QueryField<
         for (field in fields) {
             newWhereClause.addAll(field.queryStructure.where)
         }
-        return createWhereField(queryStructure.copy(where = newWhereClause))
+        return create_where_field(queryStructure.copy(where = newWhereClause))
     }
 
     fun orderBy(): ORDER_BY_FIELD {
-        return createOrderByField(queryStructure)
+        return create_order_by_field(queryStructure)
     }
 }
