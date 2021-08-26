@@ -14,7 +14,7 @@ class ImplUserQueryPro {
 
     abstract class CommonField constructor(queryStructure: QueryStructure)
         : QueryField<User, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField>(queryStructure) {
-        override val _clazz = User::class.java
+        override val field_clazz = User::class.java
         override val create_where_field: CreateQueryField<WhereField> = { queryStructure -> WhereField(queryStructure) }
         override val create_order_by_field: CreateQueryField<OrderByField> = { queryStructure -> OrderByField(queryStructure) }
         override val create_column_limiter_field: CreateQueryField<ColumnLimiterField> =

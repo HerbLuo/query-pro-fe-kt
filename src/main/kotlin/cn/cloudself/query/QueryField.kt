@@ -16,7 +16,7 @@ abstract class FinalQueryField<
         COLUMN_LIMITER_FILED: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
         COLUMNS_LIMITER_FILED: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
 > constructor(private val queryStructure: QueryStructure) {
-    protected abstract val _clazz: Class<T>
+    protected abstract val field_clazz: Class<T>
     protected abstract val create_field: CreateQueryField<FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>>
     protected abstract val create_column_limiter_field: CreateQueryField<COLUMN_LIMITER_FILED>
     protected abstract val create_columns_limiter_field: CreateQueryField<COLUMNS_LIMITER_FILED>
@@ -53,7 +53,7 @@ abstract class FinalQueryField<
     }
 
     fun run(): List<T> {
-        return QueryStructureResolver.resolve(queryStructure, _clazz)
+        return QueryStructureResolver.resolve(queryStructure, field_clazz)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")

@@ -3,7 +3,7 @@ package cn.cloudself.query
 data class QueryStructure(
     val action: QueryStructureAction = QueryStructureAction.SELECT,
     val fields: List<Field> = listOf(),
-    val from: QueryStructureFrom,
+    var from: QueryStructureFrom = QueryStructureFrom(),
     val where: List<WhereClause> = listOf(),
     val orderBy: List<OrderByClause> = listOf(),
     val limit: Int? = null,
@@ -52,6 +52,6 @@ data class FromJoiner(
 )
 
 data class QueryStructureFrom(
-    val main: String,
+    val main: String = "?",
     val joins: List<FromJoiner> = listOf(),
 )
