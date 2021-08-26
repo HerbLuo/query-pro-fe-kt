@@ -119,6 +119,10 @@ class QueryProFileMakerDbJavaNameConverterSample {
     }
 }
 
+/**
+ * 推荐参考 多文件模式(Kotlin) 中的示例
+ * @see entityAndDaoMode
+ */
 class QueryProFileMakerSample {
     /**
      * 单文件模式
@@ -127,11 +131,17 @@ class QueryProFileMakerSample {
     fun singleFileMode() {
         QueryProFileMaker
             /* 将文件生成至 <project>/src/main/kotlin/cn/cloudself/foo/dao/zz下 */
-            .singleFileMode(PathFrom.ktPackage("cn.cloudself.foo"))
+            .singleFileMode(PathFrom.ktPackage("cn.cloudself.demo.single_mode"))
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
             .tables("user", "setting")
+            /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
+            .replaceMode()
+            /* 为Entity显示指定所有构造函数参数的默认值, 以便Kotlin自动生成默认的无参构造函数 */
+            .disableKtNoArgMode()
+            /* 显示更多输出 */
+            .debug()
             .create()
     }
 
