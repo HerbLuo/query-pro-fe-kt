@@ -9,6 +9,10 @@ class QueryKeywords<F : QueryField<*, *, *, *, *>>(
     val not = QueryWithNotKeywords(field, queryStructure, createQueryField)
     val ignoreCase = QueryIgnoreCaseKeywords(field, queryStructure, createQueryField)
 
+    fun `is`() = this
+    fun not() = not
+    fun ignoreCase() = ignoreCase
+
     fun equalsTo(value: Any) = with(WhereClause(field, "=", value))
     fun between(start: Any, end: Any) = with(WhereClause(field, "between", arrayOf(start, end)))
     fun lessThan(value: Any) = with(WhereClause(field, "<", value))
