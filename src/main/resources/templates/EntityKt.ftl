@@ -5,8 +5,6 @@ package ${m.packagePath}
 </#if><#if m.hasDate>import java.util.Date
 </#if>import javax.persistence.*
 
-<#--@Entity-->
-<#--@Table(name = "attachment", schema = "rcms")-->
 /**
  * ${m.remark}
  */

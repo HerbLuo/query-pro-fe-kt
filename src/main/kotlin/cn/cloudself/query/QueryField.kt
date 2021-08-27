@@ -17,9 +17,10 @@ abstract class FinalQueryField<
         COLUMNS_LIMITER_FILED: QueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>,
 > constructor(private val queryStructure: QueryStructure) {
     protected abstract val field_clazz: Class<T>
-    protected abstract val create_field: CreateQueryField<FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>>
     protected abstract val create_column_limiter_field: CreateQueryField<COLUMN_LIMITER_FILED>
     protected abstract val create_columns_limiter_field: CreateQueryField<COLUMNS_LIMITER_FILED>
+    @Suppress("FunctionName")
+    protected abstract fun create_field(qs: QueryStructure): FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>
 
     fun limit(limit: Int): FinalQueryField<T, WHERE_FIELD, ORDER_BY_FIELD, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
         return create_field(queryStructure.copy(limit = limit))
@@ -78,7 +79,7 @@ abstract class QueryField<
     protected abstract val field_type: QueryFieldType
     protected abstract val create_where_field: CreateQueryField<WHERE_FIELD>
     protected abstract val create_order_by_field: CreateQueryField<ORDER_BY_FIELD>
-    override val create_field = { qs: QueryStructure -> create_where_field(qs) }
+    override fun create_field(qs: QueryStructure) = create_where_field(qs)
 
     fun customColumn(column: String) = QueryKeywords(Field(column = column), queryStructure, create_where_field)
 

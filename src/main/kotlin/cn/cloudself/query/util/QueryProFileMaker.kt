@@ -2,10 +2,10 @@ package cn.cloudself.query.util
 
 import freemarker.template.Configuration
 import java.io.File
-import java.math.BigDecimal
 import java.nio.file.OpenOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import kotlin.io.path.Path
@@ -460,70 +460,82 @@ class QueryProFileMaker private constructor(
     private fun getModelsFromDb(): MutableMap<String, TemplateModel> {
         return db?.let { db ->
             Class.forName(db.driver)
-            val connection = DriverManager.getConnection(db.url, db.username, db.password)
-            val metaData = connection.metaData
-            val catalog = connection.catalog
-            val schema = connection.schema
-            // metadata https://dev.mysql.com/doc/refman/8.0/en/show-columns.html
-            val tableSet = metaData.getTables(catalog, schema, null, arrayOf("TABLE", "VIEW"))
-
             val tableNameMapTemplateModel = mutableMapOf<String, TemplateModel>()
-            while (tableSet.next()) {
-                val tableName = tableSet.getString("TABLE_NAME")
-                val tableRemark = tableSet.getString("REMARKS")
-
-                val modelColumns = mutableListOf<TemplateModelColumn>()
-
-                /**
-                 * 获取主键
-                 */
-                var id: ModelId? = null
-                var idDefined = false
-                val primaryKeys = metaData.getPrimaryKeys(catalog, schema, tableName)
-                while (primaryKeys.next()) {
-                    if (idDefined) {
-                        id = null
-                        println("[WARN] 目前仍不支持复合主键")
-                    } else {
-                        val columnName = primaryKeys.getString("COLUMN_NAME")
-                        id = ModelId(columnName)
-                        idDefined = true
-                    }
+            val connection = DriverManager.getConnection(db.url, db.username, db.password)
+            if (tables.contains("*")) {
+                readTableAsModel(connection, null, tableNameMapTemplateModel)
+            } else {
+                for (table in tables) {
+                    readTableAsModel(connection, table, tableNameMapTemplateModel)
                 }
-
-                val columnSet = metaData.getColumns(catalog, schema, tableName, null)
-                while (columnSet.next()) {
-                    val columnName = columnSet.getString("COLUMN_NAME") ?: throw RuntimeException("找不到列名")
-                    val typeName = columnSet.getString("TYPE_NAME")
-                    val remarks = columnSet.getString("REMARKS")
-
-                    val ktJavaType = dbMetaTypeMapKtJavaType[typeName]
-                        ?: dbMetaTypeMapKtJavaType[typeName.replace(" UNSIGNED", "")]
-
-                    if (id?.column == columnName) {
-                        id.autoIncrement = columnSet.getString("IS_AUTOINCREMENT") == "YES"
-                    }
-
-                    modelColumns.add(TemplateModelColumn(
-                        db_name = columnName,
-                        ktTypeStr = ktJavaType?.ktType ?: throw RuntimeException("找不到数据库类型${typeName}对应的kt类型, 列名$columnName"),
-                        javaTypeStr = ktJavaType.javaType,
-                        remark = remarks
-                    ))
-                }
-
-                val templateModel = TemplateModel(
-                    db_name = tableName,
-                    remark = tableRemark,
-                    columns = modelColumns,
-                    id = id,
-                    hasBigDecimal = modelColumns.find { it.ktTypeStr == "BigDecimal" } != null,
-                    hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null
-                )
-                tableNameMapTemplateModel[tableName] = templateModel
             }
+
             return@let tableNameMapTemplateModel
         } ?: throw RuntimeException("db信息没有注册，参考，需使用.db方法注册")
+    }
+
+    private fun readTableAsModel(connection: Connection, tableNamePattern: String?, tableNameMapTemplateModel: MutableMap<String, TemplateModel>) {
+        val metaData = connection.metaData
+        val catalog = connection.catalog
+        val schema = connection.schema
+
+        // metadata https://dev.mysql.com/doc/refman/8.0/en/show-columns.html
+        val tableSet = metaData.getTables(catalog, schema, tableNamePattern, arrayOf("TABLE", "VIEW"))
+
+        while (tableSet.next()) {
+            val tableName = tableSet.getString("TABLE_NAME")
+            val tableRemark = tableSet.getString("REMARKS")
+
+            val modelColumns = mutableListOf<TemplateModelColumn>()
+
+            /**
+             * 获取主键
+             */
+            var id: ModelId? = null
+            var idDefined = false
+            val primaryKeys = metaData.getPrimaryKeys(catalog, schema, tableName)
+            while (primaryKeys.next()) {
+                if (idDefined) {
+                    id = null
+                    println("[WARN] 目前仍不支持复合主键")
+                } else {
+                    val columnName = primaryKeys.getString("COLUMN_NAME")
+                    id = ModelId(columnName)
+                    idDefined = true
+                }
+            }
+
+            val columnSet = metaData.getColumns(catalog, schema, tableName, null)
+            while (columnSet.next()) {
+                val columnName = columnSet.getString("COLUMN_NAME") ?: throw RuntimeException("找不到列名")
+                val typeName = columnSet.getString("TYPE_NAME")
+                val remarks = columnSet.getString("REMARKS")
+
+                val ktJavaType = dbMetaTypeMapKtJavaType[typeName]
+                    ?: dbMetaTypeMapKtJavaType[typeName.replace(" UNSIGNED", "")]
+
+                if (id?.column == columnName) {
+                    id.autoIncrement = columnSet.getString("IS_AUTOINCREMENT") == "YES"
+                }
+
+                modelColumns.add(TemplateModelColumn(
+                    db_name = columnName,
+                    ktTypeStr = ktJavaType?.ktType ?: throw RuntimeException("找不到数据库类型${typeName}对应的kt类型, 列名$columnName"),
+                    javaTypeStr = ktJavaType.javaType,
+                    remark = remarks
+                ))
+            }
+
+            val templateModel = TemplateModel(
+                db_name = tableName,
+                remark = tableRemark,
+                columns = modelColumns,
+                id = id,
+                hasBigDecimal = modelColumns.find { it.ktTypeStr == "BigDecimal" } != null,
+                hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null
+            )
+            tableNameMapTemplateModel[tableName] = templateModel
+        }
     }
 
     private fun <T> T.debugPrint(): T {
