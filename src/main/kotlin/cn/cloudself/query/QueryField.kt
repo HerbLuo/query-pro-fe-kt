@@ -54,12 +54,12 @@ abstract class FinalQueryField<
     }
 
     fun run(): List<T> {
-        return QueryStructureResolver.resolve(queryStructure, field_clazz)
+        return QueryProConfig.QueryStructureResolver.resolve(queryStructure, field_clazz)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsMap(): List<Map<String, Any>> {
-        return QueryStructureResolver.resolve(queryStructure, mapOf<String, Any>().javaClass)
+        return QueryProConfig.QueryStructureResolver.resolve(queryStructure, mutableMapOf<String, Any>().javaClass)
     }
 
     fun pageable() {
