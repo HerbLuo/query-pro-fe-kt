@@ -19,6 +19,11 @@ interface IQueryStructureResolver {
 class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
 
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
+        if (QueryProConfig.dryRun) {
+            println(queryStructure)
+            return listOf()
+        }
+
         val namedJdbcTemplate = getNamedJdbcTemplate()
 
         println(queryStructure)

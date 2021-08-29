@@ -1,15 +1,14 @@
 package cn.cloudself
 
-import cn.cloudself.query.SettingQueryPro
-import cn.cloudself.query.SettingQueryProEx
-import cn.cloudself.query.UserQueryPro
-import cn.cloudself.query.UserQueryProEx
+import cn.cloudself.query.*
 import org.junit.Test
 
 class QueryProTest {
     @Suppress("UNUSED_VARIABLE")
     @Test
     fun test() {
+        QueryProConfig.dryRun = true
+
         val ids = SettingQueryPro.selectBy().id.equalsTo(1).columnLimiter().id()
 
         UserQueryPro.selectBy().name.`is`.equalsTo(1).and().age.`is`.equalsTo(1000).run()

@@ -6,6 +6,7 @@ object QueryProConfig {
     private var dataSource: DataSource? = null
     private val dataSourceThreadLocal: ThreadLocal<DataSource?> = ThreadLocal()
 
+    var dryRun: Boolean = false
     var QueryStructureResolver: IQueryStructureResolver = SpringJdbcQueryStructureResolver()
 
     fun setDataSource(dataSource: DataSource) {

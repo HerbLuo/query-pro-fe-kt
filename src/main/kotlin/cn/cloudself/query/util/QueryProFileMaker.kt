@@ -50,7 +50,7 @@ class PathFrom private constructor() {
          * @see ktPackage
          * @sample cn.cloudself.samples.QueryProFileMakePathFromSample.javaPackage
          */
-        fun javaPackage(packageName: String) = create().ktPackage(packageName).getResolver()
+        fun javaPackage(packageName: String) = create().javaPackage(packageName).getResolver()
     }
     private var subModuleName = ""
     private var lang = "kotlin"
