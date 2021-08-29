@@ -31,9 +31,10 @@ class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
         return namedJdbcTemplate.query(sql, params, JdbcRowMapper(clazz))
     }
 
-    class JdbcRowMapper<T>constructor(private val clazz: Class<T>): RowMapper<T> {
+    class JdbcRowMapper<T>constructor(clazz: Class<T>): RowMapper<T> {
         private val createInstance: () -> T
         private val setProperty: (result: T, property: String, value: Any?) -> Unit
+        private val properties: Map<String, Boolean?>? = null
 
         init {
             @Suppress("UNCHECKED_CAST")
@@ -65,6 +66,10 @@ class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
 
             for (i in 1..columnCount) {
                 val columnName = metaData.getColumnName(i)
+                if (properties != null && properties[columnName] != true) {
+                    continue
+                }
+
                 val value = resultSet.getObject(columnName)
                 setProperty(result, columnName, value)
             }
