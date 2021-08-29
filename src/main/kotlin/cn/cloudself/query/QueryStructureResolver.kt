@@ -6,10 +6,8 @@ import cn.cloudself.query.util.SpringUtil
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.lang.Exception
-import java.lang.reflect.Constructor
 import java.sql.ResultSet
-import java.util.HashMap
-import java.util.LinkedHashMap
+import java.util.*
 import javax.sql.DataSource
 
 interface IQueryStructureResolver {
@@ -35,26 +33,22 @@ class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
 
     class JdbcRowMapper<T>constructor(private val clazz: Class<T>): RowMapper<T> {
         private val createInstance: () -> T
+        private val setProperty: (result: T, property: String, value: Any?) -> Unit
 
         init {
+            @Suppress("UNCHECKED_CAST")
             if (Map::class.java.isAssignableFrom(clazz)) {
-                println(clazz.isAssignableFrom(LinkedHashMap::class.java))
-                println(clazz.isAssignableFrom(HashMap::class.java))
-
-                createInstance = {
-                    @Suppress("UNCHECKED_CAST")
-//                    mutableMapOf<Int, Any>() as T
-                    LinkedHashMap<String, Any>() as T
-                }
-                try {
-                    createInstance()
-                } catch (e: Exception) {
-                    throw UnSupportException("不支持LinkedHashMap<String, Object>以外的Map")
+                setProperty = { result, property, value -> (result as MutableMap<String, Any?>)[property] = value }
+                createInstance = when {
+                    LinkedHashMap::class.java.isAssignableFrom(clazz) -> { { LinkedHashMap<String, Any?>() as T } }
+                    HashMap::class.java.isAssignableFrom(clazz) -> { { HashMap<String, Any?>() as T } }
+                    else -> { throw UnSupportException("不支持LinkedHashMap与HashMap<String, Object>以外的Map") }
                 }
             } else {
                 try {
                     val noArgConstructor = clazz.getDeclaredConstructor()
                     createInstance = { noArgConstructor.newInstance() }
+                    setProperty = { r, p ,v ->  }
                 } catch (e: Exception) {
                     throw UnSupportException(e, "{0} 没有找到无参构造函数，该类是一个JavaBean吗, " +
                             "对于Kotlin，需使用kotlin-maven-noarg生成默认的无参构造函数或" +
@@ -71,11 +65,8 @@ class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
 
             for (i in 1..columnCount) {
                 val columnName = metaData.getColumnName(i)
-
                 val value = resultSet.getObject(columnName)
-
-//                val data = this.getString(columnName)
-//                println("$columnName:\t $data")
+                setProperty(result, columnName, value)
             }
 
             return result

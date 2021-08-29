@@ -58,7 +58,7 @@ abstract class FinalQueryField<
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun runAsMap(): List<Map<String, Any>> {
+    fun runAsMap(): List<Map<String, Any?>> {
         return QueryProConfig.QueryStructureResolver.resolve(queryStructure, mutableMapOf<String, Any>().javaClass)
     }
 
