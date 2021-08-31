@@ -26,7 +26,7 @@ enum class WhereClauseCommands {
 data class WhereClause(
     val field: Field? = null,
     val operator: String,
-    val value: Any? = null, // null arrayOr<string boolean integer long date> WhereClause[]
+    val value: Any? = null, // null arrayOr<string boolean integer long date> List<WhereClause>
     val commands: WhereClauseCommands? = null,
 )
 

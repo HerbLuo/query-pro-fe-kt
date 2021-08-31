@@ -100,7 +100,7 @@ abstract class QueryField<
             return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = "or")))
         }
 
-        val vTempQueryStructure = QueryStructure(from = QueryStructureFrom("v_temp"))
+        val vTempQueryStructure = QueryStructure(from = QueryStructureFrom("v_temp")) // v_temp会消失, 只取where
         val orWhereClauses = factor(create_where_field(vTempQueryStructure)).queryStructure.where
         val newWhereClause = queryStructure.where + WhereClause(operator = "or", value = orWhereClauses)
         return create_where_field(queryStructure.copy(where = newWhereClause))

@@ -23,7 +23,7 @@ class SpringJdbcResolverTest {
 
         val words = WordQueryPro
             .selectBy().word.equalsTo("formulae")
-            .and().createBy.equalsTo("12")
+            .or().createBy.equalsTo("12")
             .run()
         println(words)
     }

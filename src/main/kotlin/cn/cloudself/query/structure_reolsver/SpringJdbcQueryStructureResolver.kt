@@ -16,17 +16,17 @@ class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
     private val namedJdbcTemplateThreadLocal = ThreadLocal<NamedParameterJdbcTemplate?>()
 
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
+
+        QueryStructureToSql.toSqlWithIndexedParams(queryStructure)
+        val sql = "select * from word"
+        val params = mutableMapOf<String, Any>()
+
         if (QueryProConfig.dryRun) {
-            println(queryStructure)
+            println(sql)
             return listOf()
         }
 
         val namedJdbcTemplate = getNamedJdbcTemplate()
-
-        println(queryStructure)
-        val sql = "select * from word"
-        val params = mutableMapOf<String, Any>()
-
         return namedJdbcTemplate.query(sql, params, JdbcRowMapper(clazz))
     }
 
