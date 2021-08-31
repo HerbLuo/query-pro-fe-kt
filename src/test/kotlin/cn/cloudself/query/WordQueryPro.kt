@@ -4,6 +4,10 @@ import java.util.Date
 import javax.persistence.*
 import cn.cloudself.query.*
 
+enum class WordEnum {
+    FORMULAE,
+}
+
 /**
  * 词汇
  */

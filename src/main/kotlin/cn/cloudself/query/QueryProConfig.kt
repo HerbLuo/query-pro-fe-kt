@@ -9,7 +9,12 @@ import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KClass
 
+@Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING", "HasPlatformType")
+fun <T: Enum<*>> enumValueOfAny(clazz: Class<*>, name: String) = java.lang.Enum.valueOf(clazz as Class<T>, name)
+
 typealias ResultSetGetter<T> = (rs: ResultSet) -> (i: Int) -> T
+
+typealias ResultSetParserEx = (rs: ResultSet, clazz: Class<*>, i: Int) -> Optional<Any>
 
 data class DbColumnInfo(
     val type: String,
@@ -22,8 +27,9 @@ object QueryProConfig {
     private var supportedColumnType = mutableSetOf<Class<*>>()
     private val resultSetParser = mutableMapOf<Class<*>, ResultSetGetter<*>>()
         .also { map ->
+            @Suppress("UNCHECKED_CAST")
             fun <T: Any> put(clazz: KClass<T>, value: ResultSetGetter<T>) {
-                val primitiveType = clazz.javaPrimitiveType
+                val primitiveType = (clazz).javaPrimitiveType
                 if (primitiveType != null && primitiveType != clazz.java) {
                     supportedColumnType.add(primitiveType)
                     map[primitiveType] = value
@@ -55,6 +61,16 @@ object QueryProConfig {
             // 如果是未知的类型，使用meta data获取默认的java类型，如果一致，直接getObject
             // 否则抛出异常
         }
+    val resultSetParserEx = mutableListOf<ResultSetParserEx>(
+        { rs, clazz, i ->
+            if (!clazz.isEnum) {
+                Optional.empty()
+            } else {
+                @Suppress("UNCHECKED_CAST")
+                Optional.ofNullable(enumValueOfAny(clazz, rs.getString(i)))
+            }
+        }
+    )
 
     var dryRun: Boolean = false
     var QueryStructureResolver: IQueryStructureResolver = SpringJdbcQueryStructureResolver()
@@ -63,7 +79,17 @@ object QueryProConfig {
     )
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> getResultSetParser(clazz: Class<T>): ResultSetGetter<T>? = this.resultSetParser[clazz] as ResultSetGetter<T>?
+    fun <T> getResultSetParser(clazz: Class<T>): ResultSetGetter<T>? {
+        var res = this.resultSetParser[clazz] as ResultSetGetter<T>?
+        if (res == null) {
+            for ((key, value) in this.resultSetParser) {
+                if (key.isAssignableFrom(clazz)) {
+                    res = value as ResultSetGetter<T>
+                }
+            }
+        }
+        return res
+    }
 
     fun <T> addResultSetParser(clazz: Class<T>, value: ResultSetGetter<T>) = this.also {
         resultSetParser[clazz] = value

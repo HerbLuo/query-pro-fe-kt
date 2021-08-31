@@ -9,6 +9,7 @@ import cn.cloudself.query.util.SpringUtil
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.sql.ResultSet
+import java.util.*
 import javax.sql.DataSource
 
 class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
@@ -60,14 +61,26 @@ class SpringJdbcQueryStructureResolver: IQueryStructureResolver {
                     if (parser != null) {
                         parser(resultSet)(i) /* value */
                     } else {
-                        // 没有找到生成目标类型的配置，尝试使用数据库默认的类型转换成目标类型，如果不行，则抛出异常
-                        val couldConvertClassName = metaData.getColumnClassName(i)
-                        if (beanNeedType.isAssignableFrom(Class.forName(couldConvertClassName))) {
-                            resultSet.getObject(i)
+                        var valueOpt: Optional<Any>? = null
+                        for (resultSetParserEx in QueryProConfig.resultSetParserEx) {
+                            val valueOptMay = resultSetParserEx(resultSet, beanNeedType, i)
+                            if (valueOptMay.isPresent) {
+                                valueOpt = valueOptMay
+                                break
+                            }
+                        }
+                        if (valueOpt != null) {
+                            valueOpt.get()
                         } else {
-                            throw ConfigException("不支持将name: {0}, type: {1}转换为{2}, " +
-                                    "使用QueryProConfig(.INSTANCE).addResultSetParser添加转换器",
-                                columnName, columnType, beanNeedType.name)
+                            // 没有找到生成目标类型的配置，尝试使用数据库默认的类型转换成目标类型，如果不行，则抛出异常
+                            val couldConvertClassName = metaData.getColumnClassName(i)
+                            if (beanNeedType.isAssignableFrom(Class.forName(couldConvertClassName))) {
+                                resultSet.getObject(i)
+                            } else {
+                                throw ConfigException("不支持将name: {0}, type: {1}转换为{2}, " +
+                                        "使用QueryProConfig(.INSTANCE).addResultSetParser添加转换器",
+                                    columnName, columnType, beanNeedType.name)
+                            }
                         }
                     }
                 }
