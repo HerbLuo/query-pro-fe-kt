@@ -1,19 +1,82 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.structure_reolsver.SpringJdbcQueryStructureResolver
+import java.math.BigDecimal
+import java.sql.ResultSet
+import java.sql.Time
+import java.sql.Timestamp
+import java.util.*
 import javax.sql.DataSource
+import kotlin.reflect.KClass
+
+typealias ResultSetGetter<T> = (rs: ResultSet) -> (i: Int) -> T
+
+data class DbColumnInfo(
+    val type: String,
+    val label: String,
+)
 
 object QueryProConfig {
     private var dataSource: DataSource? = null
     private val dataSourceThreadLocal: ThreadLocal<DataSource?> = ThreadLocal()
+    private var supportedColumnType = mutableSetOf<Class<*>>()
+    private val resultSetParser = mutableMapOf<Class<*>, ResultSetGetter<*>>()
+        .also { map ->
+            fun <T: Any> put(clazz: KClass<T>, value: ResultSetGetter<T>) {
+                val primitiveType = clazz.javaPrimitiveType
+                if (primitiveType != null && primitiveType != clazz.java) {
+                    supportedColumnType.add(primitiveType)
+                    map[primitiveType] = value
+                }
+                val objectType = clazz.javaObjectType
+                if (objectType != clazz.java) {
+                    supportedColumnType.add(objectType)
+                    map[objectType] = value
+                }
+
+                supportedColumnType.add(clazz.java)
+                map[clazz.java] = value
+            }
+
+            put(BigDecimal::class) { it::getBigDecimal }
+            put(Byte::class) { it::getByte }
+            put(ByteArray::class) { it::getBytes }
+            put(Date::class) { it::getDate }
+            put(java.sql.Date::class) { it::getDate }
+            put(Double::class) { it::getDouble }
+            put(Float::class) { it::getFloat }
+            put(Int::class) { it::getInt }
+            put(Long::class) { it::getLong }
+            put(Time::class) { it::getTime }
+            put(Timestamp::class) { it::getTimestamp }
+            put(Short::class) { it::getShort }
+            put(String::class) { it::getString }
+
+            // 如果是未知的类型，使用meta data获取默认的java类型，如果一致，直接getObject
+            // 否则抛出异常
+        }
 
     var dryRun: Boolean = false
     var QueryStructureResolver: IQueryStructureResolver = SpringJdbcQueryStructureResolver()
+    val dbColumnInfoToJavaType = mutableMapOf<(column: DbColumnInfo) -> Boolean, Class<*>>(
+        { column: DbColumnInfo -> column.label == "id" && column.type.startsWith("BIGINT") } to Long::class.java,
+    )
 
-    fun setDataSource(dataSource: DataSource) {
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getResultSetParser(clazz: Class<T>): ResultSetGetter<T>? = this.resultSetParser[clazz] as ResultSetGetter<T>?
+
+    fun <T> addResultSetParser(clazz: Class<T>, value: ResultSetGetter<T>) = this.also {
+        resultSetParser[clazz] = value
+        supportedColumnType.add(clazz)
+    }
+
+    fun getSupportedColumnType() = supportedColumnType
+
+    fun setDataSource(dataSource: DataSource) = this.also {
         this.dataSource = dataSource
     }
 
-    fun setDataSourceThreadLocal(dataSource: DataSource) {
+    fun setDataSourceThreadLocal(dataSource: DataSource) = this.also {
         dataSourceThreadLocal.set(dataSource)
     }
 

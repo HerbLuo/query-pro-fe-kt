@@ -20,7 +20,10 @@ class SpringJdbcResolverTest {
     fun test() {
         QueryProConfig.setDataSource(getDataSource())
 
-        val words = WordQueryPro.selectBy().word.equalsTo("formulae").runAsMap()
+        val words = WordQueryPro
+            .selectBy().word.equalsTo("formulae")
+            .and().createBy.equalsTo("12")
+            .run()
         println(words)
     }
 }
