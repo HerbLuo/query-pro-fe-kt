@@ -135,17 +135,20 @@ class ImplWordQueryPro {
     }
 }
 
-val WordQueryPro = QueryPro(
-    QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)),
-    { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs) },
-    { qs: QueryStructure -> ImplWordQueryPro.OrderByField(qs) }
-)
+private fun createQuery(queryStructure: QueryStructure) =
+    QueryPro(
+        queryStructure,
+        { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs) },
+        { qs: QueryStructure -> ImplWordQueryPro.OrderByField(qs) }
+    )
+
+val WordQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)));
 
 val WordQueryProEx = QueryProEx(
     QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)),
     { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs) },
     { ImplWordQueryPro.FieldsGenerator() },
-    { WordQueryPro }
+    { qs -> createQuery(qs) }
 )
 
 

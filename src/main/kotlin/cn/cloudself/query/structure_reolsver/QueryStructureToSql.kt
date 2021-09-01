@@ -1,105 +1,187 @@
 package cn.cloudself.query.structure_reolsver
 
-import cn.cloudself.query.QueryStructure
-import cn.cloudself.query.WhereClause
-import cn.cloudself.query.WhereClauseCommands
+import cn.cloudself.query.*
 import cn.cloudself.query.exception.UnSupportException
-import freemarker.template.ObjectWrapper
 import java.lang.StringBuilder
 
-object QueryStructureToSql {
-    fun toSqlWithIndexedParams(qs: QueryStructure) {
-        val indexedParams = mutableListOf<Any?>()
+class QueryStructureToSql(
+    private val qs: QueryStructure,
+) {
+    private val beautify = QueryProConfig.beautifySql
+    private val sql = StringBuilder()
+    private val indexedParams = mutableListOf<Any?>()
 
-        val sql = StringBuilder()
+    fun toSqlWithIndexedParams(): Pair<String, List<Any?>> {
         sql.append(qs.action.name, ' ')
-//        qs.fields
-        sql.append('*')
-        sql.append(" FROM ")
-        sql.append(qs.from.main)
-        for (join in qs.from.joins) {
+        buildFields(qs.fields)
+        sql.append(if (beautify) '\n' else ' ')
+        sql.append("FROM ")
+        buildFromClause(qs.from)
+        buildWheresClause(qs.where)
+        buildOrderByClause(qs.orderBy)
+        buildLimitClause(qs.limit)
 
+        return sql.toString() to indexedParams
+    }
+
+    private fun buildField(field: Field?, whereClauseUpper: Boolean) {
+        if (field == null) {
+            return
         }
-        val wheres = qs.where
-        if (wheres.isNotEmpty()) {
-            fun parseWhereClause(whereClause: WhereClause) {
-                val upper = whereClause.commands == WhereClauseCommands.UPPER_CASE
-                if (upper) {
-                    sql.append("UPPER(")
-                }
-                val field = whereClause.field
-                if (field != null) {
-                    if (field.table != null) {
-                        sql.append(field.table, '.')
-                    }
-                    sql.append(field.column)
-                }
-                if (upper) {
-                    sql.append(')')
-                }
-                val operator = whereClause.operator
-                sql.append(' ', operator, ' ')
-                val value = whereClause.value
-                fun parseValue(v: Any?) {
-                    if (v != null) {
-                        sql.append(if (upper) "UPPER(?)" else '?')
-                        indexedParams.add(v)
-                    }
-                }
-                if (value is List<*> || value is Array<*>) {
-                    sql.append('(')
-                    val lastIndexOfValues: Int
-                    val valueIndexIter: Iterable<IndexedValue<Any?>>
-                    when (value) {
-                        is List<*> -> {
-                            lastIndexOfValues = value.size - 1
-                            valueIndexIter = value.withIndex()
-                        }
-                        is Array<*> -> {
-                            lastIndexOfValues = value.size - 1
-                            valueIndexIter = value.withIndex()
-                        }
-                        else -> throw Error("不可达1")
-                    }
-                    for ((vi, v) in valueIndexIter) {
-                        if (v is WhereClause) {
-                            parseWhereClause(v)
-                        } else {
-                            parseValue(v)
-                        }
-                        if (vi != lastIndexOfValues) {
-                            sql.append(when (operator) {
-                                "in" -> ", "
-                                "not in" -> ", "
-                                "between" -> " AND "
-                                "not between" -> " AND "
-                                "or" -> " AND "
-                                else -> throw UnSupportException("未知的运算符{0}", operator)
-                            })
-                        }
-                    }
-                    sql.append(')')
-                } else {
-                    parseValue(value)
-                }
+        val upper = if (field.commands == FieldCommands.UPPER_CASE)
+            true
+        else
+            whereClauseUpper
+        if (upper) {
+            sql.append("UPPER(")
+        }
+        if (field.table != null) {
+            sql.append(field.table, '.')
+        }
+        sql.append(field.column)
+        if (upper) {
+            sql.append(')')
+        }
+    }
+
+    private fun buildValue(v: Any?, upper: Boolean) {
+        if (v != null) {
+            sql.append(if (upper) "UPPER(?)" else '?')
+            indexedParams.add(v)
+        }
+    }
+
+    private fun buildFields(fields: List<Field>) {
+        if (fields.isEmpty()) {
+            sql.append("*")
+            return
+        }
+
+        val lastIndexOfFields = fields.size - 1
+        for ((i, field) in fields.withIndex()) {
+            buildField(field, false)
+            if (i != lastIndexOfFields) {
+                sql.append(",")
+                sql.append(if (beautify) "\n       " else ' ')
             }
+        }
+    }
 
-            sql.append(" WHERE ")
-            val lastIndexOfWheres = wheres.size - 1
-            for ((i, whereClause) in wheres.withIndex()) {
-                parseWhereClause(whereClause)
-
-                if (lastIndexOfWheres != i && whereClause.operator != "or" && wheres[i + 1].operator != "or") {
+    private fun buildFromClause(from: QueryStructureFrom) {
+        sql.append(from.main)
+        for (joiner in from.joins) {
+            sql.append(if (beautify) "\n    " else ' ')
+            sql.append(when (joiner.type) {
+                JoinType.LEFT_JOIN -> "LEFT JOIN "
+            })
+            sql.append(joiner.table)
+            sql.append(" ON ")
+            val lastIndexOfJoinOn = joiner.on.size - 1
+            for ((i, joinOn) in joiner.on.withIndex()) {
+                buildField(joinOn.left, false)
+                sql.append(" = ")
+                buildField(joinOn.right, false)
+                if (i != lastIndexOfJoinOn) {
                     sql.append(" AND ")
                 }
             }
         }
+    }
 
-//        qs.limit
-//        qs.orderBy
+    private fun buildWheresClause(wheres: List<WhereClause>) {
+        fun parseWhereClause(whereClause: WhereClause) {
+            val upper = whereClause.commands == WhereClauseCommands.UPPER_CASE
+            val field = whereClause.field
+            val operator = whereClause.operator
+            val value = whereClause.value
 
-        println(qs)
-        println(indexedParams)
-        println(sql.toString())
+            buildField(field, upper)
+            sql.append(' ', operator, ' ')
+
+            arrayOf("").toList()
+            if (value is List<*> || value is Array<*>) {
+                sql.append('(')
+                val lastIndexOfValues: Int
+                val valueIndexIter: Iterable<IndexedValue<Any?>>
+                when (value) {
+                    is List<*> -> {
+                        lastIndexOfValues = value.size - 1
+                        valueIndexIter = value.withIndex()
+                    }
+                    is Array<*> -> {
+                        lastIndexOfValues = value.size - 1
+                        valueIndexIter = value.withIndex()
+                    }
+                    else -> throw Error("不可达1")
+                }
+                for ((vi, v) in valueIndexIter) {
+                    if (v is WhereClause) {
+                        parseWhereClause(v)
+                    } else {
+                        buildValue(v, upper)
+                    }
+                    if (vi != lastIndexOfValues) {
+                        sql.append(when (operator) {
+                            "in" -> ", "
+                            "not in" -> ", "
+                            "between" -> " AND "
+                            "not between" -> " AND "
+                            "or" -> " AND "
+                            else -> throw UnSupportException("未知的运算符{0}", operator)
+                        })
+                    }
+                }
+                sql.append(')')
+            } else {
+                buildValue(value, upper)
+            }
+        }
+        if (wheres.isEmpty()) {
+            return
+        }
+
+        sql.append(if (beautify) '\n' else ' ')
+        sql.append("WHERE ")
+        val lastIndexOfWheres = wheres.size - 1
+        for ((i, whereClause) in wheres.withIndex()) {
+            parseWhereClause(whereClause)
+
+            if (lastIndexOfWheres != i && whereClause.operator != "or" && wheres[i + 1].operator != "or") {
+                sql.append(if (beautify) "\n  " else ' ')
+                sql.append("AND ")
+            }
+        }
+    }
+
+    private fun buildOrderByClause(orderBys: List<OrderByClause>) {
+        if (orderBys.isEmpty()) {
+            return
+        }
+        sql.append(if (beautify) '\n' else ' ')
+        sql.append("ORDER BY ")
+        val lastIndexOfOrderBy = orderBys.size - 1
+        for ((i, orderBy) in orderBys.withIndex()) {
+            buildField(orderBy.field, false)
+            sql.append(' ')
+            sql.append(when (orderBy.operator) {
+                "desc" -> "DESC"
+                "asc" -> "ASC"
+                "" -> "ASC"
+                else -> throw UnSupportException("不支持的order by操作符{0}", orderBy.operator)
+            })
+            if (i != lastIndexOfOrderBy) {
+                sql.append(", ")
+            }
+        }
+    }
+
+    private fun buildLimitClause(limit: Int?) {
+        if (limit == null) {
+            return
+        }
+        if (limit != -1) {
+            sql.append(if (beautify) '\n' else ' ')
+            sql.append("LIMIT ", qs.limit)
+        }
     }
 }

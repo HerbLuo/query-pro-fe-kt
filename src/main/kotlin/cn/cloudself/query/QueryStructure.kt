@@ -17,7 +17,12 @@ data class OrderByClause(
 data class Field(
     val table: String? = null,
     val column: String,
+    val commands: FieldCommands? = null,
 )
+
+enum class FieldCommands {
+    UPPER_CASE,
+}
 
 enum class WhereClauseCommands {
     UPPER_CASE,

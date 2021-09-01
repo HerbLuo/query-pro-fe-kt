@@ -76,15 +76,18 @@ class Impl${ClassName} {
     }
 }
 
-val ${ClassName} = QueryPro(
-    QueryStructure(from = QueryStructureFrom(Impl${ClassName}.TABLE_NAME)),
-    { qs: QueryStructure -> Impl${ClassName}.WhereField(qs) },
-    { qs: QueryStructure -> Impl${ClassName}.OrderByField(qs) }
-)
+private fun createQuery(queryStructure: QueryStructure) =
+    QueryPro(
+        queryStructure,
+        { qs: QueryStructure -> Impl${ClassName}.WhereField(qs) },
+        { qs: QueryStructure -> Impl${ClassName}.OrderByField(qs) }
+    )
+
+val ${ClassName} = createQuery(QueryStructure(from = QueryStructureFrom(Impl${ClassName}.TABLE_NAME)))
 
 val ${ClassName}Ex = QueryProEx(
     QueryStructure(from = QueryStructureFrom(Impl${ClassName}.TABLE_NAME)),
     { qs: QueryStructure -> Impl${ClassName}.WhereField(qs) },
     { Impl${ClassName}.FieldsGenerator() },
-    { ${ClassName} }
+    { qs -> createQuery(qs) }
 )

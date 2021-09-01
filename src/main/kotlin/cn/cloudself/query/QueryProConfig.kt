@@ -1,10 +1,13 @@
 package cn.cloudself.query
 
-import cn.cloudself.query.structure_reolsver.SpringJdbcQueryStructureResolver
+import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
 import java.math.BigDecimal
 import java.sql.ResultSet
 import java.sql.Time
 import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KClass
@@ -48,6 +51,9 @@ object QueryProConfig {
             put(Byte::class) { it::getByte }
             put(ByteArray::class) { it::getBytes }
             put(Date::class) { it::getDate }
+            put(LocalDate::class) { rs -> { i -> rs.getDate(i).toLocalDate() } }
+            put(LocalTime::class) { rs -> { i -> rs.getTime(i).toLocalTime() } }
+            put(LocalDateTime::class) { rs -> { i -> rs.getTimestamp(i).toLocalDateTime() } }
             put(java.sql.Date::class) { it::getDate }
             put(Double::class) { it::getDouble }
             put(Float::class) { it::getFloat }
@@ -72,8 +78,10 @@ object QueryProConfig {
         }
     )
 
+    var beautifySql = true
+    var printSql = true
     var dryRun: Boolean = false
-    var QueryStructureResolver: IQueryStructureResolver = SpringJdbcQueryStructureResolver()
+    var QueryStructureResolver: IQueryStructureResolver = JdbcQueryStructureResolver()
     val dbColumnInfoToJavaType = mutableMapOf<(column: DbColumnInfo) -> Boolean, Class<*>>(
         { column: DbColumnInfo -> column.label == "id" && column.type.startsWith("BIGINT") } to Long::class.java,
     )

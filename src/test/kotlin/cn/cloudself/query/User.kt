@@ -64,15 +64,18 @@ class ImplUserQueryPro {
     }
 }
 
-val UserQueryPro = QueryPro(
-    QueryStructure(from = QueryStructureFrom(ImplUserQueryPro.TABLE_NAME)),
-    { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs) },
-    { qs: QueryStructure -> ImplUserQueryPro.OrderByField(qs) }
-)
+private fun createQuery(queryStructure: QueryStructure) =
+    QueryPro(
+        queryStructure,
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs) },
+        { qs: QueryStructure -> ImplUserQueryPro.OrderByField(qs) }
+    )
+
+val UserQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplUserQueryPro.TABLE_NAME)))
 
 val UserQueryProEx = QueryProEx(
     QueryStructure(from = QueryStructureFrom(ImplUserQueryPro.TABLE_NAME)),
     { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs) },
     { ImplUserQueryPro.FieldsGenerator() },
-    { UserQueryPro }
+    { qs -> createQuery(qs) }
 )

@@ -20,11 +20,11 @@ public class ${ClassName} {
         return queryStructure;
     }
 
-    private static final QueryPro${"<"}__Impl.WhereField, __Impl.OrderByField> queryPro = new QueryPro<>(
-            defQueryStructure(),
-            __Impl.WhereField::new,
-            __Impl.OrderByField::new
-    );
+    private static QueryPro${"<"}__Impl.WhereField, __Impl.OrderByField> createQuery(QueryStructure queryStructure) {
+        return new QueryPro<>(queryStructure, __Impl.WhereField::new, __Impl.OrderByField::new);
+    }
+
+    private static final QueryPro${"<"}__Impl.WhereField, __Impl.OrderByField> queryPro = createQuery(defQueryStructure());
 
     public static final QueryProEx<
             QueryPro${"<"}__Impl.WhereField, __Impl.OrderByField>,
@@ -34,7 +34,7 @@ public class ${ClassName} {
             defQueryStructure(),
             __Impl.WhereField::new,
             __Impl.FieldsGenerator::new,
-            (qs) -> ${ClassName}.queryPro
+            ${ClassName}::createQuery
     );
 
     public static __Impl.WhereField selectBy() {
@@ -60,7 +60,7 @@ public class ${ClassName} {
     public static class __Impl {
         private static final Class${"<"}${EntityName}> CLAZZ = ${EntityName}.class;
         public static final String TABLE_NAME = "${m.db_name}";
-        private static Field createField(String column) { return new Field(TABLE_NAME, column); }
+        private static Field createField(String column) { return new Field(TABLE_NAME, column, null); }
 
         public abstract static class CommonField extends QueryField${"<"}${EntityName}, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField> {
             public CommonField(QueryStructure queryStructure) { super(queryStructure); }

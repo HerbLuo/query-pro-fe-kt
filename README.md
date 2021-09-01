@@ -15,7 +15,21 @@ QueryStructure的设计哲学: 易于序列化, 以便多端生成，并传输
 ```
 
 调用`run`之后: 会使用`IQueryStructureResolver`接口将上述结构`QueryStructure`转换为目标对象list。
-`IQueryStructureResolver`默认的实现有`SpringJdbcQueryStructureResolver`
+`IQueryStructureResolver`默认的实现有`JdbcQueryStructureResolver`
 
-`SpringJdbcQueryStructureResolver`简述:
-该实现的所有依赖项(除了JDBC驱动)均已导入，所以无需额外引入包。
+`JdbcQueryStructureResolver`简述:
+```
+             QueryStructureToSql        prepareStatement     mapRow(with BeanProxy)
+QueryStructure ------------> sql & params ----------> ResultSet -----------> List<T>
+```
+
+
+
+
+#### 后续规划
+update delete
+分页
+支持sql直接查询
+日志
+count
+更多的测试用例

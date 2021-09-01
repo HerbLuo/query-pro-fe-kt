@@ -25,7 +25,7 @@ val beanProxyCaches = mutableMapOf<Class<*>, BeanProxy<*, *>>()
  * 使用[BeanProxy.newInstance]创建临时对象[BeanInstance]
  * 使用[BeanInstance.setProperty]设置目标对象的属性
  * 使用[BeanInstance.getJavaType]获取目标某字段的类型
- * 使用[BeanInstance.toResult]转为目标对象
+ * 使用[BeanInstance.toResult]将临时对象转为目标对象
  */
 class BeanProxy<T, R>(
     /**

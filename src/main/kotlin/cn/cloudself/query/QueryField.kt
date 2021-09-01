@@ -48,6 +48,10 @@ abstract class FinalQueryField<
         return create_column_limiter_field(queryStructure)
     }
 
+    fun count(): Int {
+        return 0;
+    }
+
     fun runLimit1(): T? {
         val results = create_field(queryStructure.copy(limit = 1)).run()
         return if (results.isEmpty()) null else results[0]
