@@ -49,7 +49,7 @@ abstract class FinalQueryField<
     }
 
     fun count(): Int {
-        return 0;
+        return 0
     }
 
     fun runLimit1(): T? {

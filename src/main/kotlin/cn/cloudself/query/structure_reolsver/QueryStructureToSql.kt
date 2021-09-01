@@ -21,7 +21,10 @@ class QueryStructureToSql(
         buildOrderByClause(qs.orderBy)
         buildLimitClause(qs.limit)
 
-        return sql.toString() to indexedParams
+
+        val sqlWithIndexedParams = sql.toString() to indexedParams
+        beforeReturnForTest?.let { it(sqlWithIndexedParams) }
+        return sqlWithIndexedParams
     }
 
     private fun buildField(field: Field?, whereClauseUpper: Boolean) {
@@ -183,5 +186,9 @@ class QueryStructureToSql(
             sql.append(if (beautify) '\n' else ' ')
             sql.append("LIMIT ", qs.limit)
         }
+    }
+
+    companion object {
+        internal var beforeReturnForTest: ((Pair<String, List<Any?>>) -> Unit)? = null
     }
 }
