@@ -20,40 +20,57 @@ public class ${ClassName} {
         return queryStructure;
     }
 
-    private static QueryPro${"<"}__Impl.WhereField, __Impl.OrderByField> createQuery(QueryStructure queryStructure) {
-        return new QueryPro<>(queryStructure, __Impl.WhereField::new, __Impl.OrderByField::new);
+    private static QueryPro<
+            __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            __Impl.WhereField${"<"}Boolean, Boolean>,
+            __Impl.WhereField${"<"}Boolean, Boolean>
+    > createQuery(QueryStructure queryStructure) {
+        return new QueryPro<>(
+                queryStructure, 
+                qs -> new __Impl.WhereField<>(qs, ${EntityName}.class),
+                qs -> new __Impl.OrderByField<>(qs, ${EntityName}.class),
+                qs -> new __Impl.WhereField<>(qs, Boolean.class),
+                qs -> new __Impl.WhereField<>(qs, Boolean.class)
+        );
     }
 
-    private static final QueryPro${"<"}__Impl.WhereField, __Impl.OrderByField> queryPro = createQuery(defQueryStructure());
+    private static final QueryPro<
+            __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            __Impl.WhereField${"<"}Boolean, Boolean>,
+            __Impl.WhereField${"<"}Boolean, Boolean>
+    > queryPro = createQuery(defQueryStructure());
 
     public static final QueryProEx<
-            QueryPro${"<"}__Impl.WhereField, __Impl.OrderByField>,
-            __Impl.WhereField,
+            QueryPro<
+                    __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+                    __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+                    __Impl.WhereField${"<"}Boolean, Boolean>,
+                    __Impl.WhereField${"<"}Boolean, Boolean>
+            >,
+            __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
             __Impl.FieldsGenerator
     > EX = new QueryProEx<>(
             defQueryStructure(),
-            __Impl.WhereField::new,
+            qs -> new __Impl.WhereField<>(qs, ${EntityName}.class),
             __Impl.FieldsGenerator::new,
-            ${ClassName}::createQuery
+            ${EntityName}QueryPro::createQuery
     );
 
-    public static __Impl.WhereField selectBy() {
+    public static __Impl.WhereField<${EntityName}, List<${EntityName}>> selectBy() {
         return queryPro.selectBy();
     }
 
-    public static __Impl.OrderByField orderBy() {
+    public static __Impl.OrderByField<${EntityName}, List<${EntityName}>> orderBy() {
         return queryPro.orderBy();
     }
 
-    public static __Impl.WhereField deleteBy() {
+    public static __Impl.WhereField${"<"}Boolean, Boolean> deleteBy() {
         return queryPro.deleteBy();
     }
 
-    public static __Impl.WhereField selectOneBy() {
-        return queryPro.selectOneBy();
-    }
-
-    public static __Impl.WhereField updateBy() {
+    public static __Impl.WhereField${"<"}Boolean, Boolean> updateBy() {
         return queryPro.updateBy();
     }
 
@@ -62,64 +79,61 @@ public class ${ClassName} {
         public static final String TABLE_NAME = "${m.db_name}";
         private static Field createField(String column) { return new Field(TABLE_NAME, column, null); }
 
-        public abstract static class CommonField extends QueryField${"<"}${EntityName}, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField> {
-            public CommonField(QueryStructure queryStructure) { super(queryStructure); }
+        public abstract static class CommonField${"<"}T, RUN_RES>
+                extends QueryField${"<"}T, RUN_RES, WhereField${"<"}T, RUN_RES>, OrderByField${"<"}T, RUN_RES>, ColumnLimiterField${"<"}T, RUN_RES>, ColumnsLimiterField${"<"}T, RUN_RES>> {
+            public CommonField(QueryStructure queryStructure, Class${"<"}T> field_clazz) { super(queryStructure, field_clazz); }
 
             @NotNull
             @Override
-            protected Class${"<"}${EntityName}> getField_clazz() { return CLAZZ; }
+            protected Function1${"<"}QueryStructure, WhereField${"<"}T, RUN_RES>> getCreate_where_field() { return qs -> new WhereField<>(qs, super.getField_clazz()); }
 
             @NotNull
             @Override
-            protected Function1${"<"}QueryStructure, WhereField> getCreate_where_field() { return WhereField::new; }
+            protected Function1${"<"}QueryStructure, OrderByField${"<"}T, RUN_RES>> getCreate_order_by_field() { return qs -> new OrderByField<>(qs, super.getField_clazz()); }
 
             @NotNull
             @Override
-            protected Function1${"<"}QueryStructure, OrderByField> getCreate_order_by_field() { return OrderByField::new; }
+            protected Function1${"<"}QueryStructure, ColumnLimiterField${"<"}T, RUN_RES>> getCreate_column_limiter_field() { return qs -> new ColumnLimiterField<>(qs, super.getField_clazz()); }
 
             @NotNull
             @Override
-            protected Function1${"<"}QueryStructure, ColumnLimiterField> getCreate_column_limiter_field() { return ColumnLimiterField::new; }
-
-            @NotNull
-            @Override
-            protected Function1${"<"}QueryStructure, ColumnsLimiterField> getCreate_columns_limiter_field() { return ColumnsLimiterField::new; }
+            protected Function1${"<"}QueryStructure, ColumnsLimiterField${"<"}T, RUN_RES>> getCreate_columns_limiter_field() { return qs -> new ColumnsLimiterField<>(qs, super.getField_clazz()); }
         }
 
-        public static class WhereField extends CommonField {
-            public WhereField(QueryStructure queryStructure) { super(queryStructure); }
+        public static class WhereField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {
+            public WhereField(QueryStructure queryStructure, Class${"<"}T> field_clazz) { super(queryStructure, field_clazz); }
 
             @NotNull
             @Override
             protected QueryFieldType getField_type() { return QueryFieldType.WHERE_FIELD; }
 
-            private QueryKeywords${"<"}WhereField> createWhereField(String column) {
+            private QueryKeywords${"<"}WhereField${"<"}T, RUN_RES>> createWhereField(String column) {
                 return new QueryKeywords<>(createField(column), super.getQueryStructure(), super.getCreate_where_field());
             }
 
         <#list m.columns as field>
-            public QueryKeywords${"<"}WhereField> ${field.propertyName}() { return createWhereField("${field.db_name}"); }
+            public QueryKeywords${"<"}WhereField${"<"}T, RUN_RES>> ${field.propertyName}() { return createWhereField("${field.db_name}"); }
         </#list>
         }
 
-        public static class OrderByField extends CommonField {
-            public OrderByField(QueryStructure queryStructure) { super(queryStructure); }
+        public static class OrderByField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {
+            public OrderByField(QueryStructure queryStructure, Class${"<"}T> field_clazz) { super(queryStructure, field_clazz); }
 
             @NotNull
             @Override
             protected QueryFieldType getField_type() { return QueryFieldType.ORDER_BY_FIELD; }
 
-            private QueryOrderByKeywords${"<"}OrderByField> createOrderByField(String column) {
+            private QueryOrderByKeywords${"<"}OrderByField${"<"}T, RUN_RES>> createOrderByField(String column) {
                 return new QueryOrderByKeywords<>(createField(column), super.getQueryStructure(), super.getCreate_order_by_field());
             }
 
         <#list m.columns as field>
-            public QueryOrderByKeywords${"<"}OrderByField> ${field.propertyName}() { return createOrderByField("${field.db_name}"); }
+            public QueryOrderByKeywords${"<"}OrderByField${"<"}T, RUN_RES>> ${field.propertyName}() { return createOrderByField("${field.db_name}"); }
         </#list>
         }
 
-        public static class ColumnLimiterField extends CommonField {
-            public ColumnLimiterField(QueryStructure queryStructure) { super(queryStructure); }
+        public static class ColumnLimiterField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {
+            public ColumnLimiterField(QueryStructure queryStructure, Class${"<"}T> field_clazz) { super(queryStructure, field_clazz); }
 
             @NotNull
             @Override
@@ -130,18 +144,18 @@ public class ${ClassName} {
         </#list>
         }
 
-        public static class ColumnsLimiterField extends CommonField {
-            public ColumnsLimiterField(QueryStructure queryStructure) { super(queryStructure); }
+        public static class ColumnsLimiterField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {
+            public ColumnsLimiterField(QueryStructure queryStructure, Class${"<"}T> field_clazz) { super(queryStructure, field_clazz); }
 
             @NotNull
             @Override
             protected QueryFieldType getField_type() { return QueryFieldType.OTHER_FIELD; }
 
-            private ColumnsLimiterField createColumnsLimiterField(String column) {
+            private ColumnsLimiterField${"<"}T, RUN_RES> createColumnsLimiterField(String column) {
                 final QueryStructure oldQueryStructure = getQueryStructure();
                 final QueryStructure newQueryStructure = oldQueryStructure.copy(
                         oldQueryStructure.getAction(),
-                        new ArrayList<>(oldQueryStructure.getFields()) {{
+                        new ArrayList${"<"}Field>(oldQueryStructure.getFields()) {{
                             add(createField(column));
                         }},
                         oldQueryStructure.getFrom(),
@@ -149,11 +163,11 @@ public class ${ClassName} {
                         oldQueryStructure.getOrderBy(),
                         oldQueryStructure.getLimit()
                 );
-                return new ColumnsLimiterField(newQueryStructure);
+                return new ColumnsLimiterField${"<"}T, RUN_RES>(newQueryStructure, super.getField_clazz());
             }
 
         <#list m.columns as field>
-            public ColumnsLimiterField ${field.propertyName}() { return createColumnsLimiterField("${field.db_name}"); }
+            public ColumnsLimiterField${"<"}T, RUN_RES> ${field.propertyName}() { return createColumnsLimiterField("${field.db_name}"); }
         </#list>
         }
 
