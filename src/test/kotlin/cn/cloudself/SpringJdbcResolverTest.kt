@@ -1,7 +1,6 @@
 package cn.cloudself
 
 import cn.cloudself.query.QueryProConfig
-import cn.cloudself.query.WordEnum
 import cn.cloudself.query.WordQueryPro
 import com.alibaba.druid.pool.DruidDataSource
 import org.junit.Test

@@ -15,8 +15,8 @@ class ImplSettingQueryPro {
     }
 
     abstract class CommonField constructor(queryStructure: QueryStructure)
-        : QueryField<Setting, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField>(queryStructure) {
-        override val field_clazz = CLAZZ
+        : QueryField<Setting, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField>(queryStructure, CLAZZ) {
+//        override val field_clazz = CLAZZ
         override val create_where_field: CreateQueryField<WhereField> = { queryStructure -> WhereField(queryStructure) }
         override val create_order_by_field: CreateQueryField<OrderByField> = { queryStructure -> OrderByField(queryStructure) }
         override val create_column_limiter_field: CreateQueryField<ColumnLimiterField> =
@@ -84,7 +84,9 @@ private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
         queryStructure,
         { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs) },
-        { qs: QueryStructure -> ImplSettingQueryPro.OrderByField(qs) }
+        { qs: QueryStructure -> ImplSettingQueryPro.OrderByField(qs) },
+        { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs) },
+        { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs) },
     )
 
 val SettingQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplSettingQueryPro.TABLE_NAME)))

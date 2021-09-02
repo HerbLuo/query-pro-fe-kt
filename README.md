@@ -24,8 +24,6 @@ QueryStructure ------------> sql & params ----------> ResultSet -----------> Lis
 ```
 
 
-
-
 #### 后续规划
 update delete
 分页

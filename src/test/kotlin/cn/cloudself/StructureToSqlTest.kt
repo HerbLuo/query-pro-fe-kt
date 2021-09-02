@@ -83,7 +83,6 @@ class StructureToSqlTest {
     @Test
     fun testDelete() {
         UserQueryPro.deleteBy().id.equalsTo(1).run()
-
     }
 
     private fun expectSqlResult(sql: String, params: List<Any?>) {

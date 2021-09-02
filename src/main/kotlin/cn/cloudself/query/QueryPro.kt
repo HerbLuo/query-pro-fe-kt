@@ -3,20 +3,22 @@ package cn.cloudself.query
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
 class QueryPro<
-    WHERE_FIELD: QueryField<*, *, *, *, *>,
-    ORDER_BY_FIELD: QueryField<*, *, *, *, *>
+    SELECT_BY_FIELD: QueryField<*, *, *, *, *>,
+    ORDER_BY_FIELD: QueryField<*, *, *, *, *>,
+    UPDATE_BY_FIELD: QueryField<*, *, *, *, *>,
+    DELETE_BY_FIELD: QueryField<*, *, *, *, *>
 > constructor(
     private val queryStructure: QueryStructure,
-    private val createWhereField: CreateQueryField<WHERE_FIELD>,
+    private val createSelectByField: CreateQueryField<SELECT_BY_FIELD>,
     private val createOrderByField: CreateQueryField<ORDER_BY_FIELD>,
+    private val createUpdateByField: CreateQueryField<UPDATE_BY_FIELD>,
+    private val createDeleteByField: CreateQueryField<DELETE_BY_FIELD>,
 ) {
-    fun selectBy() = createWhereField(queryStructure.copy(action = QueryStructureAction.SELECT))
-
-    fun selectOneBy() = createWhereField(queryStructure.copy(action = QueryStructureAction.SELECT, limit = 1))
+    fun selectBy() = createSelectByField(queryStructure.copy(action = QueryStructureAction.SELECT))
 
     fun orderBy() = createOrderByField(queryStructure.copy(action = QueryStructureAction.SELECT))
 
-    fun updateBy() = createWhereField(queryStructure.copy(action = QueryStructureAction.UPDATE))
+    fun updateBy() = createUpdateByField(queryStructure.copy(action = QueryStructureAction.UPDATE))
 
-    fun deleteBy() = createWhereField(queryStructure.copy(action = QueryStructureAction.DELETE))
+    fun deleteBy() = createDeleteByField(queryStructure.copy(action = QueryStructureAction.DELETE))
 }

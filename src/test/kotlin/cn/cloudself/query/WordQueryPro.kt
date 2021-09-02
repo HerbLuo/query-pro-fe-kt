@@ -4,10 +4,6 @@ import java.util.Date
 import javax.persistence.*
 import cn.cloudself.query.*
 
-enum class WordEnum {
-    FORMULAE,
-}
-
 /**
  * 词汇
  */
@@ -49,18 +45,17 @@ class ImplWordQueryPro {
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }
 
-    abstract class CommonField constructor(queryStructure: QueryStructure)
-        : QueryField<Word, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField>(queryStructure) {
-        override val field_clazz = CLAZZ
-        override val create_where_field: CreateQueryField<WhereField> = { queryStructure -> WhereField(queryStructure) }
-        override val create_order_by_field: CreateQueryField<OrderByField> = { queryStructure -> OrderByField(queryStructure) }
-        override val create_column_limiter_field: CreateQueryField<ColumnLimiterField> =
-            { queryStructure -> ColumnLimiterField(queryStructure) }
-        override val create_columns_limiter_field: CreateQueryField<ColumnsLimiterField> =
-            { queryStructure -> ColumnsLimiterField(queryStructure) }
+    abstract class CommonField<T> constructor(queryStructure: QueryStructure, field_clazz: Class<T>)
+        : QueryField<T, WhereField<T>, OrderByField<T>, ColumnLimiterField<T>, ColumnsLimiterField<T>>(queryStructure, field_clazz) {
+        override val create_where_field: CreateQueryField<WhereField<T>> = { queryStructure -> WhereField(queryStructure, field_clazz) }
+        override val create_order_by_field: CreateQueryField<OrderByField<T>> = { queryStructure -> OrderByField(queryStructure, field_clazz) }
+        override val create_column_limiter_field: CreateQueryField<ColumnLimiterField<T>> =
+            { queryStructure -> ColumnLimiterField(queryStructure, field_clazz) }
+        override val create_columns_limiter_field: CreateQueryField<ColumnsLimiterField<T>> =
+            { queryStructure -> ColumnsLimiterField(queryStructure, field_clazz) }
     }
 
-    class WhereField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class WhereField<T> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.WHERE_FIELD
 
         private fun createWhereField(column: String) =
@@ -76,7 +71,7 @@ class ImplWordQueryPro {
         val updateTime = createWhereField("update_time")
     }
 
-    class OrderByField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class OrderByField<T> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.ORDER_BY_FIELD
 
         private fun createOrderByField(column: String) =
@@ -92,7 +87,7 @@ class ImplWordQueryPro {
         fun updateTime() = createOrderByField("update_time")
     }
 
-    class ColumnLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class ColumnLimiterField<T> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.OTHER_FIELD
 
         fun id() = getColumn(createField("id"), Long::class.java)
@@ -105,11 +100,11 @@ class ImplWordQueryPro {
         fun updateTime() = getColumn(createField("update_time"), Date::class.java)
     }
 
-    class ColumnsLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class ColumnsLimiterField<T> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.OTHER_FIELD
 
         private fun createColumnsLimiterField(column: String) =
-            ColumnsLimiterField(queryStructure.copy(fields = queryStructure.fields + createField(column)))
+            ColumnsLimiterField<T>(queryStructure.copy(fields = queryStructure.fields + createField(column)), field_clazz)
 
         fun id() = createColumnsLimiterField("id")
         fun word() = createColumnsLimiterField("word")
@@ -138,15 +133,17 @@ class ImplWordQueryPro {
 private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
         queryStructure,
-        { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs) },
-        { qs: QueryStructure -> ImplWordQueryPro.OrderByField(qs) }
+        { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs, ImplWordQueryPro.CLAZZ) },
+        { qs: QueryStructure -> ImplWordQueryPro.OrderByField(qs, ImplWordQueryPro.CLAZZ) },
+        { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs, Boolean::class.java) },
+        { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs, Boolean::class.java) },
     )
 
 val WordQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)));
 
 val WordQueryProEx = QueryProEx(
     QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)),
-    { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs) },
+    { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs, ImplWordQueryPro.CLAZZ) },
     { ImplWordQueryPro.FieldsGenerator() },
     { qs -> createQuery(qs) }
 )
