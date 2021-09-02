@@ -1,44 +1,67 @@
 package cn.cloudself.query
 
+import javax.persistence.*
+import cn.cloudself.query.*
+
+/**
+ *
+ */
+@Entity
+@Table(name = "user")
 data class User(
-    private val id: Long,
-    private val name: String,
-    private val age: Int,
+    /**  */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    var id: Long? = null,
+    /**  */
+    @Column(name = "name")
+    var name: String? = null,
+    /**  */
+    @Column(name = "age")
+    var age: Int? = null,
 )
 
 class ImplUserQueryPro {
     companion object {
+        val CLAZZ = User::class.java
         const val TABLE_NAME = "user"
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }
 
-    abstract class CommonField constructor(queryStructure: QueryStructure)
-        : QueryField<User, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField>(queryStructure, User::class.java) {
-        override val create_where_field: CreateQueryField<WhereField> = { queryStructure -> WhereField(queryStructure) }
-        override val create_order_by_field: CreateQueryField<OrderByField> = { queryStructure -> OrderByField(queryStructure) }
-        override val create_column_limiter_field: CreateQueryField<ColumnLimiterField> =
-            { queryStructure -> ColumnLimiterField(queryStructure) }
-        override val create_columns_limiter_field: CreateQueryField<ColumnsLimiterField> =
-            { queryStructure -> ColumnsLimiterField(queryStructure) }
+    abstract class CommonField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>)
+        : QueryField<T, RUN_RES, WhereField<T, RUN_RES>, OrderByField<T, RUN_RES>, ColumnLimiterField<T, RUN_RES>, ColumnsLimiterField<T, RUN_RES>>(queryStructure, field_clazz) {
+        override val create_where_field: CreateQueryField<WhereField<T, RUN_RES>> = { queryStructure -> WhereField(queryStructure, field_clazz) }
+        override val create_order_by_field: CreateQueryField<OrderByField<T, RUN_RES>> = { queryStructure -> OrderByField(queryStructure, field_clazz) }
+        override val create_column_limiter_field: CreateQueryField<ColumnLimiterField<T, RUN_RES>> =
+            { queryStructure -> ColumnLimiterField(queryStructure, field_clazz) }
+        override val create_columns_limiter_field: CreateQueryField<ColumnsLimiterField<T, RUN_RES>> =
+            { queryStructure -> ColumnsLimiterField(queryStructure, field_clazz) }
     }
 
-    class WhereField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class WhereField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.WHERE_FIELD
 
-        val id = QueryKeywords(createField("id"), queryStructure, create_where_field)
-        val name = QueryKeywords(createField("name"), queryStructure, create_where_field)
-        val age = QueryKeywords(createField("age"), queryStructure, create_where_field)
+        private fun createWhereField(column: String) =
+            QueryKeywords(createField(column), queryStructure, create_where_field)
+
+        val id = createWhereField("id")
+        val name = createWhereField("name")
+        val age = createWhereField("age")
     }
 
-    class OrderByField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.ORDER_BY_FIELD
 
-        fun id() = QueryOrderByKeywords(createField("id"), queryStructure, create_order_by_field)
-        fun name() = QueryOrderByKeywords(createField("name"), queryStructure, create_order_by_field)
-        fun age() = QueryOrderByKeywords(createField("age"), queryStructure, create_order_by_field)
+        private fun createOrderByField(column: String) =
+            QueryOrderByKeywords(createField(column), queryStructure, create_order_by_field)
+
+        fun id() = createOrderByField("id")
+        fun name() = createOrderByField("name")
+        fun age() = createOrderByField("age")
     }
 
-    class ColumnLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class ColumnLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.OTHER_FIELD
 
         fun id() = getColumn(createField("id"), Long::class.java)
@@ -46,12 +69,15 @@ class ImplUserQueryPro {
         fun age() = getColumn(createField("age"), Int::class.java)
     }
 
-    class ColumnsLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class ColumnsLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.OTHER_FIELD
 
-        fun id() = ColumnsLimiterField(queryStructure.copy(fields = queryStructure.fields + createField("id")))
-        fun name() = ColumnsLimiterField(queryStructure.copy(fields = queryStructure.fields + createField("name")))
-        fun age() = ColumnsLimiterField(queryStructure.copy(fields = queryStructure.fields + createField("age")))
+        private fun createColumnsLimiterField(column: String) =
+            ColumnsLimiterField<T, RUN_RES>(queryStructure.copy(fields = queryStructure.fields + createField(column)), field_clazz)
+
+        fun id() = createColumnsLimiterField("id")
+        fun name() = createColumnsLimiterField("name")
+        fun age() = createColumnsLimiterField("age")
     }
 
     class FieldsGenerator: FieldGenerator() {
@@ -66,17 +92,17 @@ class ImplUserQueryPro {
 private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
         queryStructure,
-        { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs) },
-        { qs: QueryStructure -> ImplUserQueryPro.OrderByField(qs) },
-        { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs) },
-        { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs) },
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField<User, List<User>>(qs, User::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.OrderByField<User, List<User>>(qs, User::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
     )
 
 val UserQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplUserQueryPro.TABLE_NAME)))
 
 val UserQueryProEx = QueryProEx(
     QueryStructure(from = QueryStructureFrom(ImplUserQueryPro.TABLE_NAME)),
-    { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs) },
+    { qs: QueryStructure -> ImplUserQueryPro.WhereField<User, List<User>>(qs, User::class.java) },
     { ImplUserQueryPro.FieldsGenerator() },
     { qs -> createQuery(qs) }
 )

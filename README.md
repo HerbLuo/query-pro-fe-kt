@@ -31,3 +31,4 @@ update delete
 日志
 count
 更多的测试用例
+生成的java文件 委托模拟

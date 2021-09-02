@@ -9,7 +9,7 @@ abstract class FieldGenerator {
 
 class QueryProEx<
         QUERY,
-        WHERE_FIELD: QueryField<*, *, *, *, *>,
+        WHERE_FIELD: QueryField<*, *, *, *, *, *>,
         FIELD_GENERATOR: FieldGenerator,
 > constructor(
     private val queryStructure: QueryStructure,

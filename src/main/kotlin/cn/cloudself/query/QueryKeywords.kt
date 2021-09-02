@@ -1,6 +1,6 @@
 package cn.cloudself.query
 
-class QueryKeywords<F : QueryField<*, *, *, *, *>>(
+class QueryKeywords<F : QueryField<*, *, *, *, *, *>>(
     private val field: Field,
     private val queryStructure: QueryStructure,
     private val createQueryField: CreateQueryField<F>,
@@ -28,7 +28,7 @@ class QueryKeywords<F : QueryField<*, *, *, *, *>>(
     private fun with(whereClause: WhereClause) = createQueryField(queryStructure.copy(where = queryStructure.where + whereClause))
 }
 
-class QueryWithNotKeywords<F : QueryField<*, *, *, *, *>>(
+class QueryWithNotKeywords<F : QueryField<*, *, *, *, *, *>>(
     private val field: Field,
     private val queryStructure: QueryStructure,
     private val createQueryField: CreateQueryField<F>,
@@ -42,7 +42,7 @@ class QueryWithNotKeywords<F : QueryField<*, *, *, *, *>>(
     private fun with(whereClause: WhereClause) = createQueryField(queryStructure.copy(where = queryStructure.where + whereClause))
 }
 
-class QueryIgnoreCaseKeywords<F : QueryField<*, *, *, *, *>>(
+class QueryIgnoreCaseKeywords<F : QueryField<*, *, *, *, *, *>>(
     private val field: Field,
     private val queryStructure: QueryStructure,
     private val createQueryField: CreateQueryField<F>,
@@ -55,7 +55,7 @@ class QueryIgnoreCaseKeywords<F : QueryField<*, *, *, *, *>>(
     private fun with(whereClause: WhereClause) = createQueryField(queryStructure.copy(where = queryStructure.where + whereClause))
 }
 
-class QueryOrderByKeywords<F: QueryField<*, *, *, *, *>>(
+class QueryOrderByKeywords<F: QueryField<*, *, *, *, *, *>>(
     private val field: Field,
     private val queryStructure: QueryStructure,
     private val createQueryField: CreateQueryField<F>,

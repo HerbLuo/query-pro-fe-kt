@@ -15,18 +15,17 @@ class Impl${ClassName} {
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }
 
-    abstract class CommonField constructor(queryStructure: QueryStructure)
-        : QueryField${"<"}${EntityName}, WhereField, OrderByField, ColumnLimiterField, ColumnsLimiterField>(queryStructure) {
-        override val field_clazz = CLAZZ
-        override val create_where_field: CreateQueryField${"<"}WhereField> = { queryStructure -> WhereField(queryStructure) }
-        override val create_order_by_field: CreateQueryField${"<"}OrderByField> = { queryStructure -> OrderByField(queryStructure) }
-        override val create_column_limiter_field: CreateQueryField${"<"}ColumnLimiterField> =
-            { queryStructure -> ColumnLimiterField(queryStructure) }
-        override val create_columns_limiter_field: CreateQueryField${"<"}ColumnsLimiterField> =
-            { queryStructure -> ColumnsLimiterField(queryStructure) }
+    abstract class CommonField${"<"}T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class${"<"}T>)
+        : QueryField${"<"}T, RUN_RES, WhereField${"<"}T, RUN_RES>, OrderByField${"<"}T, RUN_RES>, ColumnLimiterField${"<"}T, RUN_RES>, ColumnsLimiterField${"<"}T, RUN_RES>>(queryStructure, field_clazz) {
+        override val create_where_field: CreateQueryField${"<"}WhereField${"<"}T, RUN_RES>> = { queryStructure -> WhereField(queryStructure, field_clazz) }
+        override val create_order_by_field: CreateQueryField${"<"}OrderByField${"<"}T, RUN_RES>> = { queryStructure -> OrderByField(queryStructure, field_clazz) }
+        override val create_column_limiter_field: CreateQueryField${"<"}ColumnLimiterField${"<"}T, RUN_RES>> =
+            { queryStructure -> ColumnLimiterField(queryStructure, field_clazz) }
+        override val create_columns_limiter_field: CreateQueryField${"<"}ColumnsLimiterField${"<"}T, RUN_RES>> =
+            { queryStructure -> ColumnsLimiterField(queryStructure, field_clazz) }
     }
 
-    class WhereField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class WhereField${"<"}T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class${"<"}T>): CommonField${"<"}T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.WHERE_FIELD
 
         private fun createWhereField(column: String) =
@@ -37,7 +36,7 @@ class Impl${ClassName} {
     </#list>
     }
 
-    class OrderByField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class OrderByField${"<"}T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class${"<"}T>): CommonField${"<"}T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.ORDER_BY_FIELD
 
         private fun createOrderByField(column: String) =
@@ -48,7 +47,7 @@ class Impl${ClassName} {
     </#list>
     }
 
-    class ColumnLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class ColumnLimiterField${"<"}T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class${"<"}T>): CommonField${"<"}T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.OTHER_FIELD
 
     <#list m.columns as field>
@@ -56,11 +55,11 @@ class Impl${ClassName} {
     </#list>
     }
 
-    class ColumnsLimiterField constructor(queryStructure: QueryStructure): CommonField(queryStructure) {
+    class ColumnsLimiterField${"<"}T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class${"<"}T>): CommonField${"<"}T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.OTHER_FIELD
 
         private fun createColumnsLimiterField(column: String) =
-            ColumnsLimiterField(queryStructure.copy(fields = queryStructure.fields + createField(column)))
+            ColumnsLimiterField${"<"}T, RUN_RES>(queryStructure.copy(fields = queryStructure.fields + createField(column)), field_clazz)
 
     <#list m.columns as field>
         fun ${field.propertyName}() = createColumnsLimiterField("${field.db_name}")
@@ -79,15 +78,17 @@ class Impl${ClassName} {
 private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
         queryStructure,
-        { qs: QueryStructure -> Impl${ClassName}.WhereField(qs) },
-        { qs: QueryStructure -> Impl${ClassName}.OrderByField(qs) }
+        { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>(qs, ${EntityName}::class.java) },
+        { qs: QueryStructure -> Impl${ClassName}.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>(qs, ${EntityName}::class.java) },
+        { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}Boolean, Boolean>(qs, Boolean::class.java) },
     )
 
 val ${ClassName} = createQuery(QueryStructure(from = QueryStructureFrom(Impl${ClassName}.TABLE_NAME)))
 
 val ${ClassName}Ex = QueryProEx(
     QueryStructure(from = QueryStructureFrom(Impl${ClassName}.TABLE_NAME)),
-    { qs: QueryStructure -> Impl${ClassName}.WhereField(qs) },
+    { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>(qs, ${EntityName}::class.java) },
     { Impl${ClassName}.FieldsGenerator() },
     { qs -> createQuery(qs) }
 )

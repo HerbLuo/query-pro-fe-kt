@@ -83,7 +83,7 @@ object QueryProConfig {
     var dryRun: Boolean = false
     var QueryStructureResolver: IQueryStructureResolver = JdbcQueryStructureResolver()
     val dbColumnInfoToJavaType = mutableMapOf<(column: DbColumnInfo) -> Boolean, Class<*>>(
-        { column: DbColumnInfo -> column.label == "id" && column.type.startsWith("BIGINT") } to Long::class.java,
+        { column: DbColumnInfo -> (column.label == "id" || column.label.endsWith("_id")) && column.type.startsWith("BIGINT") } to Long::class.java,
     )
 
     @Suppress("UNCHECKED_CAST")

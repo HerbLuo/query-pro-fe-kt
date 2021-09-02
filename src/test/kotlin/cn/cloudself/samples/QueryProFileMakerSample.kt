@@ -135,7 +135,7 @@ class QueryProFileMakerSample {
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
-            .tables("word")
+            .tables("user", "setting")
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
             .replaceMode()
             /* 为Entity显示指定所有构造函数参数的默认值, 以便Kotlin自动生成默认的无参构造函数 */
@@ -177,7 +177,8 @@ class QueryProFileMakerSample {
         QueryProFileMaker
             /* 将entity文件生成至 <project>/src/main/java/cn/cloudself/foo/entity下 */
             /* 将dao文件生成至 <project>/src/main/java/cn/cloudself/foo/dao/zz下 */
-            .javaEntityAndDaoMode(PathFrom.javaPackage("cn.cloudself.foo"))
+//            .javaEntityAndDaoMode(PathFrom.javaPackage("cn.cloudself.foo"))
+            .javaEntityAndDaoMode(PathFrom.ktPackage("cn.cloudself.foo"))
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */

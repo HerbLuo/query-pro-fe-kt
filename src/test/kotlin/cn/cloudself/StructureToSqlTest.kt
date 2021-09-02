@@ -66,7 +66,7 @@ class StructureToSqlTest {
         val user: User? = UserQueryPro.selectBy().runLimit1()
 
         expectSqlResult(
-            "SELECT setting.kee, setting.value FROM setting LEFT JOIN user ON setting.userId = user.id " +
+            "SELECT setting.kee, setting.value FROM setting LEFT JOIN user ON setting.user_id = user.id " +
                     "WHERE setting.kee = ? AND setting.value = ? AND UPPER(user.name) like UPPER(?) LIMIT 10",
             listOf("autoStart", true, "%luo%"))
         SettingQueryProEx // from setting
@@ -82,7 +82,7 @@ class StructureToSqlTest {
 
     @Test
     fun testDelete() {
-        UserQueryPro.deleteBy().id.equalsTo(1).run()
+        val success: Boolean = UserQueryPro.deleteBy().id.equalsTo(1).run()
     }
 
     private fun expectSqlResult(sql: String, params: List<Any?>) {

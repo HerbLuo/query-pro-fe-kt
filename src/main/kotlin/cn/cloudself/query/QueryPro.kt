@@ -3,10 +3,10 @@ package cn.cloudself.query
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
 class QueryPro<
-    SELECT_BY_FIELD: QueryField<*, *, *, *, *>,
-    ORDER_BY_FIELD: QueryField<*, *, *, *, *>,
-    UPDATE_BY_FIELD: QueryField<*, *, *, *, *>,
-    DELETE_BY_FIELD: QueryField<*, *, *, *, *>
+    SELECT_BY_FIELD: QueryField<*, *, *, *, *, *>,
+    ORDER_BY_FIELD: QueryField<*, *, *, *, *, *>,
+    UPDATE_BY_FIELD: QueryField<*, *, *, *, *, *>,
+    DELETE_BY_FIELD: QueryField<*, *, *, *, *, *>
 > constructor(
     private val queryStructure: QueryStructure,
     private val createSelectByField: CreateQueryField<SELECT_BY_FIELD>,
