@@ -72,7 +72,7 @@ class StructureToSqlTest {
         SettingQueryProEx // from setting
             .leftJoinOn(UserQueryProEx.joiner().id(), SettingQueryProEx.joiner().userId()) // left join user on user.id = setting.user_id
             .selectBy().kee.equalsTo("autoStart") // select ... where setting.kee = 'autoStart'
-            .and().value.equalsTo(true) // and setting.value = true
+            .and().value.`is`.equalsTo(true) // and setting.value = true
             .andForeignField(UserQueryProEx.foreignField().name.ignoreCase.like("%luo%")) // and upper(user.name) like upper("%luo%")
             .limit(10) // limit 10
             .columnsLimiter().kee().value() // select setting.kee, setting.value from setting ...
@@ -82,7 +82,20 @@ class StructureToSqlTest {
 
     @Test
     fun testDelete() {
+        QueryProConfig.dryRun = true
+        QueryProConfig.beautifySql = false
+
         val success: Boolean = UserQueryPro.deleteBy().id.equalsTo(1).run()
+    }
+
+    @Test
+    fun testUpdate() {
+        QueryProConfig.dryRun = true
+        QueryProConfig.beautifySql = false
+
+        val run = UserQueryPro.updateSet(1).run()
+        val run1 = UserQueryPro.updateSet(1).where.age.graterThan(1).run()
+
     }
 
     private fun expectSqlResult(sql: String, params: List<Any?>) {

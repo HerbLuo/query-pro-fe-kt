@@ -1,5 +1,7 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.exception.IllegalImplements
+
 enum class QueryFieldType {
     WHERE_FIELD,
     ORDER_BY_FIELD,
@@ -62,7 +64,11 @@ abstract class FinalSelectField<
                 runAsList() as RUN_RES
             }
             QueryStructureAction.DELETE, QueryStructureAction.UPDATE -> {
-                runLimit1() as RUN_RES
+                val results = runAsList()
+                if (results.isEmpty())
+                    throw IllegalImplements("DELETE, UPDATE需返回长度为1的List<Boolean>")
+                else
+                    results[0] as RUN_RES
             }
         }
     }

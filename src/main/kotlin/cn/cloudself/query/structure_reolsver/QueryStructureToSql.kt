@@ -12,9 +12,12 @@ class QueryStructureToSql(
     private val indexedParams = mutableListOf<Any?>()
 
     fun toSqlWithIndexedParams(): Pair<String, List<Any?>> {
-        sql.append(qs.action.name, ' ')
-        buildFields(qs.fields)
-        sql.append(if (beautify) '\n' else ' ')
+        val action = qs.action
+        sql.append(action.name, ' ')
+        if (action == QueryStructureAction.SELECT) {
+            buildFields(qs.fields)
+            sql.append(if (beautify) '\n' else ' ')
+        }
         sql.append("FROM ")
         buildFromClause(qs.from)
         buildWheresClause(qs.where)

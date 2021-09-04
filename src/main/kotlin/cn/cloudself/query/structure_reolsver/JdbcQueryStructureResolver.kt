@@ -17,27 +17,41 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
 
-        if (QueryProConfig.dryRun) {
-            println(sql)
-            println(params)
-            return listOf()
-        }
-
         if (QueryProConfig.printSql) {
             println(sql)
             println(params)
         }
+
+        if (QueryProConfig.dryRun) {
+            @Suppress("UNCHECKED_CAST")
+            return if (queryStructure.action == QueryStructureAction.SELECT) {
+                listOf()
+            } else {
+                listOf(true) as List<T>
+            }
+        }
+
         val connection = getConnection()
         val preparedStatement = connection.prepareStatement(sql)
 
         setParam(preparedStatement, params)
 
-        val proxy = BeanProxy.fromClass(clazz)
         val resultList = mutableListOf<T>()
-        val resultSet = preparedStatement.executeQuery()
-        while (resultSet.next()) {
-            resultList.add(mapRow(proxy, resultSet))
+        when (queryStructure.action) {
+            QueryStructureAction.SELECT -> {
+                val proxy = BeanProxy.fromClass(clazz)
+                val resultSet = preparedStatement.executeQuery()
+                while (resultSet.next()) {
+                    resultList.add(mapRow(proxy, resultSet))
+                }
+            }
+            QueryStructureAction.DELETE, QueryStructureAction.UPDATE -> {
+                val success = preparedStatement.execute()
+                @Suppress("UNCHECKED_CAST")
+                resultList.add(success as T)
+            }
         }
+
         return resultList
     }
 
