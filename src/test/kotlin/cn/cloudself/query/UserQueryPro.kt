@@ -4,7 +4,7 @@ import javax.persistence.*
 import cn.cloudself.query.*
 
 /**
- *
+ * 
  */
 @Entity
 @Table(name = "user")
@@ -80,6 +80,18 @@ class ImplUserQueryPro {
         fun age() = createColumnsLimiterField("age")
     }
 
+    class UpdateSetField(private val queryStructure: QueryStructure): UpdateField<WhereField<Boolean, Boolean>>(queryStructure, { qs: QueryStructure -> WhereField(qs, Boolean::class.java) }) {
+        private fun createUpdateSetField(key: String, value: Any) = this.also {
+            @Suppress("UNCHECKED_CAST") val map = queryStructure.update?.data as MutableMap<String, Any>
+            map[key] = value
+        }
+
+        fun id(id: Any) = createUpdateSetField("id", id)
+        fun name(name: Any) = createUpdateSetField("name", name)
+        fun age(age: Any) = createUpdateSetField("age", age)
+    }
+
+
     class FieldsGenerator: FieldGenerator() {
         override val tableName = TABLE_NAME
 
@@ -91,10 +103,12 @@ class ImplUserQueryPro {
 
 private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
+        User::class.java,
         queryStructure,
         { qs: QueryStructure -> ImplUserQueryPro.WhereField<User, List<User>>(qs, User::class.java) },
         { qs: QueryStructure -> ImplUserQueryPro.OrderByField<User, List<User>>(qs, User::class.java) },
-        { qs: QueryStructure -> ImplUserQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.UpdateSetField(qs) },
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs, Boolean::class.java) },
         { qs: QueryStructure -> ImplUserQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
     )
 

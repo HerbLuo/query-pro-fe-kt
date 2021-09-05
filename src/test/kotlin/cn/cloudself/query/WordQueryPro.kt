@@ -2,6 +2,7 @@ package cn.cloudself.query
 
 import java.util.Date
 import javax.persistence.*
+import cn.cloudself.query.*
 
 /**
  * 词汇
@@ -39,6 +40,7 @@ data class Word(
 
 class ImplWordQueryPro {
     companion object {
+        val CLAZZ = Word::class.java
         const val TABLE_NAME = "word"
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }
@@ -46,7 +48,6 @@ class ImplWordQueryPro {
     abstract class CommonField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>)
         : QueryField<T, RUN_RES, WhereField<T, RUN_RES>, OrderByField<T, RUN_RES>, ColumnLimiterField<T, RUN_RES>, ColumnsLimiterField<T, RUN_RES>>(queryStructure, field_clazz) {
         override val create_where_field: CreateQueryField<WhereField<T, RUN_RES>> = { queryStructure -> WhereField(queryStructure, field_clazz) }
-
         override val create_order_by_field: CreateQueryField<OrderByField<T, RUN_RES>> = { queryStructure -> OrderByField(queryStructure, field_clazz) }
         override val create_column_limiter_field: CreateQueryField<ColumnLimiterField<T, RUN_RES>> =
             { queryStructure -> ColumnLimiterField(queryStructure, field_clazz) }
@@ -115,6 +116,23 @@ class ImplWordQueryPro {
         fun updateTime() = createColumnsLimiterField("update_time")
     }
 
+    class UpdateSetField(private val queryStructure: QueryStructure): UpdateField<WhereField<Boolean, Boolean>>(queryStructure, { qs: QueryStructure -> WhereField(qs, Boolean::class.java) }) {
+        private fun createUpdateSetField(key: String, value: Any) = this.also {
+            @Suppress("UNCHECKED_CAST") val map = queryStructure.update?.data as MutableMap<String, Any>
+            map[key] = value
+        }
+
+        fun id(id: Any) = createUpdateSetField("id", id)
+        fun word(word: Any) = createUpdateSetField("word", word)
+        fun score(score: Any) = createUpdateSetField("score", score)
+        fun deleted(deleted: Any) = createUpdateSetField("deleted", deleted)
+        fun createBy(createBy: Any) = createUpdateSetField("create_by", createBy)
+        fun createTime(createTime: Any) = createUpdateSetField("create_time", createTime)
+        fun updateBy(updateBy: Any) = createUpdateSetField("update_by", updateBy)
+        fun updateTime(updateTime: Any) = createUpdateSetField("update_time", updateTime)
+    }
+
+
     class FieldsGenerator: FieldGenerator() {
         override val tableName = TABLE_NAME
 
@@ -131,14 +149,16 @@ class ImplWordQueryPro {
 
 private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
+        Word::class.java,
         queryStructure,
         { qs: QueryStructure -> ImplWordQueryPro.WhereField<Word, List<Word>>(qs, Word::class.java) },
         { qs: QueryStructure -> ImplWordQueryPro.OrderByField<Word, List<Word>>(qs, Word::class.java) },
-        { qs: QueryStructure -> ImplWordQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> ImplWordQueryPro.UpdateSetField(qs) },
+        { qs: QueryStructure -> ImplWordQueryPro.WhereField(qs, Boolean::class.java) },
         { qs: QueryStructure -> ImplWordQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
     )
 
-val WordQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)));
+val WordQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)))
 
 val WordQueryProEx = QueryProEx(
     QueryStructure(from = QueryStructureFrom(ImplWordQueryPro.TABLE_NAME)),
@@ -146,5 +166,3 @@ val WordQueryProEx = QueryProEx(
     { ImplWordQueryPro.FieldsGenerator() },
     { qs -> createQuery(qs) }
 )
-
-

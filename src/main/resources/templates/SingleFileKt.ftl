@@ -85,6 +85,19 @@ class Impl${ClassName} {
     </#list>
     }
 
+    class UpdateSetField(private val queryStructure: QueryStructure): UpdateField${"<"}WhereField${"<"}Boolean, Boolean>>(queryStructure, { qs: QueryStructure -> WhereField(qs, Boolean::class.java) }) {
+        private fun createUpdateSetField(key: String, value: Any) = this.also {
+            @Suppress("UNCHECKED_CAST") val map = queryStructure.update?.data as MutableMap${"<"}String, Any>
+            map[key] = value
+        }
+
+    <#list m.columns as field>
+        <#assign prop = field.propertyName/>
+        fun ${prop}(${prop}: Any) = createUpdateSetField("${field.db_name}", ${prop})
+    </#list>
+    }
+
+
     class FieldsGenerator: FieldGenerator() {
         override val tableName = TABLE_NAME
 
@@ -96,10 +109,12 @@ class Impl${ClassName} {
 
 private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
+        ${EntityName}::class.java,
         queryStructure,
         { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>(qs, ${EntityName}::class.java) },
         { qs: QueryStructure -> Impl${ClassName}.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>(qs, ${EntityName}::class.java) },
-        { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> Impl${ClassName}.UpdateSetField(qs) },
+        { qs: QueryStructure -> Impl${ClassName}.WhereField(qs, Boolean::class.java) },
         { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}Boolean, Boolean>(qs, Boolean::class.java) },
     )
 

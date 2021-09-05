@@ -2,12 +2,18 @@ package cn.cloudself.query
 
 data class QueryStructure(
     val action: QueryStructureAction = QueryStructureAction.SELECT,
-
+    val update: Update? = null,
+    val updates: List<Update> = listOf(),
     val fields: List<Field> = listOf(),
     var from: QueryStructureFrom = QueryStructureFrom(),
     val where: List<WhereClause> = listOf(),
     val orderBy: List<OrderByClause> = listOf(),
     val limit: Int? = null,
+)
+
+data class Update(
+    val data: Any? = null,
+    val override: Boolean = false,
 )
 
 data class OrderByClause(

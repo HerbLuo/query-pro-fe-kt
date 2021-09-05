@@ -93,8 +93,8 @@ class StructureToSqlTest {
         QueryProConfig.dryRun = true
         QueryProConfig.beautifySql = false
 
-        val run = UserQueryPro.updateSet(1).run()
-        val run1 = UserQueryPro.updateSet(1).where.age.graterThan(1).run()
+        val run = UserQueryPro.updateSet(User()).run()
+        val run1 = UserQueryPro.updateSet(User()).where.age.graterThan(1).run()
 
     }
 

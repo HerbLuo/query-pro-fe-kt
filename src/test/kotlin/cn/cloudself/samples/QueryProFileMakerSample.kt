@@ -4,6 +4,7 @@ import cn.cloudself.query.util.DbInfoBuilder
 import cn.cloudself.query.util.DbNameToJava
 import cn.cloudself.query.util.PathFrom
 import cn.cloudself.query.util.QueryProFileMaker
+import org.junit.AfterClass
 import org.junit.Test
 
 class QueryProFileMakePathFromSample {
@@ -11,33 +12,30 @@ class QueryProFileMakePathFromSample {
      * 指示生成的文件应该放在packageName指定的包下面
      * [PathFrom.ktPackage] 会自动在包后面加上 dao 或 entity， 加上abs可以阻止该行为
      */
-    @Test
     fun ktAbsPackage() {
         QueryProFileMaker
             /* 将文件生成至 <project>/src/main/java/cn/cloudself/foo下 */
-            .singleFileMode(PathFrom.create().ktPackage("cn.cloudself.foo").abs().getResolver())
+            .singleFileMode(PathFrom.create().ktPackage("cn.cloudself.demo").abs().getResolver())
             .create()
     }
 
     /**
      * 指示生成的文件应该放在packageName指定的包下面
      */
-    @Test
     fun javaPackage() {
         QueryProFileMaker
             /* 将文件生成至 <project>/src/main/java/cn/cloudself/foo/dao/zz下 */
-            .singleFileMode(PathFrom.javaPackage("cn.cloudself.foo"))
+            .singleFileMode(PathFrom.javaPackage("cn.cloudself.demo"))
             .create()
     }
 
     /**
      * 如果项目存在子模块, 使用这个设置项目的子模块
      */
-    @Test
     fun subModule() {
         QueryProFileMaker
             /* 将文件生成至 <project>/zz-example-api/src/main/kotlin/cn/cloudself/foo/dao/zz下 */
-            .singleFileMode(PathFrom.create().subModule("zz-example-api").ktPackage("cn.cloudself.foo").getResolver())
+            .singleFileMode(PathFrom.create().subModule("zz-example-api").ktPackage("cn.cloudself.demo").getResolver())
             .create()
     }
 
@@ -46,7 +44,6 @@ class QueryProFileMakePathFromSample {
      *
      * 如果是singleFileMode(单文件模式) 针对entity的配置不会起任何作用
      */
-    @Test
     fun entityDaoPackage() {
         /**
          * 将entity文件生成至 <project>/src/main/kotlin/cn/cloudself/foo/beans下
@@ -56,7 +53,7 @@ class QueryProFileMakePathFromSample {
         val filePathResolver = PathFrom.create()
             .entityPackage("beans")
             .daoPackage("dao")
-            .ktPackage("cn.cloudself.foo")
+            .ktPackage("cn.cloudself.demo")
             .getResolver()
         QueryProFileMaker
             .entityAndDaoMode(filePathResolver)
@@ -71,7 +68,7 @@ class QueryProFileMakerDbInfoSample {
     @Test
     fun base() {
         QueryProFileMaker
-            .singleFileMode(PathFrom.ktPackage("cn.cloudself.foo"))
+            .singleFileMode(PathFrom.ktPackage("cn.cloudself.demo"))
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
             .create()
@@ -83,7 +80,7 @@ class QueryProFileMakerDbInfoSample {
     @Test
     fun fullUsage() {
         QueryProFileMaker
-            .singleFileMode(PathFrom.ktPackage("cn.cloudself.foo"))
+            .singleFileMode(PathFrom.ktPackage("cn.cloudself.demo"))
             .db(
                 DbInfoBuilder
                     .mysql("127.0.0.1", "zz_trans")
@@ -100,10 +97,9 @@ class QueryProFileMakerDbInfoSample {
 }
 
 class QueryProFileMakerDbJavaNameConverterSample {
-    @Test
     fun fullUsage() {
         QueryProFileMaker
-            .singleFileMode(PathFrom.ktPackage("cn.cloudself.foo"))
+            .singleFileMode(PathFrom.ktPackage("cn.cloudself.demo"))
             .dbJavaNameConverter(
                 DbNameToJava
                     .createDefault()
@@ -135,7 +131,7 @@ class QueryProFileMakerSample {
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
-            .tables("user", "setting")
+            .tables("user", "setting", "word")
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
             .replaceMode()
             /* 为Entity显示指定所有构造函数参数的默认值, 以便Kotlin自动生成默认的无参构造函数 */
@@ -157,7 +153,7 @@ class QueryProFileMakerSample {
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
-            .tables("user_pri", "word")
+            .tables("setting", "user")
             /* 给Entity添加后缀，该步骤是在下划线转驼峰之后进行的 */
             .dbJavaNameConverter(DbNameToJava.createDefault().addSuffixToEntity("Entity").getConverter())
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
