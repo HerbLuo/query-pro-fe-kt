@@ -32,3 +32,4 @@ update delete
 count
 更多的测试用例
 生成的java文件 委托模拟
+类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1

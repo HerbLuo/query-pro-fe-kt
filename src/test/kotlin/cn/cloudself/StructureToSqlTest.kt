@@ -1,13 +1,16 @@
 package cn.cloudself
 
 import cn.cloudself.query.*
+import cn.cloudself.query.exception.IllegalCall
+import cn.cloudself.query.exception.MissingParameter
 import cn.cloudself.query.structure_reolsver.QueryStructureToSql
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
+@Suppress("UNUSED_VARIABLE")
 class StructureToSqlTest {
-    @Suppress("UNUSED_VARIABLE")
     @Test
     fun testSelect() {
         QueryProConfig.dryRun = true
@@ -85,6 +88,7 @@ class StructureToSqlTest {
         QueryProConfig.dryRun = true
         QueryProConfig.beautifySql = false
 
+        expectSqlResult("DELETE FROM user WHERE user.id = ?", listOf(1))
         val success: Boolean = UserQueryPro.deleteBy().id.equalsTo(1).run()
     }
 
@@ -93,9 +97,30 @@ class StructureToSqlTest {
         QueryProConfig.dryRun = true
         QueryProConfig.beautifySql = false
 
-        val run = UserQueryPro.updateSet(User()).run()
-        val run1 = UserQueryPro.updateSet(User()).where.age.graterThan(1).run()
+        // 如果没有传入primary key, 且无where条件, 则报错
+//        assertFailsWith(MissingParameter::class) {
+//            UserQueryPro.updateSet(User(name = "hb")).run()
+//        }
 
+//        assertFailsWith(MissingParameter::class) {
+//            UserQueryPro.updateSet(User(id = 3, name = "hb"), User(name = "herb")).run()
+//        }
+
+//        assertFailsWith(IllegalCall::class) {
+//            UserQueryPro.updateSet(User(id = 5, name = "hb")).where.age.equalsTo(18).run()
+//        }
+
+        val success1: Boolean = UserQueryPro.updateSet(User(age = 18)).where.id.equalsTo(1).run()
+
+        val success2: Boolean = UserQueryPro.updateSet(User(id = 2, age = 18)).run()
+
+        val success3: Boolean = UserQueryPro.updateSet(User(id = 3, age = 18)).run()
+
+        val success5: Boolean = UserQueryPro.updateSetOverride(User(id = 2, name = "hb")).run()
+
+        val success6: Boolean = UserQueryPro.updateSet().id(1).age(18).run()
+
+        val success7: Boolean = UserQueryPro.updateSet().age(18).where.name.equalsTo("herb").run()
     }
 
     private fun expectSqlResult(sql: String, params: List<Any?>) {

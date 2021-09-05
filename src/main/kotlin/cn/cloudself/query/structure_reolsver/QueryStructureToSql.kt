@@ -1,7 +1,9 @@
 package cn.cloudself.query.structure_reolsver
 
 import cn.cloudself.query.*
+import cn.cloudself.query.exception.MissingParameter
 import cn.cloudself.query.exception.UnSupportException
+import org.springframework.beans.BeanUtils
 import java.lang.StringBuilder
 
 class QueryStructureToSql(
@@ -18,8 +20,13 @@ class QueryStructureToSql(
             buildFields(qs.fields)
             sql.append(if (beautify) '\n' else ' ')
         }
-        sql.append("FROM ")
+        if (action == QueryStructureAction.SELECT || action == QueryStructureAction.DELETE) {
+            sql.append("FROM ")
+        }
         buildFromClause(qs.from)
+        if (action == QueryStructureAction.UPDATE) {
+            buildUpdateSetField(qs.update ?: throw MissingParameter("updateSet缺少参数, 参考.updateSet(obj)"))
+        }
         buildWheresClause(qs.where)
         buildOrderByClause(qs.orderBy)
         buildLimitClause(qs.limit)
@@ -92,6 +99,16 @@ class QueryStructureToSql(
                 }
             }
         }
+    }
+
+    private fun buildUpdateSetField(update: Update) {
+        sql.append(" SET")
+        val data = update.data ?: throw MissingParameter(".updateSet(obj): obj不能为null")
+        val override = update.override
+
+        objIter(data, { field, value ->
+
+        })
     }
 
     private fun buildWheresClause(wheres: List<WhereClause>) {

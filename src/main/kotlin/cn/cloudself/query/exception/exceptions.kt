@@ -17,3 +17,13 @@ class IllegalImplements: Exception {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }
+
+class MissingParameter: Exception {
+    constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
+    constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
+}
+
+class IllegalCall: Exception {
+    constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
+    constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
+}

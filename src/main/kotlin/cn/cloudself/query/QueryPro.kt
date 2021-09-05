@@ -44,7 +44,7 @@ class QueryPro<
      * 如果 需要更新的值为null, 则跳过该字段不更新
      * 如确实需要更新, 使用[updateSetOverride]
      */
-    fun updateSet(vararg objs: T) = UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, updates = objs.map { Update(it, false) }), createUpdateByField)
+    fun updateSet(obj: T) = UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = Update(obj, false)), createUpdateByField)
 
     /**
      * 更新操作 updateSetOverride(Apple(id = 2021, name = "iPhone13", type = null)).run()
