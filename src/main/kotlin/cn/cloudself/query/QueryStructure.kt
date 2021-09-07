@@ -13,6 +13,7 @@ data class QueryStructure(
 data class Update(
     val data: Any? = null,
     val override: Boolean = false,
+    val id: String? = null,
 )
 
 data class OrderByClause(

@@ -144,8 +144,9 @@ open class UpdateField<UPDATE_BY_FIELD: QueryField<*, *, *, *, *, *>>(
     private val queryStructure: QueryStructure,
     private val createUpdateByField: CreateQueryField<UPDATE_BY_FIELD>,
 ) {
-    @JvmField
     val where = createUpdateByField(queryStructure.copy(action = QueryStructureAction.UPDATE))
+
+    fun where() = where
 
     fun run(): Boolean = createUpdateByField(queryStructure).run() as Boolean
 }

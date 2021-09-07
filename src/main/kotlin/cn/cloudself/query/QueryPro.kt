@@ -1,5 +1,7 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.structure_reolsver.parseClass
+
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
 class QueryPro<
@@ -44,14 +46,21 @@ class QueryPro<
      * 如果 需要更新的值为null, 则跳过该字段不更新
      * 如确实需要更新, 使用[updateSetOverride]
      */
-    fun updateSet(obj: T) = UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = Update(obj, false)), createUpdateByField)
+    fun updateSet(obj: T) = updateSet(obj, false)
 
     /**
      * 更新操作 updateSetOverride(Apple(id = 2021, name = "iPhone13", type = null)).run()
      * 注意如果更新的值为null, 该方法会将其更新为null
      * 如不想更新为null的字段, 使用[updateSet]
      */
-    fun updateSetOverride(vararg obj: T) = UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = Update(obj, true)), createUpdateByField)
+    fun updateSetOverride(obj: T) = updateSet(obj, true)
+
+    private fun updateSet(obj: T, override: Boolean): UpdateField<UPDATE_BY_FIELD> {
+        parseClass(clazz)
+
+        val update = Update(obj, override)
+        return UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = update), createUpdateByField)
+    }
 
     /**
      * 删除操作

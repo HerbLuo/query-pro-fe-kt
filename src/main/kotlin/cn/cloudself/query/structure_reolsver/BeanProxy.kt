@@ -6,16 +6,9 @@ import javax.persistence.Column
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
-data class ParsedColumn(
-    val javaName: String,
-    val javaType: Class<*>,
-    val setter: (o: Any?, v: Any?) -> Unit,
-    val dbName: String,
-)
+private class Ref<R>(var value: R)
 
-class Ref<R>(var value: R)
-
-val beanProxyCaches = mutableMapOf<Class<*>, BeanProxy<*, *>>()
+private val beanProxyCaches = mutableMapOf<Class<*>, BeanProxy<*, *>>()
 
 /**
  * Bean代理，
@@ -84,28 +77,8 @@ class BeanProxy<T, R>(
                 else -> {
                     try {
                         val noArgConstructor = clazz.getDeclaredConstructor()
-
-                        val columns = mutableMapOf<String, ParsedColumn>()
-                        var classOrSuperClass: Class<*>? = clazz
-                        while (classOrSuperClass != null) {
-                            for (field in classOrSuperClass.declaredFields) {
-                                val fieldName = field.name
-                                val columnAnnotation: Column? = field.getAnnotation(Column::class.java)
-                                val dbName = columnAnnotation?.name ?: fieldName.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").lowercase()
-
-                                val setter = clazz.getMethod("set${fieldName[0].uppercaseChar()}${fieldName.substring(1)}", field.type)
-
-                                columns[dbName] = ParsedColumn(
-                                    javaName = fieldName,
-                                    javaType = field.type,
-                                    setter = { o, v ->
-                                        setter.invoke(o, v)
-                                    },
-                                    dbName = dbName
-                                )
-                            }
-                            classOrSuperClass = classOrSuperClass.superclass
-                        }
+                        val parsedClass = parseClass(clazz)
+                        val columns = parsedClass.columns
 
                         BeanProxy<R, R>(
                             { noArgConstructor.newInstance() },

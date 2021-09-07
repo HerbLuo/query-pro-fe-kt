@@ -3,7 +3,6 @@ package cn.cloudself.query.structure_reolsver
 import cn.cloudself.query.*
 import cn.cloudself.query.exception.MissingParameter
 import cn.cloudself.query.exception.UnSupportException
-import org.springframework.beans.BeanUtils
 import java.lang.StringBuilder
 
 class QueryStructureToSql(
@@ -106,9 +105,22 @@ class QueryStructureToSql(
         val data = update.data ?: throw MissingParameter(".updateSet(obj): obj不能为null")
         val override = update.override
 
-        objIter(data, { field, value ->
-
-        })
+        var first = true
+        val columns = parseObject(data)
+        val idColumn = update.id
+        for (column in columns) {
+            val value = column.value
+            val field = column.javaName
+            if (!override && value == null || field == idColumn) {
+                continue
+            }
+            if (!first) {
+                sql.append(",")
+            }
+            sql.append(" `", field, "` = ", value)
+            first = false
+        }
+        // TODO id没处理好
     }
 
     private fun buildWheresClause(wheres: List<WhereClause>) {
