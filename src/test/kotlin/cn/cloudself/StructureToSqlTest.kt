@@ -106,16 +106,22 @@ class StructureToSqlTest {
 //            UserQueryPro.updateSet(User(id = 5, name = "hb")).where.age.equalsTo(18).run()
 //        }
 
+        expectSqlResult("UPDATE user SET `age` = 18 WHERE user.id = ?", listOf(1))
         val success1: Boolean = UserQueryPro.updateSet(User(age = 18)).where.id.equalsTo(1).run()
 
+        expectSqlResult("UPDATE user SET `age` = 18 WHERE user.id = ?", listOf(2L))
         val success2: Boolean = UserQueryPro.updateSet(User(id = 2, age = 18)).run()
 
+        expectSqlResult("UPDATE user SET `age` = 18 WHERE user.id = ?", listOf(3L))
         val success3: Boolean = UserQueryPro.updateSet(User(id = 3, age = 18)).run()
 
+        expectSqlResult("UPDATE user SET `name` = hb, `age` = null WHERE user.id = ?", listOf(2L))
         val success5: Boolean = UserQueryPro.updateSetOverride(User(id = 2, name = "hb")).run()
 
+        expectSqlResult("UPDATE user SET `age` = 18 WHERE user.id = ?", listOf(1))
         val success6: Boolean = UserQueryPro.updateSet().id(1).age(18).run()
 
+        expectSqlResult("UPDATE user SET `age` = 18 WHERE user.name = ?", listOf("herb"))
         val success7: Boolean = UserQueryPro.updateSet().age(18).where.name.equalsTo("herb").run()
     }
 

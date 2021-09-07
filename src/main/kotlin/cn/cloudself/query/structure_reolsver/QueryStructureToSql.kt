@@ -125,6 +125,7 @@ class QueryStructureToSql(
             }
             if (field == idColumn) {
                 idWhereClause = WhereClause(Field(table = qs.from.main, column = idColumn), "=", value)
+                continue
             }
             if (!first) {
                 sql.append(",")
