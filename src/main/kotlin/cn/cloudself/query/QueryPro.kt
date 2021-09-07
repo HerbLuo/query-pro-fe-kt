@@ -38,7 +38,7 @@ class QueryPro<
      * java: updateSet().kee(QueryProConstKt.NULL).where.id().equalsTo(1).run()
      */
     fun updateSet() = createUpdateSetField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = Update(
-        mutableMapOf<String, Any>(), false
+        data = mutableMapOf<String, Any>(), override = false, id = parseClass(clazz).idColumn
     )))
 
     /**
@@ -56,9 +56,7 @@ class QueryPro<
     fun updateSetOverride(obj: T) = updateSet(obj, true)
 
     private fun updateSet(obj: T, override: Boolean): UpdateField<UPDATE_BY_FIELD> {
-        parseClass(clazz)
-
-        val update = Update(obj, override)
+        val update = Update(data = obj, override = override, id = parseClass(clazz).idColumn)
         return UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = update), createUpdateByField)
     }
 

@@ -23,13 +23,18 @@ class QueryStructureToSql(
             sql.append("FROM ")
         }
         buildFromClause(qs.from)
+        var idWhereClause: WhereClause? = null
         if (action == QueryStructureAction.UPDATE) {
-            buildUpdateSetField(qs.update ?: throw MissingParameter("updateSet缺少参数, 参考.updateSet(obj)"))
+            idWhereClause = buildUpdateSetField(qs.update ?: throw MissingParameter("updateSet缺少参数, 参考.updateSet(obj)"))
         }
-        buildWheresClause(qs.where)
+        val wheres = if (idWhereClause == null) {
+            qs.where
+        } else {
+            qs.where + idWhereClause
+        }
+        buildWheresClause(wheres)
         buildOrderByClause(qs.orderBy)
         buildLimitClause(qs.limit)
-
 
         val sqlWithIndexedParams = sql.toString() to indexedParams
         beforeReturnForTest?.let { it(sqlWithIndexedParams) }
@@ -100,7 +105,7 @@ class QueryStructureToSql(
         }
     }
 
-    private fun buildUpdateSetField(update: Update) {
+    private fun buildUpdateSetField(update: Update): WhereClause? {
         sql.append(" SET")
         val data = update.data ?: throw MissingParameter(".updateSet(obj): obj不能为null")
         val override = update.override
@@ -108,11 +113,15 @@ class QueryStructureToSql(
         var first = true
         val columns = parseObject(data)
         val idColumn = update.id
+        var idWhereClause: WhereClause? = null
         for (column in columns) {
             val value = column.value
             val field = column.javaName
-            if (!override && value == null || field == idColumn) {
+            if (!override && value == null) {
                 continue
+            }
+            if (field == idColumn) {
+                idWhereClause = WhereClause(Field(table = qs.from.main, column = idColumn), "=", value)
             }
             if (!first) {
                 sql.append(",")
@@ -120,7 +129,7 @@ class QueryStructureToSql(
             sql.append(" `", field, "` = ", value)
             first = false
         }
-        // TODO id没处理好
+        return idWhereClause
     }
 
     private fun buildWheresClause(wheres: List<WhereClause>) {
