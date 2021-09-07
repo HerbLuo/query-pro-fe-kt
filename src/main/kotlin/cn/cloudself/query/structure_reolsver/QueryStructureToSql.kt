@@ -32,6 +32,9 @@ class QueryStructureToSql(
         } else {
             qs.where + idWhereClause
         }
+        if (action == QueryStructureAction.UPDATE && wheres.isEmpty()) {
+            throw MissingParameter("updateSet缺少参数, 需指定id字段或者where条件")
+        }
         buildWheresClause(wheres)
         buildOrderByClause(qs.orderBy)
         buildLimitClause(qs.limit)

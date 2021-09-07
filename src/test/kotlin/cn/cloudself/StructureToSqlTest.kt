@@ -98,13 +98,9 @@ class StructureToSqlTest {
         QueryProConfig.beautifySql = false
 
         // 如果没有传入primary key, 且无where条件, 则报错
-//        assertFailsWith(MissingParameter::class) {
-//            UserQueryPro.updateSet(User(name = "hb")).run()
-//        }
-
-//        assertFailsWith(MissingParameter::class) {
-//            UserQueryPro.updateSet(User(id = 3, name = "hb"), User(name = "herb")).run()
-//        }
+        assertFailsWith(MissingParameter::class) {
+            UserQueryPro.updateSet(User(name = "hb")).run()
+        }
 
 //        assertFailsWith(IllegalCall::class) {
 //            UserQueryPro.updateSet(User(id = 5, name = "hb")).where.age.equalsTo(18).run()
