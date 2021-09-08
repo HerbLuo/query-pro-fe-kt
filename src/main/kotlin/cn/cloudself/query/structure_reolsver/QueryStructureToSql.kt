@@ -56,9 +56,9 @@ class QueryStructureToSql(
             sql.append("UPPER(")
         }
         if (field.table != null) {
-            sql.append(field.table, '.')
+            sql.append('`', field.table, '`', '.')
         }
-        sql.append(field.column)
+        sql.append('`', field.column, '`')
         if (upper) {
             sql.append(')')
         }
@@ -88,13 +88,13 @@ class QueryStructureToSql(
     }
 
     private fun buildFromClause(from: QueryStructureFrom) {
-        sql.append(from.main)
+        sql.append('`', from.main, '`')
         for (joiner in from.joins) {
             sql.append(if (beautify) "\n    " else ' ')
             sql.append(when (joiner.type) {
                 JoinType.LEFT_JOIN -> "LEFT JOIN "
             })
-            sql.append(joiner.table)
+            sql.append('`', joiner.table, '`')
             sql.append(" ON ")
             val lastIndexOfJoinOn = joiner.on.size - 1
             for ((i, joinOn) in joiner.on.withIndex()) {

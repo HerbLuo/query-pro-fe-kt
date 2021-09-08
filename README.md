@@ -25,11 +25,16 @@ QueryStructure ------------> sql & params ----------> ResultSet -----------> Lis
 
 
 #### 后续规划
-update delete
 分页
 支持sql直接查询
+事务
+thread配置
+rpc context配置
 日志
 count
-更多的测试用例
+逻辑删除
 生成的java文件 委托模拟
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
+
+仅关键字转义
+更多的测试用例

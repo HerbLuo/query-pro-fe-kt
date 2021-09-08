@@ -381,6 +381,7 @@ class QueryProFileMaker private constructor(
      * 是否替换掉已有的文件 默认false
      * @sample cn.cloudself.samples.QueryProFileMakerSample.entityAndDaoMode
      */
+    @JvmOverloads
     fun replaceMode(replaceMode: Boolean = true) = this.also { this.replaceMode = replaceMode }
 
     /**

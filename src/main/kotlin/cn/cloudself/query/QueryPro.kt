@@ -42,20 +42,16 @@ class QueryPro<
     )))
 
     /**
-     * 更新操作 updateSet(Apple(id = 2021, name = "iPhone13", type = null)).run()
+     * 更新操作
+     *
+     * updateSet(Apple(id = 2021, name = "iPhone13", type = null)).run()
      * 如果 需要更新的值为null, 则跳过该字段不更新
-     * 如确实需要更新, 使用[updateSetOverride]
+     * 如确实需要更新, 使用
+     * updateSet(Apple(id = 2021, name = "iPhone13", type = null), true).run()
+     * 如果需要更新的值更新的值为null, 会将其更新为null
      */
-    fun updateSet(obj: T) = updateSet(obj, false)
-
-    /**
-     * 更新操作 updateSetOverride(Apple(id = 2021, name = "iPhone13", type = null)).run()
-     * 注意如果更新的值为null, 该方法会将其更新为null
-     * 如不想更新为null的字段, 使用[updateSet]
-     */
-    fun updateSetOverride(obj: T) = updateSet(obj, true)
-
-    private fun updateSet(obj: T, override: Boolean): UpdateField<UPDATE_BY_FIELD> {
+    @JvmOverloads
+    fun updateSet(obj: T, override: Boolean = false): UpdateField<UPDATE_BY_FIELD> {
         val update = Update(data = obj, override = override, id = parseClass(clazz).idColumn)
         return UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = update), createUpdateByField)
     }

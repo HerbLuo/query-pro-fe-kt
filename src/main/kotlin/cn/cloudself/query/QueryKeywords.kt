@@ -51,7 +51,7 @@ class QueryIgnoreCaseKeywords<F : QueryField<*, *, *, *, *, *>>(
     fun like(str: String) = with(WhereClause(upperField(field), "like", str, WhereClauseCommands.UPPER_CASE))
     fun `in`(vararg values: Any) = with(WhereClause(upperField(field), "in", values, WhereClauseCommands.UPPER_CASE))
 
-    private fun upperField(field: Field) = Field(column = "${field.table}.${field.column}")
+    private fun upperField(field: Field) = Field(table = field.table, column = field.column)
     private fun with(whereClause: WhereClause) = createQueryField(queryStructure.copy(where = queryStructure.where + whereClause))
 }
 

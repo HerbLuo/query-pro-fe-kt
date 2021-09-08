@@ -181,6 +181,8 @@ class QueryProFileMakerSample {
             .tables("user_pri")
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
             .replaceMode()
+            /* 显示更多输出 */
+            .debug()
             .create()
     }
 }

@@ -142,8 +142,11 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
     private fun getConnection(): Connection {
         val dataSource = QueryProConfig.getDataSourceOrInit {
-            SpringUtil.getBean(DataSource::class.java)
-                ?: throw ConfigException("无法找到DataSource, 使用QueryProConfig(.INSTANCE).setDataSource设置")
+            try {
+                SpringUtil.getBean(DataSource::class.java)
+            } catch (e: NoClassDefFoundError) {
+                null
+            } ?: throw ConfigException("无法找到DataSource, 使用QueryProConfig(.INSTANCE).setDataSource设置")
         }
         return dataSource.connection
     }
