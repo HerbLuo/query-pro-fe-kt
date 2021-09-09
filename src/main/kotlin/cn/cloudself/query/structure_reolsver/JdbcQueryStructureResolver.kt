@@ -31,13 +31,21 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             }
         }
 
+        return resolve(sql, params, clazz, queryStructure.action)
+    }
+
+    override fun <T> resolve(sql: String, params: List<Any?>, clazz: Class<T>): List<T> {
+        return resolve(sql, params, clazz, declareAction(sql))
+    }
+
+    private fun <T> resolve(sql: String, params: List<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
         val connection = getConnection()
         val preparedStatement = connection.prepareStatement(sql)
 
         setParam(preparedStatement, params)
 
         val resultList = mutableListOf<T>()
-        when (queryStructure.action) {
+        when (action) {
             QueryStructureAction.SELECT -> {
                 val proxy = BeanProxy.fromClass(clazz)
                 val resultSet = preparedStatement.executeQuery()
@@ -46,13 +54,40 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 }
             }
             QueryStructureAction.DELETE, QueryStructureAction.UPDATE -> {
-                val success = preparedStatement.execute()
+                val updatedCount = preparedStatement.executeUpdate()
                 @Suppress("UNCHECKED_CAST")
-                resultList.add(success as T)
+                if (Boolean::class.java.isAssignableFrom(clazz)) {
+                    val success = updatedCount > 1
+                    resultList.add(success as T)
+                } else if (Int::class.java.isAssignableFrom(clazz)) {
+                    resultList.add(updatedCount as T)
+                }
             }
         }
 
         return resultList
+    }
+
+    private fun declareAction(sql: String): QueryStructureAction {
+        return when (sql.trim().substring(0, 6).lowercase()) {
+            "select" -> {
+                QueryStructureAction.SELECT
+            }
+            "update" -> {
+                QueryStructureAction.UPDATE
+            }
+            "delete" -> {
+                QueryStructureAction.DELETE
+            }
+            else -> {
+                // 这个仅支持mysql
+                "EXPLAIN SELECT * FROM ($sql) t"
+
+                // 再试试preparedStatement.exeQuery执行一个update会不会报错
+                // TODO
+                QueryStructureAction.SELECT
+            }
+        }
     }
 
     private fun setParam(preparedStatement: PreparedStatement, params: List<Any?>) {

@@ -25,6 +25,7 @@ class QueryProSql {
         fun <T> execForObj(clazz: Class<T>) = execForList(clazz).getOrNull(0)
 
         fun <T> execForList(clazz: Class<T>): List<T> {
+            
             return listOf()
         }
     }
