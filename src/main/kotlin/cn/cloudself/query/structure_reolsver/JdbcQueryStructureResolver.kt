@@ -4,6 +4,7 @@ import cn.cloudself.query.*
 import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.UnSupportException
 import cn.cloudself.query.util.SpringUtil
+import cn.cloudself.query.util.StringUtils
 import java.math.BigDecimal
 import java.sql.*
 import java.time.LocalDate
@@ -13,7 +14,6 @@ import java.util.*
 import javax.sql.DataSource
 
 class JdbcQueryStructureResolver: IQueryStructureResolver {
-
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
 
@@ -69,25 +69,36 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     }
 
     private fun declareAction(sql: String): QueryStructureAction {
-        return when (sql.trim().substring(0, 6).lowercase()) {
-            "select" -> {
-                QueryStructureAction.SELECT
+        val beginPosOfNonWhitespace = StringUtils.beginPosOfNonWhitespace(sql)
+        val firstChar = sql[beginPosOfNonWhitespace].uppercaseChar()
+        println(firstChar)
+        if (firstChar == 'I' || firstChar == 'U' || firstChar == 'D' || firstChar == 'A' || firstChar == 'C' || firstChar == 'T' || firstChar == 'R') {
+            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "DELETE")) {
+                return QueryStructureAction.DELETE
             }
-            "update" -> {
-                QueryStructureAction.UPDATE
-            }
-            "delete" -> {
-                QueryStructureAction.DELETE
-            }
-            else -> {
-                // 这个仅支持mysql
-                "EXPLAIN SELECT * FROM ($sql) t"
-
-                // 再试试preparedStatement.exeQuery执行一个update会不会报错
-                // TODO
-                QueryStructureAction.SELECT
+            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "INSERT") ||
+                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "UPDATE") ||
+                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "DROP") ||
+                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "CREATE") ||
+                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "ALTER") ||
+                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "TRUNCATE") ||
+                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "RENAME")
+            ) {
+                return QueryStructureAction.UPDATE
             }
         }
+        if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "SELECT")) {
+            return QueryStructureAction.SELECT
+        }
+
+        // 这个仅支持mysql
+        "EXPLAIN SELECT * FROM ($sql) t"
+
+        // 再试试preparedStatement.exeQuery执行一个update会不会报错
+        // TODO
+        QueryStructureAction.SELECT
+        // 再不行将connection设置为只读
+        throw UnSupportException("TODO")
     }
 
     private fun setParam(preparedStatement: PreparedStatement, params: List<Any?>) {
