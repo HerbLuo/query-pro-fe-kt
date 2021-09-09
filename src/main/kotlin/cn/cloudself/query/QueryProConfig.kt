@@ -28,6 +28,12 @@ object QueryProConfig {
     private var dataSource: DataSource? = null
     private val dataSourceThreadLocal: ThreadLocal<DataSource?> = ThreadLocal()
     private var supportedColumnType = mutableSetOf<Class<*>>()
+    /**
+     * ResultSet解析器
+     * 内置支持的类型有:
+     * BigDecimal, Byte, ByteArray, Date, LocalDate, LocalTime, LocalDateTime, java.sql.Date, Double, Float, Int,
+     * Long, Time, Timestamp, Short, String,
+     */
     private val resultSetParser = mutableMapOf<Class<*>, ResultSetGetter<*>>()
         .also { map ->
             @Suppress("UNCHECKED_CAST")
@@ -100,6 +106,14 @@ object QueryProConfig {
         return res
     }
 
+    /**
+     * 添加一个ResultSet解析器(字段解析器)
+     * @param clazz 需要解析至的class, 例如: LocalDate.class
+     * @param value 例子 rs -> i -> rs.getDate(i).toLocalDate()
+     *
+     * @see [resultSetParser]
+     * @see [resultSetParserEx]
+     */
     fun <T> addResultSetParser(clazz: Class<T>, value: ResultSetGetter<T>) = this.also {
         resultSetParser[clazz] = value
         supportedColumnType.add(clazz)
