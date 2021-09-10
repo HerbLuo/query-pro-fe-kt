@@ -31,38 +31,43 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             }
         }
 
-        return resolve(sql, params, clazz, queryStructure.action)
+        return resolvePri(sql, params, clazz, queryStructure.action)
     }
 
-    override fun <T> resolve(sql: String, params: List<Any?>, clazz: Class<T>): List<T> {
-        return resolve(sql, params, clazz, declareAction(sql))
+    override fun <T> resolve(sql: String, params: List<Any?>, clazz: Class<T>, action: QueryStructureAction?): List<T> {
+        return resolvePri(sql, params, clazz, action ?: declareAction(sql))
     }
 
-    private fun <T> resolve(sql: String, params: List<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
+    private fun <T> resolvePri(sql: String, params: List<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
         val connection = getConnection()
         val preparedStatement = connection.prepareStatement(sql)
 
         setParam(preparedStatement, params)
 
         val resultList = mutableListOf<T>()
+
+        fun doSelect() {
+            val proxy = BeanProxy.fromClass(clazz)
+            val resultSet = preparedStatement.executeQuery()
+            while (resultSet.next()) {
+                resultList.add(mapRow(proxy, resultSet))
+            }
+        }
+
+        fun doUpdate() {
+            val updatedCount = preparedStatement.executeUpdate()
+            @Suppress("UNCHECKED_CAST")
+            if (Boolean::class.java.isAssignableFrom(clazz)) {
+                val success = updatedCount > 1
+                resultList.add(success as T)
+            } else if (Int::class.java.isAssignableFrom(clazz)) {
+                resultList.add(updatedCount as T)
+            }
+        }
+
         when (action) {
-            QueryStructureAction.SELECT -> {
-                val proxy = BeanProxy.fromClass(clazz)
-                val resultSet = preparedStatement.executeQuery()
-                while (resultSet.next()) {
-                    resultList.add(mapRow(proxy, resultSet))
-                }
-            }
-            QueryStructureAction.DELETE, QueryStructureAction.UPDATE, QueryStructureAction.INSERT -> {
-                val updatedCount = preparedStatement.executeUpdate()
-                @Suppress("UNCHECKED_CAST")
-                if (Boolean::class.java.isAssignableFrom(clazz)) {
-                    val success = updatedCount > 1
-                    resultList.add(success as T)
-                } else if (Int::class.java.isAssignableFrom(clazz)) {
-                    resultList.add(updatedCount as T)
-                }
-            }
+            QueryStructureAction.SELECT -> doSelect()
+            QueryStructureAction.DELETE, QueryStructureAction.UPDATE, QueryStructureAction.INSERT -> doUpdate()
         }
 
         return resultList
@@ -93,14 +98,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             return QueryStructureAction.SELECT
         }
 
-        // 这个仅支持mysql
-        "EXPLAIN SELECT * FROM ($sql) t"
-
-        // 再试试preparedStatement.exeQuery执行一个update会不会报错
-        // TODO
-        QueryStructureAction.SELECT
-        // 再不行将connection设置为只读
-        throw UnSupportException("TODO")
+        throw UnSupportException("无法简单判定sql为select还是update,insert，使用executeUpdate或者query代替execute")
     }
 
     private fun setParam(preparedStatement: PreparedStatement, params: List<Any?>) {
