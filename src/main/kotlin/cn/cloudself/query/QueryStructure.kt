@@ -46,6 +46,7 @@ enum class QueryStructureAction {
     SELECT,
     UPDATE,
     DELETE,
+    INSERT,
 }
 
 data class FromJoinerOn(

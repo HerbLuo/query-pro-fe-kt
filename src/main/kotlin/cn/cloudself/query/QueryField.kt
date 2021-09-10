@@ -1,5 +1,6 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
 
 enum class QueryFieldType {
@@ -69,6 +70,9 @@ abstract class FinalSelectField<
                     throw IllegalImplements("DELETE, UPDATE需返回长度为1的List<Boolean>")
                 else
                     results[0] as RUN_RES
+            }
+            QueryStructureAction.INSERT -> {
+                throw IllegalCall("run方法暂不支持INSERT")
             }
         }
     }

@@ -53,7 +53,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                     resultList.add(mapRow(proxy, resultSet))
                 }
             }
-            QueryStructureAction.DELETE, QueryStructureAction.UPDATE -> {
+            QueryStructureAction.DELETE, QueryStructureAction.UPDATE, QueryStructureAction.INSERT -> {
                 val updatedCount = preparedStatement.executeUpdate()
                 @Suppress("UNCHECKED_CAST")
                 if (Boolean::class.java.isAssignableFrom(clazz)) {
@@ -76,8 +76,10 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "DELETE")) {
                 return QueryStructureAction.DELETE
             }
-            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "INSERT") ||
-                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "UPDATE") ||
+            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "INSERT")) {
+                return QueryStructureAction.INSERT
+            }
+            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "UPDATE") ||
                 StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "DROP") ||
                 StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "CREATE") ||
                 StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "ALTER") ||
