@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import java.lang.Exception
 
 @Component
-class SpringUtil: ApplicationContextAware {
+class SpringUtils: ApplicationContextAware {
     companion object {
         private var applicationContext: ApplicationContext? = null
 
@@ -28,6 +28,6 @@ class SpringUtil: ApplicationContextAware {
     }
 
     override fun setApplicationContext(applicationContext: ApplicationContext) {
-        SpringUtil.applicationContext = applicationContext
+        SpringUtils.applicationContext = applicationContext
     }
 }

@@ -3,7 +3,7 @@ package cn.cloudself.query.structure_reolsver
 import cn.cloudself.query.*
 import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.UnSupportException
-import cn.cloudself.query.util.SpringUtil
+import cn.cloudself.query.util.SpringUtils
 import cn.cloudself.query.util.StringUtils
 import java.math.BigDecimal
 import java.sql.*
@@ -31,14 +31,19 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             }
         }
 
-        return resolvePri(sql, params, clazz, queryStructure.action)
+        return resolvePri(sql, params.toTypedArray(), clazz, queryStructure.action)
     }
 
-    override fun <T> resolve(sql: String, params: List<Any?>, clazz: Class<T>, action: QueryStructureAction?): List<T> {
-        return resolvePri(sql, params, clazz, action ?: declareAction(sql))
+    override fun <T> resolve(sql: String, params: Array<Any?>, clazz: Class<T>, type: QueryStructureAction): List<T> {
+        return resolvePri(sql, params, clazz, type)
     }
 
-    private fun <T> resolvePri(sql: String, params: List<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
+    override fun <T> updateBatch(sqlArr: Array<String>, params: Array<Array<Any?>>, clazz: Class<T>): T {
+//        return resolvePri(sql, params, clazz, type, false)
+        return null as T
+    }
+
+    private fun <T> resolvePri(sql: String, params: Array<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
         val connection = getConnection()
         val preparedStatement = connection.prepareStatement(sql)
 
@@ -73,35 +78,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         return resultList
     }
 
-    private fun declareAction(sql: String): QueryStructureAction {
-        val beginPosOfNonWhitespace = StringUtils.beginPosOfNonWhitespace(sql)
-        val firstChar = sql[beginPosOfNonWhitespace].uppercaseChar()
-        println(firstChar)
-        if (firstChar == 'I' || firstChar == 'U' || firstChar == 'D' || firstChar == 'A' || firstChar == 'C' || firstChar == 'T' || firstChar == 'R') {
-            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "DELETE")) {
-                return QueryStructureAction.DELETE
-            }
-            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "INSERT")) {
-                return QueryStructureAction.INSERT
-            }
-            if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "UPDATE") ||
-                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "DROP") ||
-                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "CREATE") ||
-                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "ALTER") ||
-                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "TRUNCATE") ||
-                StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "RENAME")
-            ) {
-                return QueryStructureAction.UPDATE
-            }
-        }
-        if (StringUtils.startsWithIgnoreCase(sql, beginPosOfNonWhitespace, "SELECT")) {
-            return QueryStructureAction.SELECT
-        }
-
-        throw UnSupportException("无法简单判定sql为select还是update,insert，使用executeUpdate或者query代替execute")
-    }
-
-    private fun setParam(preparedStatement: PreparedStatement, params: List<Any?>) {
+    private fun setParam(preparedStatement: PreparedStatement, params: Array<Any?>) {
         for ((i, param) in params.withIndex()) {
             when (param) {
                 NULL -> preparedStatement.setNull(i + 1, Types.NULL)
@@ -189,7 +166,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     private fun getConnection(): Connection {
         val dataSource = QueryProConfig.getDataSourceOrInit {
             try {
-                SpringUtil.getBean(DataSource::class.java)
+                SpringUtils.getBean(DataSource::class.java)
             } catch (e: NoClassDefFoundError) {
                 null
             } ?: throw ConfigException("无法找到DataSource, 使用QueryProConfig(.INSTANCE).setDataSource设置")

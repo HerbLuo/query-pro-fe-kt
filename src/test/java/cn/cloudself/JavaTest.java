@@ -1,4 +1,4 @@
-package cn.cloudself.java;
+package cn.cloudself;
 
 import org.junit.Test;
 

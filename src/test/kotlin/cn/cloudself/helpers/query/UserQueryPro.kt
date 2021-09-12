@@ -1,4 +1,4 @@
-package cn.cloudself.query
+package cn.cloudself.helpers.query
 
 import javax.persistence.*
 import cn.cloudself.query.*
@@ -7,28 +7,25 @@ import cn.cloudself.query.*
  * 
  */
 @Entity
-@Table(name = "setting")
-data class Setting(
+@Table(name = "user")
+data class User(
     /**  */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     var id: Long? = null,
     /**  */
-    @Column(name = "user_id")
-    var userId: Long? = null,
+    @Column(name = "name")
+    var name: String? = null,
     /**  */
-    @Column(name = "kee")
-    var kee: String? = null,
-    /**  */
-    @Column(name = "value")
-    var value: String? = null,
+    @Column(name = "age")
+    var age: Int? = null,
 )
 
-class ImplSettingQueryPro {
+class ImplUserQueryPro {
     companion object {
-        val CLAZZ = Setting::class.java
-        const val TABLE_NAME = "setting"
+        val CLAZZ = User::class.java
+        const val TABLE_NAME = "user"
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }
 
@@ -49,9 +46,8 @@ class ImplSettingQueryPro {
             QueryKeywords(createField(column), queryStructure, create_where_field)
 
         val id = createWhereField("id")
-        val userId = createWhereField("user_id")
-        val kee = createWhereField("kee")
-        val value = createWhereField("value")
+        val name = createWhereField("name")
+        val age = createWhereField("age")
     }
 
     class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -61,18 +57,16 @@ class ImplSettingQueryPro {
             QueryOrderByKeywords(createField(column), queryStructure, create_order_by_field)
 
         fun id() = createOrderByField("id")
-        fun userId() = createOrderByField("user_id")
-        fun kee() = createOrderByField("kee")
-        fun value() = createOrderByField("value")
+        fun name() = createOrderByField("name")
+        fun age() = createOrderByField("age")
     }
 
     class ColumnLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
         override val field_type = QueryFieldType.OTHER_FIELD
 
         fun id() = getColumn(createField("id"), Long::class.java)
-        fun userId() = getColumn(createField("user_id"), Long::class.java)
-        fun kee() = getColumn(createField("kee"), String::class.java)
-        fun value() = getColumn(createField("value"), String::class.java)
+        fun name() = getColumn(createField("name"), String::class.java)
+        fun age() = getColumn(createField("age"), Int::class.java)
     }
 
     class ColumnsLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -82,9 +76,8 @@ class ImplSettingQueryPro {
             ColumnsLimiterField<T, RUN_RES>(queryStructure.copy(fields = queryStructure.fields + createField(column)), field_clazz)
 
         fun id() = createColumnsLimiterField("id")
-        fun userId() = createColumnsLimiterField("user_id")
-        fun kee() = createColumnsLimiterField("kee")
-        fun value() = createColumnsLimiterField("value")
+        fun name() = createColumnsLimiterField("name")
+        fun age() = createColumnsLimiterField("age")
     }
 
     class UpdateSetField(private val queryStructure: QueryStructure): UpdateField<WhereField<Boolean, Boolean>>(queryStructure, { qs: QueryStructure -> WhereField(qs, Boolean::class.java) }) {
@@ -94,9 +87,8 @@ class ImplSettingQueryPro {
         }
 
         fun id(id: Any) = createUpdateSetField("id", id)
-        fun userId(userId: Any) = createUpdateSetField("user_id", userId)
-        fun kee(kee: Any) = createUpdateSetField("kee", kee)
-        fun value(value: Any) = createUpdateSetField("value", value)
+        fun name(name: Any) = createUpdateSetField("name", name)
+        fun age(age: Any) = createUpdateSetField("age", age)
     }
 
 
@@ -104,28 +96,27 @@ class ImplSettingQueryPro {
         override val tableName = TABLE_NAME
 
         fun id() = this.also { fields.add(createField("id")) }
-        fun userId() = this.also { fields.add(createField("user_id")) }
-        fun kee() = this.also { fields.add(createField("kee")) }
-        fun value() = this.also { fields.add(createField("value")) }
+        fun name() = this.also { fields.add(createField("name")) }
+        fun age() = this.also { fields.add(createField("age")) }
     }
 }
 
 private fun createQuery(queryStructure: QueryStructure) =
     QueryPro(
-        Setting::class.java,
+        User::class.java,
         queryStructure,
-        { qs: QueryStructure -> ImplSettingQueryPro.WhereField<Setting, List<Setting>>(qs, Setting::class.java) },
-        { qs: QueryStructure -> ImplSettingQueryPro.OrderByField<Setting, List<Setting>>(qs, Setting::class.java) },
-        { qs: QueryStructure -> ImplSettingQueryPro.UpdateSetField(qs) },
-        { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs, Boolean::class.java) },
-        { qs: QueryStructure -> ImplSettingQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField<User, List<User>>(qs, User::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.OrderByField<User, List<User>>(qs, User::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.UpdateSetField(qs) },
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField(qs, Boolean::class.java) },
+        { qs: QueryStructure -> ImplUserQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
     )
 
-val SettingQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplSettingQueryPro.TABLE_NAME)))
+val UserQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplUserQueryPro.TABLE_NAME)))
 
-val SettingQueryProEx = QueryProEx(
-    QueryStructure(from = QueryStructureFrom(ImplSettingQueryPro.TABLE_NAME)),
-    { qs: QueryStructure -> ImplSettingQueryPro.WhereField<Setting, List<Setting>>(qs, Setting::class.java) },
-    { ImplSettingQueryPro.FieldsGenerator() },
+val UserQueryProEx = QueryProEx(
+    QueryStructure(from = QueryStructureFrom(ImplUserQueryPro.TABLE_NAME)),
+    { qs: QueryStructure -> ImplUserQueryPro.WhereField<User, List<User>>(qs, User::class.java) },
+    { ImplUserQueryPro.FieldsGenerator() },
     { qs -> createQuery(qs) }
 )

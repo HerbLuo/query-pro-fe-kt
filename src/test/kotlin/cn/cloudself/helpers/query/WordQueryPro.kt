@@ -1,4 +1,4 @@
-package cn.cloudself.query
+package cn.cloudself.helpers.query
 
 import java.util.Date
 import javax.persistence.*

@@ -1,20 +1,37 @@
 package cn.cloudself
 
-import cn.cloudself.query.*
-import cn.cloudself.query.exception.IllegalCall
-import cn.cloudself.query.exception.MissingParameter
-import cn.cloudself.query.structure_reolsver.QueryStructureToSql
+import cn.cloudself.helpers.expectSqlResult
+import cn.cloudself.helpers.getDataSource
+import cn.cloudself.helpers.query.*
+import cn.cloudself.query.QueryProConfig
+import cn.cloudself.query.QueryProSql
 import org.junit.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
-@Suppress("UNUSED_VARIABLE")
-class StructureToSqlTest {
+class SelectTest {
+    private fun prepareData() {
+        QueryProSql.createBatch(arrayOf(
+            "TRUNCATE TABLE user;",
+            "INSERT INTO user (id, name, age) VALUES (1, 'hb', 18);",
+            "INSERT INTO user (id, name, age) VALUES (2, 'herb', 18);",
+            "INSERT INTO user (id, name, age) VALUES (3, 'l', 18);",
+            "TRUNCATE TABLE setting;",
+            "INSERT INTO setting (id, user_id, kee, value) VALUES (1, 1, 'lang', '简体中文');",
+        )).update(Boolean::class.java)
+    }
+
     @Test
-    fun testSelect() {
-        QueryProConfig.dryRun = true
+    fun test() {
         QueryProConfig.beautifySql = false
+        QueryProConfig.setDataSource(getDataSource())
+
+        prepareData()
+
+        if (1 == 1) {
+            return
+        }
+
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ?", listOf(1))
+        val users: List<User> = UserQueryPro.selectBy().id.equalsTo(1).run()
 
         expectSqlResult("SELECT `setting`.`id` FROM `setting` WHERE `setting`.`id` = ?", listOf(1))
         val ids: List<Long?> = SettingQueryPro.selectBy().id.equalsTo(1).columnLimiter().id()
@@ -80,52 +97,5 @@ class StructureToSqlTest {
             .limit(10) // limit 10
             .columnsLimiter().kee().value() // select setting.kee, setting.value from setting ...
             .run()
-
-    }
-
-    @Test
-    fun testDelete() {
-        QueryProConfig.dryRun = true
-        QueryProConfig.beautifySql = false
-
-        expectSqlResult("DELETE FROM `user` WHERE `user`.`id` = ?", listOf(1))
-        val success: Boolean = UserQueryPro.deleteBy().id.equalsTo(1).run()
-    }
-
-    @Test
-    fun testUpdate() {
-        QueryProConfig.dryRun = true
-        QueryProConfig.beautifySql = false
-
-        // 如果没有传入primary key, 且无where条件, 则报错
-        assertFailsWith(MissingParameter::class) {
-            UserQueryPro.updateSet(User(name = "hb")).run()
-        }
-
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(1))
-        val success1: Boolean = UserQueryPro.updateSet(User(age = 18)).where.id.equalsTo(1).run()
-
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(2L))
-        val success2: Boolean = UserQueryPro.updateSet(User(id = 2, age = 18)).run()
-
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(3L))
-        val success3: Boolean = UserQueryPro.updateSet(User(id = 3, age = 18)).run()
-
-        expectSqlResult("UPDATE `user` SET `name` = hb, `age` = null WHERE `user`.`id` = ?", listOf(2L))
-        val success5: Boolean = UserQueryPro.updateSet(User(id = 2, name = "hb"), true).run()
-
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(1))
-        val success6: Boolean = UserQueryPro.updateSet().id(1).age(18).run()
-
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`name` = ?", listOf("herb"))
-        val success7: Boolean = UserQueryPro.updateSet().age(18).where.name.equalsTo("herb").run()
-    }
-
-    private fun expectSqlResult(sql: String, params: List<Any?>) {
-        QueryStructureToSql.beforeReturnForTest = {
-            assertEquals(it.first.trim(), sql.trim())
-            assertContentEquals(it.second, params)
-            QueryStructureToSql.beforeReturnForTest = null
-        }
     }
 }
