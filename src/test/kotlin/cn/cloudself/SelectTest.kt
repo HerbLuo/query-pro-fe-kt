@@ -5,10 +5,18 @@ import cn.cloudself.helpers.getDataSource
 import cn.cloudself.helpers.query.*
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
+import org.intellij.lang.annotations.Language
 import org.junit.Test
 
 class SelectTest {
     private fun prepareData() {
+        @Language("SQL")
+        val s =
+            """
+                SELECT * FROM mysql.user WHERE password_expired = 'aaaa\\
+                bbbb' and x;
+                
+            """.trimIndent()
         QueryProSql.createBatch(arrayOf(
             "TRUNCATE TABLE user;",
             "INSERT INTO user (id, name, age) VALUES (1, 'hb', 18);",
