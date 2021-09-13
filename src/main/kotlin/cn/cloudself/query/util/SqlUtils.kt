@@ -3,7 +3,7 @@ package cn.cloudself.query.util
 object SqlUtils {
     enum class CommentTag {
         NormalOneLine,
-        SharpOneLine,
+        HashOneLine,
         MultiLine,
     }
 
@@ -21,7 +21,7 @@ object SqlUtils {
             val char = chars[i]
             chars.add(char)
 
-            fun lookbehindIsEscape() = chars[i - 1] == '\\' && chars[i - 2] != '\\'
+            fun lookbehindIsEscape(from: Int = i) = chars[from - 1] == '\\' && chars[from - 2] != '\\'
 
             when (char) {
                 '\'', '"', '`' -> if (!inComment) {
@@ -29,44 +29,59 @@ object SqlUtils {
                         inString = true
                         quota = char
                     } else {
-                        if (!lookbehindIsEscape()) {
+                        if (quota == char && !lookbehindIsEscape()) {
                             inString = false
-                            quota = char
+                            quota = null
                         }
                     }
                 }
                 '/' -> if (!inString && !inComment) {
-                    if (chars[i + 1] == '*') {
-                        inComment = true
-                        commentTag = CommentTag.MultiLine
-                    }
-                }
-                '*' -> if (inComment && commentTag == CommentTag.MultiLine) {
-                    if (!lookbehindIsEscape()) {
-                        if (chars[i + 1] == '/') {
-
-                            inComment = false
-                            commentTag = null
+                    if (!inComment) {
+                        if (chars[i + 1] == '*') {
+                            inComment = true
+                            commentTag = CommentTag.MultiLine
+                        }
+                    } else {
+                        if (commentTag == CommentTag.MultiLine) {
+                            if (chars[i - 1] == '*') {
+                                if (!lookbehindIsEscape(i - 1)) {
+                                    inComment = false
+                                    commentTag = null
+                                }
+                            }
                         }
                     }
                 }
-                '-' -> {
+                '-' -> if (!inString && !inComment) {
+                    if (chars[i - 1] == '-') {
+                        inComment = true
+                        commentTag = CommentTag.NormalOneLine
+                    }
+                }
+                '#' -> if (!inString && !inComment) {
+                    inComment = true
+                    commentTag = CommentTag.HashOneLine
+                }
+                '\n' -> if (inComment && commentTag != CommentTag.MultiLine) {
+                    inComment = false
+                    commentTag = null
                 }
             }
 
             if (char == '?') {
-                questionMarkCount++
+                if (!inComment && !inString) {
+                    questionMarkCount++
+                }
             }
 
-
-
-
             if (char == ';') {
-                val sql = String(chars.toCharArray())
-                sqlAndQuestionMarkCountList.add(sql to questionMarkCount)
+                if (!inComment && !inString) {
+                    val sql = String(chars.toCharArray())
+                    sqlAndQuestionMarkCountList.add(sql to questionMarkCount)
 
-                chars.clear()
-                questionMarkCount = 0
+                    chars.clear()
+                    questionMarkCount = 0
+                }
             }
         }
 
