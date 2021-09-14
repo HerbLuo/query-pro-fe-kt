@@ -2,9 +2,9 @@ package cn.cloudself.query.structure_reolsver
 
 import cn.cloudself.query.*
 import cn.cloudself.query.exception.ConfigException
+import cn.cloudself.query.exception.IllegalParameters
 import cn.cloudself.query.exception.UnSupportException
 import cn.cloudself.query.util.SpringUtils
-import cn.cloudself.query.util.StringUtils
 import java.math.BigDecimal
 import java.sql.*
 import java.time.LocalDate
@@ -38,44 +38,107 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         return resolvePri(sql, params, clazz, type)
     }
 
-    override fun <T> updateBatch(sqlArr: Array<String>, params: Array<Array<Any?>>, clazz: Class<T>): T {
-//        return resolvePri(sql, params, clazz, type, false)
-        return null as T
+    override fun <T> updateBatch(sqlArr: Array<String>, paramsArr: Array<Array<Any?>>, clazz: Class<T>): T {
+        val sqlArraySize = sqlArr.size
+        val paramsSize = paramsArr.size
+        if (sqlArraySize == 0) {
+            throw IllegalParameters("sqlArr的长度不能为空")
+        }
+        if (sqlArraySize != 1 && sqlArraySize != paramsSize) {
+            throw IllegalParameters("sqlArr的长度必须为1或者与paramsArr长度一致")
+        }
+
+        getConnection().use { connection ->
+            val affectRows = if (sqlArraySize == 1) {
+                println("sql长度为1")
+                val preparedStatement = connection.prepareStatement(sqlArr[0])
+                for (params in paramsArr) {
+                    setParam(preparedStatement, params)
+                    preparedStatement.addBatch()
+                }
+                preparedStatement.executeBatch()
+            } else {
+                val anyParams = paramsArr.filter { it.isNotEmpty() }.any()
+                if (anyParams) {
+                    println("log: 存在参数")
+                    val affectRows = IntArray(sqlArraySize) { 0 }
+                    for (i in sqlArr.indices) {
+                        val sql = sqlArr[i]
+                        val params = paramsArr[i]
+                        val affectRowNum = connection.prepareStatement(sql)
+                            .also { setParam(it, params) }
+                            .executeUpdate()
+                        affectRows[i] = affectRowNum
+                    }
+                    affectRows
+                } else {
+                    println("log: 不存在参数")
+                    val statement = connection.createStatement()
+                    for (sql in sqlArr) {
+                        statement.addBatch(sql)
+                    }
+                    statement.executeBatch()
+                }
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            when {
+                List::class.java.isAssignableFrom(clazz) -> {
+                    val affectRowList: List<Int> = affectRows.toList()
+                    return affectRowList as T
+                }
+                IntArray::class.java.isAssignableFrom(clazz) -> {
+                    return affectRows as T
+                }
+                else -> {
+                    if (Boolean::class.java.isAssignableFrom(clazz)) {
+                        if (affectRows[0] == 0) {
+                            return false as T
+                        }
+                        return (affectRows.sum() > 0) as T
+                    } else if (Int::class.java.isAssignableFrom(clazz)) {
+                        return affectRows.sum() as T
+                    }
+                    throw UnSupportException("不支持的class, 目前只支持List::class.java, listOf<Int>().javaClass, Int, Boolean")
+                }
+            }
+        }
     }
 
     private fun <T> resolvePri(sql: String, params: Array<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
-        val connection = getConnection()
-        val preparedStatement = connection.prepareStatement(sql)
+        getConnection().use { connection ->
+            val preparedStatement = connection.prepareStatement(sql)
 
-        setParam(preparedStatement, params)
+            setParam(preparedStatement, params)
 
-        val resultList = mutableListOf<T>()
+            val resultList = mutableListOf<T>()
 
-        fun doSelect() {
-            val proxy = BeanProxy.fromClass(clazz)
-            val resultSet = preparedStatement.executeQuery()
-            while (resultSet.next()) {
-                resultList.add(mapRow(proxy, resultSet))
+            fun doSelect() {
+                val proxy = BeanProxy.fromClass(clazz)
+                val resultSet = preparedStatement.executeQuery()
+                while (resultSet.next()) {
+                    resultList.add(mapRow(proxy, resultSet))
+                }
             }
-        }
 
-        fun doUpdate() {
-            val updatedCount = preparedStatement.executeUpdate()
-            @Suppress("UNCHECKED_CAST")
-            if (Boolean::class.java.isAssignableFrom(clazz)) {
-                val success = updatedCount > 1
-                resultList.add(success as T)
-            } else if (Int::class.java.isAssignableFrom(clazz)) {
-                resultList.add(updatedCount as T)
+            fun doUpdate() {
+                val updatedCount = preparedStatement.executeUpdate()
+                @Suppress("UNCHECKED_CAST")
+                if (Boolean::class.java.isAssignableFrom(clazz)) {
+                    val success = updatedCount > 1
+                    resultList.add(success as T)
+                } else if (Int::class.java.isAssignableFrom(clazz)) {
+                    resultList.add(updatedCount as T)
+                }
             }
-        }
 
-        when (action) {
-            QueryStructureAction.SELECT -> doSelect()
-            QueryStructureAction.DELETE, QueryStructureAction.UPDATE, QueryStructureAction.INSERT -> doUpdate()
-        }
+            when (action) {
+                QueryStructureAction.SELECT -> doSelect()
+                QueryStructureAction.DELETE, QueryStructureAction.UPDATE, QueryStructureAction.INSERT -> doUpdate()
+            }
 
-        return resultList
+            return resultList
+        }
     }
 
     private fun setParam(preparedStatement: PreparedStatement, params: Array<Any?>) {
@@ -161,7 +224,6 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
         return resultProxy.toResult()
     }
-
 
     private fun getConnection(): Connection {
         val dataSource = QueryProConfig.getDataSourceOrInit {

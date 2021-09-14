@@ -2,7 +2,6 @@ package cn.cloudself.query.structure_reolsver
 
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.exception.UnSupportException
-import javax.persistence.Column
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 

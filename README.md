@@ -38,3 +38,6 @@ count
 
 仅关键字转义
 更多的测试用例
+大于maxActive的并发测试, 以及出错时的测试
+再看一下ThreadLocal与线程池的问题
+LogFilter

@@ -1,5 +1,7 @@
 package cn.cloudself.query.util
 
+import org.intellij.lang.annotations.Language
+
 object SqlUtils {
     enum class CommentTag {
         NormalOneLine,
@@ -7,8 +9,7 @@ object SqlUtils {
         MultiLine,
     }
 
-    fun splitAndCountQuestionMark(sqlStatement: String): List<Pair<String, Int>> {
-        val sqlStatementLength = sqlStatement.length
+    fun splitBySemicolonAndCountQuestionMark(@Language("SQL") sqlStatement: String): List<Pair<String, Int>> {
         val sqlAndQuestionMarkCountList = mutableListOf<Pair<String, Int>>()
         val chars = mutableListOf<Char>()
         var questionMarkCount = 0
@@ -17,11 +18,11 @@ object SqlUtils {
         var commentTag: CommentTag? = null
         var inString = false
         var quota: Char? = null
-        for (i in 0 until sqlStatementLength) {
-            val char = chars[i]
+        for (i in sqlStatement.indices) {
+            val char = sqlStatement[i]
             chars.add(char)
 
-            fun lookbehindIsEscape(from: Int = i) = chars[from - 1] == '\\' && chars[from - 2] != '\\'
+            fun lookbehindIsEscape(from: Int = i) = sqlStatement[from - 1] == '\\' && sqlStatement[from - 2] != '\\'
 
             when (char) {
                 '\'', '"', '`' -> if (!inComment) {
@@ -37,13 +38,13 @@ object SqlUtils {
                 }
                 '/' -> if (!inString && !inComment) {
                     if (!inComment) {
-                        if (chars[i + 1] == '*') {
+                        if (sqlStatement[i + 1] == '*') {
                             inComment = true
                             commentTag = CommentTag.MultiLine
                         }
                     } else {
                         if (commentTag == CommentTag.MultiLine) {
-                            if (chars[i - 1] == '*') {
+                            if (sqlStatement[i - 1] == '*') {
                                 if (!lookbehindIsEscape(i - 1)) {
                                     inComment = false
                                     commentTag = null
@@ -53,7 +54,7 @@ object SqlUtils {
                     }
                 }
                 '-' -> if (!inString && !inComment) {
-                    if (chars[i - 1] == '-') {
+                    if (sqlStatement[i - 1] == '-') {
                         inComment = true
                         commentTag = CommentTag.NormalOneLine
                     }
@@ -76,7 +77,10 @@ object SqlUtils {
 
             if (char == ';') {
                 if (!inComment && !inString) {
-                    val sql = String(chars.toCharArray())
+                    val sql = String(chars.toCharArray()).trim()
+                    if (sql.isEmpty()) {
+                        continue
+                    }
                     sqlAndQuestionMarkCountList.add(sql to questionMarkCount)
 
                     chars.clear()

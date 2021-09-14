@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
 import javax.sql.DataSource
+import kotlin.concurrent.getOrSet
 import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING", "HasPlatformType")
@@ -26,7 +27,7 @@ data class DbColumnInfo(
 
 object QueryProConfig {
     private var dataSource: DataSource? = null
-    private val dataSourceThreadLocal: ThreadLocal<DataSource?> = ThreadLocal()
+    private val dataSourceThreadLocal: ThreadLocal<DataSource> = ThreadLocal()
     private var supportedColumnType = mutableSetOf<Class<*>>()
     /**
      * ResultSet解析器
@@ -130,10 +131,6 @@ object QueryProConfig {
     }
 
     fun getDataSourceOrInit(init: () -> DataSource): DataSource {
-        val currentThreadDataSource = dataSourceThreadLocal.get()
-        if (currentThreadDataSource != null) {
-            return currentThreadDataSource
-        }
-        return dataSource ?: init().also { dataSource = it }
+        return dataSourceThreadLocal.getOrSet { dataSource ?: init() }
     }
 }

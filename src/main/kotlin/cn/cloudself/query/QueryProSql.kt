@@ -65,6 +65,7 @@ class QueryProSql {
          * @param sql 单条sql语句 e.g. INSERT INTO user (id, name) VALUES (?, ?)
          * @param params 参数数组数组 e.g. [[1, 'hb'], [2, 'l']]
          */
+        @JvmStatic
         fun createBatch(sql: String, params: Array<Array<Any?>>): BatchAction {
             return BatchAction(arrayOf(sql), params)
         }
@@ -76,8 +77,10 @@ class QueryProSql {
          * @param sqlGroup 复合sql语句 e.g. INSERT INTO user (id, name) VALUES (?, ?); UPDATE user SET name = UPPER(name) WHERE id = ?
          * @param params e.g. [1, 'hb, 1]
          */
-        fun updateBatchInOneSql(sqlGroup: String, params: Array<Any?>): BatchAction {
-            val sqlAndCountArr = SqlUtils.splitAndCountQuestionMark(sqlGroup)
+        @JvmStatic
+        @JvmOverloads
+        fun createBatchBySqlGroup(sqlGroup: String, params: Array<Any?> = arrayOf()): BatchAction {
+            val sqlAndCountArr = SqlUtils.splitBySemicolonAndCountQuestionMark(sqlGroup)
             val size = sqlAndCountArr.size
             val sqlArr = Array(size) { "" }
             val emptyArr = arrayOf<Any?>()

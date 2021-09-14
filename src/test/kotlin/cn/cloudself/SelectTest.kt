@@ -7,50 +7,58 @@ import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import org.intellij.lang.annotations.Language
 import org.junit.Test
+import kotlin.test.assertContentEquals
 
 class SelectTest {
     private fun prepareData() {
-        @Language("SQL")
-        val s =
+        QueryProSql.createBatchBySqlGroup(
             """
-                SELECT * FROM mysql.user WHERE password_expired = 'aaaa\\
-                bbbb' and x;
-                
-            """.trimIndent()
-        QueryProSql.createBatch(arrayOf(
-            "TRUNCATE TABLE user;",
-            "INSERT INTO user (id, name, age) VALUES (1, 'hb', 18);",
-            "INSERT INTO user (id, name, age) VALUES (2, 'herb', 18);",
-            "INSERT INTO user (id, name, age) VALUES (3, 'l', 18);",
-            "TRUNCATE TABLE setting;",
-            "INSERT INTO setting (id, user_id, kee, value) VALUES (1, 1, 'lang', '简体中文');",
-        )).update(Boolean::class.java)
+                TRUNCATE TABLE user;
+                INSERT INTO user (id, name, age) VALUES (1, 'hb', 18);
+                INSERT INTO user (id, name, age) VALUES (2, 'hb', 10);
+                INSERT INTO user (id, name, age) VALUES (3, 'herb', 18);
+                INSERT INTO user (id, name, age) VALUES (4, 'l', 18);
+                TRUNCATE TABLE setting;
+                INSERT INTO setting (id, user_id, kee, value) VALUES (1, 1, 'lang', '简体中文');
+            """
+        ).update(Boolean::class.java)
     }
 
     @Test
     fun test() {
+        testPri()
+        testPri()
+        testPri()
+        testPri()
+        testPri()
+        testPri()
+        testPri()
+        testPri()
+        testPri()
+        testPri()
+    }
+
+    fun testPri() {
         QueryProConfig.beautifySql = false
         QueryProConfig.setDataSource(getDataSource())
 
         prepareData()
 
-        if (1 == 1) {
-            return
-        }
-
         expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ?", listOf(1))
         val users: List<User> = UserQueryPro.selectBy().id.equalsTo(1).run()
+        assertContentEquals(users, listOf(User(1, "hb", 18)))
 
         expectSqlResult("SELECT `setting`.`id` FROM `setting` WHERE `setting`.`id` = ?", listOf(1))
         val ids: List<Long?> = SettingQueryPro.selectBy().id.equalsTo(1).columnLimiter().id()
+//        assertContentEquals(ids, listOf(1))
 
-        expectSqlResult("SELECT * FROM `user` WHERE `user`.`name` = ? AND `user`.`age` = ?", listOf(1, 1000))
-        val users1: List<User> = UserQueryPro.selectBy().name.`is`.equalsTo(1).and().age.`is`.equalsTo(1000).run()
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`name` = ? AND `user`.`age` = ?", listOf("hb", 18))
+        val users1: List<User> = UserQueryPro.selectBy().name.`is`.equalsTo("hb").and().age.`is`.equalsTo(18).run()
 
-        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? or `user`.`name` in (?, ?, ?)", listOf(1, "Tom", "Cat", "Luo"))
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`age` = ? or `user`.`name` in (?, ?)", listOf(18, "hb", "herb"))
         val users2: List<User> = UserQueryPro
-            .selectBy().id.`is`.equalsTo(1)
-            .or().name.`in`("Tom", "Cat", "Luo")
+            .selectBy().age.`is`.equalsTo(18)
+            .or().name.`in`("hb", "herb")
             .run()
 
         expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` <> ?", listOf(2))
