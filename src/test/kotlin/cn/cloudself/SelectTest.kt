@@ -26,19 +26,6 @@ class SelectTest {
 
     @Test
     fun test() {
-        testPri()
-        testPri()
-        testPri()
-        testPri()
-        testPri()
-        testPri()
-        testPri()
-        testPri()
-        testPri()
-        testPri()
-    }
-
-    fun testPri() {
         QueryProConfig.beautifySql = false
         QueryProConfig.setDataSource(getDataSource())
 
@@ -50,7 +37,7 @@ class SelectTest {
 
         expectSqlResult("SELECT `setting`.`id` FROM `setting` WHERE `setting`.`id` = ?", listOf(1))
         val ids: List<Long?> = SettingQueryPro.selectBy().id.equalsTo(1).columnLimiter().id()
-//        assertContentEquals(ids, listOf(1))
+        assertContentEquals(ids, listOf(1))
 
         expectSqlResult("SELECT * FROM `user` WHERE `user`.`name` = ? AND `user`.`age` = ?", listOf("hb", 18))
         val users1: List<User> = UserQueryPro.selectBy().name.`is`.equalsTo("hb").and().age.`is`.equalsTo(18).run()

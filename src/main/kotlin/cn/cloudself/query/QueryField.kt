@@ -2,6 +2,7 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
+import kotlin.reflect.KClass
 
 enum class QueryFieldType {
     WHERE_FIELD,
@@ -27,12 +28,20 @@ abstract class FinalSelectField<
         return create_field(queryStructure.copy(limit = limit))
     }
 
-    protected open fun <T>getColumn(field: Field, clazz: Class<T>): List<T?> {
+    protected open fun <T: Any>getColumn(field: Field, clazz: Class<T>): List<T?> {
         val newQueryStructure = queryStructure.copy(fields = queryStructure.fields + field)
         val rows = create_field(newQueryStructure).runAsMap()
         return rows.map {
-            val f = it[field.column]
-            if (f != null && clazz.isInstance(f)) {
+            val f = it[field.column] ?: return@map null
+
+            val fieldJavaClass = f.javaClass
+            if (clazz.isAssignableFrom(f.javaClass)) {
+                @Suppress("UNCHECKED_CAST")
+                return@map f as T
+            }
+            val targetPrimitiveType = clazz.kotlin.javaPrimitiveType ?: return@map null
+            val objPrimitiveType = fieldJavaClass.kotlin.javaPrimitiveType
+            if (targetPrimitiveType == objPrimitiveType) {
                 @Suppress("UNCHECKED_CAST")
                 f as T
             } else {
