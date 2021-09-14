@@ -219,7 +219,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 }
             }
 
-            resultProxy.setProperty(columnName, value)
+            resultProxy.setProperty(columnName, if (resultSet.wasNull()) null else value)
         }
 
         return resultProxy.toResult()
