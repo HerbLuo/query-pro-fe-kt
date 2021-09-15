@@ -125,7 +125,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 val updatedCount = preparedStatement.executeUpdate()
                 @Suppress("UNCHECKED_CAST")
                 if (Boolean::class.java.isAssignableFrom(clazz)) {
-                    val success = updatedCount > 1
+                    val success = updatedCount > 0
                     resultList.add(success as T)
                 } else if (Int::class.java.isAssignableFrom(clazz)) {
                     resultList.add(updatedCount as T)
