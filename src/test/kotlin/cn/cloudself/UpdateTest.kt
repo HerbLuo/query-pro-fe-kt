@@ -19,23 +19,22 @@ class UpdateTest {
             UserQueryPro.updateSet(User(name = "hb")).run()
         }
 
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(1))
+        expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(18, 1))
         val success1: Boolean = UserQueryPro.updateSet(User(age = 18)).where.id.equalsTo(1).run()
 
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(2L))
+        expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(18, 2))
         val success2: Boolean = UserQueryPro.updateSet(User(id = 2, age = 18)).run()
 
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(3L))
+        expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(18, 3))
         val success3: Boolean = UserQueryPro.updateSet(User(id = 3, age = 18)).run()
 
-        // TODO 注入风险
-        expectSqlResult("UPDATE `user` SET `name` = 'hb', `age` = null WHERE `user`.`id` = ?", listOf(2L))
+        expectSqlResult("UPDATE `user` SET `name` = ?, `age` = ? WHERE `user`.`id` = ?", listOf("hb", null, 2))
         val success5: Boolean = UserQueryPro.updateSet(User(id = 2, name = "hb"), true).run()
 
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`id` = ?", listOf(1))
+        expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(18, 1))
         val success6: Boolean = UserQueryPro.updateSet().id(1).age(18).run()
 
-        expectSqlResult("UPDATE `user` SET `age` = 18 WHERE `user`.`name` = ?", listOf("herb"))
+        expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`name` = ?", listOf(18, "herb"))
         val success7: Boolean = UserQueryPro.updateSet().age(18).where.name.equalsTo("herb").run()
     }
 }

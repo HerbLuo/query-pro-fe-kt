@@ -5,6 +5,7 @@ import javax.sql.DataSource
 import cn.cloudself.query.structure_reolsver.QueryStructureToSql
 import cn.cloudself.query.util.SqlUtils
 import org.intellij.lang.annotations.Language
+import java.math.BigDecimal
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
@@ -60,8 +61,19 @@ fun getDataSource(dbName: String? = DB_NAME, skipInit: Boolean = false): DataSou
 fun expectSqlResult(@Language("SQL") sql: String, params: List<Any?>) {
     QueryStructureToSql.beforeReturnForTest = {
         assertEquals(it.first.trim(), sql.trim())
-        assertContentEquals(it.second, params)
+        val second = it.second
+        for (i in params.indices) {
+            if (isNumber(params[i])) {
+                assertEquals(params[i].toString(), second[i].toString())
+            } else {
+                assertEquals(params[i], second[i])
+            }
+        }
         QueryStructureToSql.beforeReturnForTest = null
     }
+}
+
+private fun isNumber(obj: Any?): Boolean {
+    return obj is Int || obj is Float || obj is Double || obj is Long || obj is BigDecimal || obj is Short
 }
 
