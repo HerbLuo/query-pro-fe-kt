@@ -70,7 +70,7 @@ class QueryProFileMakerDbInfoSample {
         QueryProFileMaker
             .singleFileMode(PathFrom.ktPackage("cn.cloudself.demo"))
             /* 指定数据源 */
-            .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
+            .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             .create()
     }
 
@@ -83,7 +83,7 @@ class QueryProFileMakerDbInfoSample {
             .singleFileMode(PathFrom.ktPackage("cn.cloudself.demo"))
             .db(
                 DbInfoBuilder
-                    .mysql("127.0.0.1", "zz_trans")
+                    .mysql("127.0.0.1", "query_pro_test")
                     .driver("com.mysql.cj.jdbc.Driver")
                     .port(3306)
                     .params {
@@ -129,9 +129,9 @@ class QueryProFileMakerSample {
             /* 将文件生成至 <project>/src/main/kotlin/cn/cloudself/foo/dao/zz下 */
             .singleFileMode(PathFrom.ktPackage("cn.cloudself.demo.single_mode"))
             /* 指定数据源 */
-            .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
+            .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
-            .tables("user", "setting", "word")
+            .tables("user", "setting")
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
             .replaceMode()
             /* 为Entity显示指定所有构造函数参数的默认值, 以便Kotlin自动生成默认的无参构造函数 */
@@ -151,7 +151,7 @@ class QueryProFileMakerSample {
             /* 将dao文件生成至 <project>/src/main/kotlin/cn/cloudself/foo/dao/zz下 */
             .entityAndDaoMode(PathFrom.ktPackage("cn.cloudself.demo"))
             /* 指定数据源 */
-            .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
+            .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
             .tables("setting", "user")
             /* 给Entity添加后缀，该步骤是在下划线转驼峰之后进行的 */
@@ -176,7 +176,7 @@ class QueryProFileMakerSample {
 //            .javaEntityAndDaoMode(PathFrom.javaPackage("cn.cloudself.demo"))
             .javaEntityAndDaoMode(PathFrom.ktPackage("cn.cloudself.demo"))
             /* 指定数据源 */
-            .db(DbInfoBuilder.mysql("127.0.0.1", "zz_trans").toDbInfo("root", "123456"))
+            .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
             .tables("user_pri")
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
