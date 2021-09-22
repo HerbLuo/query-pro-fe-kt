@@ -131,7 +131,7 @@ class QueryStructureToSql(
                 sql.append(",")
             }
             sql.append(" `", field, "` = ?")
-            indexedParams.add(value)
+            indexedParams.add(value ?: NULL)
             first = false
         }
         return idWhereClause
