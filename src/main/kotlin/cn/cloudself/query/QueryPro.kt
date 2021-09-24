@@ -67,6 +67,11 @@ class QueryPro<
     fun insert(obj: T) = insert(listOf(obj))
 
     /**
+     * 插入操作
+     */
+    fun insert(vararg objs: T) = insert(listOf(*objs))
+
+    /**
      * 批量插入
      */
     fun insert(collection: Collection<T>) = QueryProConfig.QueryStructureResolver.insert(collection, clazz)
