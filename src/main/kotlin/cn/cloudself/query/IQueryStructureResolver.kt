@@ -25,9 +25,9 @@ interface IQueryStructureResolver {
      * 使用多条语句和参数执行更新，创建，删除等非select语句
      *
      * @param sqlArr 多条或单条SQL语句
-     * @param params sqlArr 的长度为1时，params的长度任意。代表同一语句包含多参数
+     * @param paramsArr sqlArr 的长度为1时，params的长度任意。代表同一语句包含多参数
      *               sqlArr 的长度不为1时，params的长度必须和 sqlArr的长度相等。
      * @param clazz [SupportedUpdatedBatchClazz]
      */
-    fun <T> updateBatch(sqlArr: Array<String>, params: Array<Array<Any?>>, clazz: Class<T>): T
+    fun <T> updateBatch(sqlArr: Array<String>, paramsArr: Array<Array<Any?>>, clazz: Class<T>): T
 }

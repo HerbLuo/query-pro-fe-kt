@@ -66,7 +66,7 @@ class QueryProSql {
          * @param params 参数数组数组 e.g. [[1, 'hb'], [2, 'l']]
          */
         @JvmStatic
-        fun createBatch(sql: String, params: Array<Array<Any?>>): BatchAction {
+        fun createBatch(@Language("SQL") sql: String, params: Array<Array<Any?>>): BatchAction {
             return BatchAction(arrayOf(sql), params)
         }
 
@@ -79,7 +79,7 @@ class QueryProSql {
          */
         @JvmStatic
         @JvmOverloads
-        fun createBatchBySqlGroup(sqlGroup: String, params: Array<Any?> = arrayOf()): BatchAction {
+        fun createBatchBySqlGroup(@Language("SQL") sqlGroup: String, params: Array<Any?> = arrayOf()): BatchAction {
             val sqlAndCountArr = SqlUtils.splitBySemicolonAndCountQuestionMark(sqlGroup)
             val size = sqlAndCountArr.size
             val sqlArr = Array(size) { "" }
@@ -107,6 +107,13 @@ class QueryProSql {
          */
         fun <T> update(clazz: Class<T>): T {
             return QueryProConfig.QueryStructureResolver.updateBatch(sqlArr, params, clazz)
+        }
+
+        /**
+         * 批量更新
+         */
+        fun update(): Int {
+            return update(Int::class.java)
         }
     }
 

@@ -53,7 +53,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 println("sql长度为1")
                 val preparedStatement = connection.prepareStatement(sqlArr[0])
                 for (params in paramsArr) {
-                    setParam(preparedStatement, params)
+                    setParam(preparedStatement, params, false)
                     preparedStatement.addBatch()
                 }
                 preparedStatement.executeBatch()
@@ -66,7 +66,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                         val sql = sqlArr[i]
                         val params = paramsArr[i]
                         val affectRowNum = connection.prepareStatement(sql)
-                            .also { setParam(it, params) }
+                            .also { setParam(it, params, false) }
                             .executeUpdate()
                         affectRows[i] = affectRowNum
                     }
@@ -109,7 +109,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         getConnection().use { connection ->
             val preparedStatement = connection.prepareStatement(sql)
 
-            setParam(preparedStatement, params)
+            setParam(preparedStatement, params, action != QueryStructureAction.INSERT)
 
             val resultList = mutableListOf<T>()
 
@@ -141,10 +141,10 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         }
     }
 
-    private fun setParam(preparedStatement: PreparedStatement, params: Array<Any?>) {
+    private fun setParam(preparedStatement: PreparedStatement, params: Array<Any?>, brokenOnNull: Boolean) {
         for ((i, param) in params.withIndex()) {
             when (param) {
-                NULL -> preparedStatement.setNull(i + 1, Types.NULL)
+                NULL              -> preparedStatement.setNull(i + 1, Types.NULL)
                 is BigDecimal     -> preparedStatement.setBigDecimal(i + 1, param)
                 is Boolean        -> preparedStatement.setBoolean(i + 1, param)
                 is Byte           -> preparedStatement.setByte(i + 1, param)
@@ -163,7 +163,13 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 is String         -> preparedStatement.setString(i + 1, param)
                 is Time           -> preparedStatement.setTime(i + 1, param)
                 is Timestamp      -> preparedStatement.setTimestamp(i + 1, param)
-                else -> throw UnSupportException("equalsTo, in, between等操作传入了不支持的类型{0}", param)
+                else -> {
+                    if (param == null && !brokenOnNull) {
+                        preparedStatement.setNull(i + 1, Types.NULL)
+                    } else {
+                        throw UnSupportException("equalsTo, in, between等操作传入了不支持的类型{0}", param)
+                    }
+                }
             }
         }
     }
