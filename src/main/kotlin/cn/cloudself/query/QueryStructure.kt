@@ -70,6 +70,11 @@ data class QueryStructureFrom(
 )
 
 /**
+ * 支持JavaBean, 支持Map<String, *>
+ */
+typealias SupportedInsertClazz = Class<*>
+
+/**
  * 支持JavaBean, 支持Map<String, *> 支持基本类型(Long, String, Date, Enum等, 具体参考[QueryProConfig.addResultSetParser]),
  */
 typealias SupportedQueryClazz = Class<*>

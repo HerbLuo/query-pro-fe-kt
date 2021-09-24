@@ -4,6 +4,7 @@ import cn.cloudself.query.exception.UnSupportException
 import java.lang.Exception
 import javax.persistence.Column
 import javax.persistence.Id
+import javax.persistence.Table
 
 private val caches = mutableMapOf<Class<*>, ParsedClass>()
 
@@ -16,9 +17,14 @@ data class ParsedColumn(
 )
 
 data class ParsedClass(
+    val dbName: String,
     val columns: Map<String, ParsedColumn>,
     val idColumn: String?,
 )
+
+@Suppress("FunctionName")
+private fun to_snake_case(javaName: String) =
+    javaName.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").lowercase()
 
 fun parseClass(clazz: Class<*>): ParsedClass {
     return caches.getOrPut(clazz) {
@@ -26,13 +32,16 @@ fun parseClass(clazz: Class<*>): ParsedClass {
         var idColumn: String? = null
         var idColumnMay: String? = null
 
+        val tableAnnotation: Table? = clazz.getAnnotation(Table::class.java)
+        val dbNameForTable = tableAnnotation?.name ?: to_snake_case(clazz.name)
+
         var classOrSuperClass: Class<*>? = clazz
         while (classOrSuperClass != null) {
             for (field in classOrSuperClass.declaredFields) {
                 val fieldName = field.name
                 val idAnnotation: Id? = field.getAnnotation(Id::class.java)
                 val columnAnnotation: Column? = field.getAnnotation(Column::class.java)
-                val dbName = columnAnnotation?.name ?: fieldName.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").lowercase()
+                val dbName = columnAnnotation?.name ?: to_snake_case(fieldName)
                 if (idAnnotation != null) {
                     if (idColumn != null) {
                         throw UnSupportException("不支持联合主键")
@@ -71,6 +80,9 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                         }
                     },
                     getter = { o ->
+                        if (o is Map<*, *>) {
+                            return@ParsedColumn o[fieldName]
+                        }
                         if (field.canAccess(o)) {
                             return@ParsedColumn field.get(o)
                         }
@@ -85,32 +97,6 @@ fun parseClass(clazz: Class<*>): ParsedClass {
             classOrSuperClass = classOrSuperClass.superclass
         }
 
-        ParsedClass(columns = columns, idColumn ?: idColumnMay)
-    }
-}
-
-data class ParsedObjectColumn(
-    val javaName: String,
-    val value: Any?,
-)
-
-fun parseObject(obj: Any): Sequence<ParsedObjectColumn> {
-    if (obj is Map<*, *>) {
-        return sequence {
-            for ((key, value) in obj) {
-                if (key is String) {
-                    yield(ParsedObjectColumn(key, value))
-                } else {
-                    throw UnSupportException("不支持非Map<String, *>类型的Map")
-                }
-            }
-        }
-    } else {
-        val parsedClass = parseClass(obj.javaClass)
-        return sequence {
-            for ((key, column) in parsedClass.columns) {
-                yield(ParsedObjectColumn(key, column.getter(obj)))
-            }
-        }
+        ParsedClass(dbNameForTable, columns, idColumn ?: idColumnMay)
     }
 }

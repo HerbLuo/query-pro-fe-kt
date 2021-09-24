@@ -114,7 +114,7 @@ class QueryStructureToSql(
         val override = update.override
 
         var first = true
-        val columns = parseObject(data)
+        val columns = BeanObjectProxy.fromObject(data).toSequence()
         val idColumn = update.id
         var idWhereClause: WhereClause? = null
         for (column in columns) {

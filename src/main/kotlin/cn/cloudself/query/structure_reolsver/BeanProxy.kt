@@ -25,6 +25,10 @@ class BeanProxy<T, R>(
      */
     private val createInstance: () -> T,
     /**
+     * 获取属性列表
+     */
+    private val getParsedClass: () -> ParsedClass,
+    /**
      * 设置属性
      */
     private val setProperty: (o: T, p: String, v: Any?) -> Unit,
@@ -60,6 +64,7 @@ class BeanProxy<T, R>(
                     }
                     BeanProxy(
                         createInstance,
+                        { throw UnSupportException("不支持Map转properties") },
                         { result, property, value -> (result as MutableMap<String, Any?>)[property] = value },
                         { null }
                     )
@@ -68,6 +73,7 @@ class BeanProxy<T, R>(
                 QueryProConfig.getSupportedColumnType().any { it.isAssignableFrom(clazz) } -> {
                     BeanProxy<Ref<R?>, R>(
                         { Ref(null)  },
+                        { throw UnSupportException("不支持基本类型转properties") },
                         { o, _, v -> o.value = v as R },
                         { clazz },
                     ).setToResult { it.value as R }
@@ -81,6 +87,7 @@ class BeanProxy<T, R>(
 
                         BeanProxy<R, R>(
                             { noArgConstructor.newInstance() },
+                            { parsedClass },
                             { r, p, v ->
                                 val column = columns[p]
                                 if (column == null) {
@@ -104,11 +111,16 @@ class BeanProxy<T, R>(
         }
     }
 
+    data class Property(
+        val javaName: String,
+        val dbName: String,
+    )
     class BeanInstance<T, R>(
         private val instance: T,
         private val proxy: BeanProxy<T, R>,
     ) {
         fun setProperty(p: String, v: Any?) = this.also { proxy.setProperty(instance, p, v) }
+        fun getParsedClass() = proxy.getParsedClass()
         fun getJavaType(p: String) = proxy.getJavaType(p)
         fun toResult(): R = proxy.toResult(instance)
     }

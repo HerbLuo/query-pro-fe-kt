@@ -5,6 +5,7 @@ import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.IllegalParameters
 import cn.cloudself.query.exception.UnSupportException
 import cn.cloudself.query.util.SpringUtils
+import java.lang.StringBuilder
 import java.math.BigDecimal
 import java.sql.*
 import java.time.LocalDate
@@ -36,6 +37,33 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
     override fun <T> resolve(sql: String, params: Array<Any?>, clazz: Class<T>, type: QueryStructureAction): List<T> {
         return resolvePri(sql, params, clazz, type)
+    }
+
+    override fun <T> insert(objs: Collection<Any>, clazz: Class<T>): Int {
+        val bean = BeanProxy.fromClass(clazz).newInstance()
+        val parsedClass = bean.getParsedClass()
+        val columns = parsedClass.columns.values
+
+        val sqlBuilder = StringBuilder("INSERT INTO `")
+        sqlBuilder.append(parsedClass.dbName, "` (")
+        for ((i, col) in columns.withIndex()) {
+            if (i != 0) {
+                sqlBuilder.append(", ")
+            }
+            sqlBuilder.append('`', col.dbName, '`')
+        }
+        sqlBuilder.append(") VALUES (")
+        for (j in columns.indices) {
+            if (j == 0) {
+                sqlBuilder.append("?")
+            } else {
+                sqlBuilder.append(", ?")
+            }
+        }
+        sqlBuilder.append(')')
+        val params = objs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
+
+        return updateBatch(arrayOf(sqlBuilder.toString()), params, Int::class.java)
     }
 
     override fun <T> updateBatch(sqlArr: Array<String>, paramsArr: Array<Array<Any?>>, clazz: Class<T>): T {

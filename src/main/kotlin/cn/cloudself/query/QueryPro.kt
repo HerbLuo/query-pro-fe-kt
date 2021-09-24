@@ -5,7 +5,7 @@ import cn.cloudself.query.structure_reolsver.parseClass
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
 class QueryPro<
-        T,
+        T: Any,
         SELECT_BY_FIELD: QueryField<*, *, *, *, *, *>,
         ORDER_BY_FIELD: QueryField<*, *, *, *, *, *>,
         UPDATE_SET_FIELD: UpdateField<UPDATE_BY_FIELD>,
@@ -60,4 +60,14 @@ class QueryPro<
      * 删除操作
      */
     fun deleteBy() = createDeleteByField(queryStructure.copy(action = QueryStructureAction.DELETE))
+
+    /**
+     * 插入操作
+     */
+    fun insert(obj: T) = insert(listOf(obj))
+
+    /**
+     * 批量插入
+     */
+    fun insert(collection: Collection<T>) = QueryProConfig.QueryStructureResolver.insert(collection, clazz)
 }

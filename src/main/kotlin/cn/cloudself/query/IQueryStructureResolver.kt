@@ -22,6 +22,14 @@ interface IQueryStructureResolver {
     fun <T> resolve(@Language("SQL") sql: String, params: Array<Any?>, clazz: Class<T>, type: QueryStructureAction): List<T>
 
     /**
+     * 执行一次插入操作
+     *
+     * @param objs 对象集合
+     * @param clazz [SupportedInsertClazz]
+     */
+    fun <T> insert(objs: Collection<Any>, clazz: Class<T>): Int
+
+    /**
      * 使用多条语句和参数执行更新，创建，删除等非select语句
      *
      * @param sqlArr 多条或单条SQL语句
