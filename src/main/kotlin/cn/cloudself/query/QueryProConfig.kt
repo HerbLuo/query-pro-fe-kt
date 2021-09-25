@@ -89,6 +89,7 @@ object QueryProConfig {
     var printSql = true
     var dryRun: Boolean = false
     var queryProFieldComment = true
+    var logicDelete = true
     var QueryStructureResolver: IQueryStructureResolver = JdbcQueryStructureResolver()
     val dbColumnInfoToJavaType = mutableMapOf<(column: DbColumnInfo) -> Boolean, Class<*>>(
         { column: DbColumnInfo -> (column.label == "id" || column.label.endsWith("_id")) && column.type.startsWith("BIGINT") } to Long::class.java,

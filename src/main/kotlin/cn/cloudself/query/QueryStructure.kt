@@ -7,7 +7,7 @@ data class QueryStructure(
     var from: QueryStructureFrom = QueryStructureFrom(),
     val where: List<WhereClause> = listOf(),
     val orderBy: List<OrderByClause> = listOf(),
-    val limit: Int? = null,
+    val limit: Pair<Int, Int>? = null,
 )
 
 data class Update(

@@ -224,14 +224,16 @@ class QueryStructureToSql(
         }
     }
 
-    private fun buildLimitClause(limit: Int?) {
+    private fun buildLimitClause(limit: Pair<Int, Int>?) {
         if (limit == null) {
             return
         }
-        if (limit != -1) {
-            sql.append(if (beautify) '\n' else ' ')
-            sql.append("LIMIT ", qs.limit)
+        sql.append(if (beautify) '\n' else ' ')
+        sql.append("LIMIT ")
+        if (limit.first != 0) {
+            sql.append(limit.first, ", ")
         }
+        sql.append(limit.second)
     }
 
     companion object {

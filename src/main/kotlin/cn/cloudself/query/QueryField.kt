@@ -2,7 +2,6 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
-import kotlin.reflect.KClass
 
 enum class QueryFieldType {
     WHERE_FIELD,
@@ -25,7 +24,11 @@ abstract class FinalSelectField<
     protected abstract fun create_field(qs: QueryStructure): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>
 
     fun limit(limit: Int): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
-        return create_field(queryStructure.copy(limit = limit))
+        return limit(0, limit)
+    }
+
+    fun limit(start: Int, limit: Int): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
+        return create_field(queryStructure.copy(limit = start to limit))
     }
 
     protected open fun <T: Any>getColumn(field: Field, clazz: Class<T>): List<T?> {
@@ -59,11 +62,15 @@ abstract class FinalSelectField<
     }
 
     fun count(): Int {
-        return 0
+        if (queryStructure.action != QueryStructureAction.SELECT) {
+            throw IllegalCall("非SELECT语句不能使用count方法")
+        }
+        val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
+        return QueryProConfig.QueryStructureResolver.resolve(queryStructureForCount, Int::class.java)[0]
     }
 
     fun runLimit1(): T? {
-        val results = create_field(queryStructure.copy(limit = 1)).runAsList()
+        val results = create_field(queryStructure.copy(limit = 0 to 1)).runAsList()
         return if (results.isEmpty()) null else results[0]
     }
 
@@ -95,8 +102,11 @@ abstract class FinalSelectField<
         return QueryProConfig.QueryStructureResolver.resolve(queryStructure, mutableMapOf<String, Any>().javaClass)
     }
 
-    fun pageable() {
-        TODO("分页功能延后")
+    fun pageable(): Pageable<T> {
+        return Pageable.create(
+            { count() },
+            { start, limit -> QueryProConfig.QueryStructureResolver.resolve(queryStructure.copy(limit = start to limit), field_clazz) }
+        )
     }
 }
 

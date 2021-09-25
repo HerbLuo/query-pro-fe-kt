@@ -30,11 +30,11 @@ QueryStructure ------------> sql & params ----------> ResultSet -----------> Lis
 thread配置
 rpc context配置
 日志
-count
 逻辑删除
 生成的java文件 委托模拟
-缺少插入和插入数组的方法
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
+
+QueryStructure 不复制
 
 仅关键字转义
 更多的测试用例
