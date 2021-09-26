@@ -27,15 +27,14 @@ QueryStructure ------------> sql & params ----------> ResultSet -----------> Lis
 #### 后续规划
 thread配置
 rpc context配置
-日志
 逻辑删除
 生成的java文件 委托模拟
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
 
+一些优化
 QueryStructure 不复制
-
+更多日志
 仅关键字转义
 更多的测试用例
 大于maxActive的并发测试, 以及出错时的测试
 再看一下ThreadLocal与线程池的问题
-LogFilter
