@@ -25,7 +25,6 @@ QueryStructure ------------> sql & params ----------> ResultSet -----------> Lis
 
 
 #### 后续规划
-事务
 thread配置
 rpc context配置
 日志
