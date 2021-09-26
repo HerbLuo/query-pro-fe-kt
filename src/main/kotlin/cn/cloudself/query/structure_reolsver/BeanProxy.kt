@@ -2,12 +2,15 @@ package cn.cloudself.query.structure_reolsver
 
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.exception.UnSupportException
+import cn.cloudself.query.util.LogFactory
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
 private class Ref<R>(var value: R)
 
 private val beanProxyCaches = mutableMapOf<Class<*>, BeanProxy<*, *>>()
+
+private val logger = LogFactory.getLog(BeanProxy::class.java)
 
 /**
  * Bean代理，
@@ -91,7 +94,7 @@ class BeanProxy<T, R>(
                             { r, p, v ->
                                 val column = columns[p]
                                 if (column == null) {
-                                    println("[WARN] 数据库返回了多余的数据 $p")
+                                    logger.warn("数据库返回了多余的数据 $p")
                                     return@BeanProxy
                                 }
                                 column.setter(r, v)

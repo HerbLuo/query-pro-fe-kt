@@ -4,6 +4,7 @@ import cn.cloudself.query.*
 import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.IllegalParameters
 import cn.cloudself.query.exception.UnSupportException
+import cn.cloudself.query.util.LogFactory
 import cn.cloudself.query.util.SpringUtils
 import java.lang.StringBuilder
 import java.math.BigDecimal
@@ -15,12 +16,14 @@ import java.util.*
 import javax.sql.DataSource
 
 class JdbcQueryStructureResolver: IQueryStructureResolver {
+    private companion object private val logger = LogFactory.getLog(JdbcQueryStructureResolver::class.java)
+
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
 
         if (QueryProConfig.printSql) {
-            println(sql)
-            println(params)
+            logger.info(sql)
+            logger.info(params)
         }
 
         if (QueryProConfig.dryRun) {
@@ -78,7 +81,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
         getConnection().use { connection ->
             val affectRows = if (sqlArraySize == 1) {
-                println("sql长度为1")
+                logger.debug("sql长度为1")
                 val preparedStatement = connection.prepareStatement(sqlArr[0])
                 for (params in paramsArr) {
                     setParam(preparedStatement, params, false)
@@ -88,7 +91,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             } else {
                 val anyParams = paramsArr.filter { it.isNotEmpty() }.any()
                 if (anyParams) {
-                    println("log: 存在参数")
+                    logger.debug("log: 存在参数")
                     val affectRows = IntArray(sqlArraySize) { 0 }
                     for (i in sqlArr.indices) {
                         val sql = sqlArr[i]
@@ -100,7 +103,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                     }
                     affectRows
                 } else {
-                    println("log: 不存在参数")
+                    logger.debug("log: 不存在参数")
                     val statement = connection.createStatement()
                     for (sql in sqlArr) {
                         statement.addBatch(sql)

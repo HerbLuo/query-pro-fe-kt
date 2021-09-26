@@ -1,5 +1,6 @@
 package cn.cloudself.query.util
 
+import cn.cloudself.query.structure_reolsver.BeanProxy
 import freemarker.template.Configuration
 import java.io.File
 import java.nio.file.OpenOption
@@ -11,6 +12,8 @@ import java.sql.ResultSet
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
+
+private val logger = LogFactory.getLog(QueryProFileMaker::class.java)
 
 data class JavaFilePath(
     val templateName: String,
@@ -498,7 +501,7 @@ class QueryProFileMaker private constructor(
             while (primaryKeys.next()) {
                 if (idDefined) {
                     id = null
-                    println("[WARN] 目前仍不支持复合主键")
+                    logger.warn("[WARN] 目前仍不支持复合主键")
                 } else {
                     val columnName = primaryKeys.getString("COLUMN_NAME")
                     id = ModelId(columnName)
@@ -541,7 +544,7 @@ class QueryProFileMaker private constructor(
 
     private fun <T> T.debugPrint(): T {
         if (debug) {
-            println(this)
+            logger.info(this)
         }
         return this
     }
@@ -553,7 +556,7 @@ private fun ResultSet.print() {
     for (i in 1..metaData.columnCount) {
         val columnName = metaData.getColumnName(i)
         val data = this.getString(columnName)
-        println("$columnName:\t $data")
+        logger.info("$columnName:\t $data")
     }
-    println("\n")
+    logger.info("\n")
 }
