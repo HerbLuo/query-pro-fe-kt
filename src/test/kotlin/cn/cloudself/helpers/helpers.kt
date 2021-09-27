@@ -4,6 +4,9 @@ import com.alibaba.druid.pool.DruidDataSource
 import javax.sql.DataSource
 import cn.cloudself.query.structure_reolsver.QueryStructureToSql
 import cn.cloudself.query.util.SqlUtils
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.core.config.Configurator
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
 import kotlin.test.assertContentEquals
@@ -29,7 +32,8 @@ fun initDb() {
             id      bigint auto_increment primary key,
             user_id bigint      null,
             kee     varchar(55) null,
-            value   varchar(55) null
+            value   varchar(55) null,
+            deleted tinyint(1) not null default false
         );
     """.trimIndent()
 
@@ -75,5 +79,19 @@ fun expectSqlResult(@Language("SQL") sql: String, params: List<Any?>) {
 
 private fun isNumber(obj: Any?): Boolean {
     return obj is Int || obj is Float || obj is Double || obj is Long || obj is BigDecimal || obj is Short
+}
+
+fun initLogger() {
+    val builder = ConfigurationBuilderFactory.newConfigurationBuilder()
+
+    val rootLogger = builder.newRootLogger(Level.ALL).add(builder.newAppenderRef("stdout"))
+    builder.add(rootLogger)
+
+    val layout = builder.newLayout("PatternLayout").addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %highlight{%-5level}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=gray, TRACE=blue} %style{%40.40C{1.}-%-4L}{cyan}: %msg%n%ex")
+    val console = builder.newAppender("stdout", "Console")
+    console.add(layout)
+    builder.add(console)
+
+    Configurator.initialize(builder.build())
 }
 

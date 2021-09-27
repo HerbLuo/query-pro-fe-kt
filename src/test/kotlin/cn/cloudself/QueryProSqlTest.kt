@@ -1,6 +1,7 @@
 package cn.cloudself
 
 import cn.cloudself.helpers.getDataSource
+import cn.cloudself.helpers.initLogger
 import cn.cloudself.helpers.query.Setting
 import cn.cloudself.helpers.query.User
 import cn.cloudself.query.QueryProConfig
@@ -33,6 +34,8 @@ class QueryProSqlTest {
 
     @Test
     fun test() {
+        initLogger()
+
         QueryProConfig.beautifySql = false
         QueryProConfig.setDataSource(getDataSource())
 

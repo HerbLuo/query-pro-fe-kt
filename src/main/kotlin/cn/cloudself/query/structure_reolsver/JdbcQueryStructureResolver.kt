@@ -16,7 +16,7 @@ import java.util.*
 import javax.sql.DataSource
 
 class JdbcQueryStructureResolver: IQueryStructureResolver {
-    private companion object private val logger = LogFactory.getLog(JdbcQueryStructureResolver::class.java)
+    private companion object STATIC private val logger = LogFactory.getLog(JdbcQueryStructureResolver::class.java)
 
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
@@ -24,9 +24,13 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         if (QueryProConfig.printSql) {
             logger.info(sql)
             logger.info(params)
+        } else {
+            logger.debug(sql)
+            logger.debug(params)
         }
 
         if (QueryProConfig.dryRun) {
+            logger.info("dry run mode, skip querying.")
             @Suppress("UNCHECKED_CAST")
             return if (queryStructure.action == QueryStructureAction.SELECT) {
                 listOf()

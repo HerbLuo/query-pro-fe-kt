@@ -2,6 +2,7 @@ package cn.cloudself
 
 import cn.cloudself.helpers.expectSqlResult
 import cn.cloudself.helpers.getDataSource
+import cn.cloudself.helpers.initLogger
 import cn.cloudself.helpers.query.*
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
@@ -29,7 +30,10 @@ class SelectTest {
     @Suppress("SqlRedundantOrderingDirection")
     @Test
     fun test() {
+        initLogger()
+
         QueryProConfig.beautifySql = false
+        QueryProConfig.logicDelete = false
         QueryProConfig.setDataSource(getDataSource())
 
         prepareData()

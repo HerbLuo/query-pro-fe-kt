@@ -59,7 +59,14 @@ class QueryPro<
     /**
      * 删除操作
      */
-    fun deleteBy() = createDeleteByField(queryStructure.copy(action = QueryStructureAction.DELETE))
+    fun deleteBy(): DELETE_BY_FIELD {
+        return if (QueryProConfig.logicDelete) {
+            val update = Update(data = mutableMapOf("deleted" to true), override = false, id = parseClass(clazz).idColumn)
+            createDeleteByField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = update))
+        } else {
+            createDeleteByField(queryStructure.copy(action = QueryStructureAction.DELETE))
+        }
+    }
 
     /**
      * 插入操作

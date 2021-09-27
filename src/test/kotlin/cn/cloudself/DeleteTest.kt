@@ -2,6 +2,7 @@ package cn.cloudself
 
 import cn.cloudself.helpers.expectSqlResult
 import cn.cloudself.helpers.getDataSource
+import cn.cloudself.helpers.initLogger
 import cn.cloudself.helpers.query.User
 import cn.cloudself.helpers.query.UserQueryPro
 import cn.cloudself.query.QueryProConfig
@@ -24,7 +25,10 @@ class DeleteTest {
 
     @Test
     fun test() {
+        initLogger()
+
         QueryProConfig.beautifySql = false
+        QueryProConfig.logicDelete = false
         QueryProConfig.setDataSource(getDataSource())
 
         prepareData()
