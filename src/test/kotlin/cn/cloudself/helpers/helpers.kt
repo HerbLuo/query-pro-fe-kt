@@ -54,7 +54,7 @@ fun getDataSource(dbName: String? = DB_NAME, skipInit: Boolean = false): DataSou
     }
 
     val dataSource = DruidDataSource()
-    dataSource.url = "jdbc:mysql://127.0.0.1:3306/${dbName ?: ""}?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC"
+    dataSource.url = "jdbc:mysql://127.0.0.1:3306/${dbName ?: ""}?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
     dataSource.username = "root"
     dataSource.password = "123456"
     dataSource.driverClassName = "com.mysql.cj.jdbc.Driver"

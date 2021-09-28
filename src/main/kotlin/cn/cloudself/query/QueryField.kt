@@ -2,6 +2,7 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
+import cn.cloudself.query.structure_reolsver.parseClass
 
 enum class QueryFieldType {
     WHERE_FIELD,
@@ -94,12 +95,12 @@ abstract class FinalSelectField<
     }
 
     fun runAsList(): List<T> {
-        return QueryProConfig.QueryStructureResolver.resolve(queryStructure, field_clazz)
+        return QueryProConfig.QueryStructureResolver.resolve(preRun(queryStructure), field_clazz)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsMap(): List<Map<String, Any?>> {
-        return QueryProConfig.QueryStructureResolver.resolve(queryStructure, mutableMapOf<String, Any>().javaClass)
+        return QueryProConfig.QueryStructureResolver.resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
     }
 
     fun pageable(): Pageable<T> {
@@ -107,6 +108,21 @@ abstract class FinalSelectField<
             { count() },
             { start, limit -> QueryProConfig.QueryStructureResolver.resolve(queryStructure.copy(limit = start to limit), field_clazz) }
         )
+    }
+
+    private fun preRun(qs: QueryStructure): QueryStructure {
+        var queryStructure = qs
+        if (QueryProConfig.logicDelete) {
+            queryStructure = if (queryStructure.action == QueryStructureAction.DELETE) {
+                val update = Update(data = mutableMapOf("deleted" to true), override = false)
+                queryStructure.copy(action = QueryStructureAction.UPDATE, update = update)
+            } else {
+                val tables = queryStructure.where.map { it.field?.table }.distinct()
+                val whereClauses = tables.map { WhereClause(Field(it, "deleted"), "=", false) }
+                queryStructure.copy(where = queryStructure.where + whereClauses)
+            }
+        }
+        return queryStructure
     }
 }
 

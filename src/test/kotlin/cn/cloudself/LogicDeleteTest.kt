@@ -1,11 +1,13 @@
 package cn.cloudself
 
+import cn.cloudself.helpers.expectSqlResult
 import cn.cloudself.helpers.getDataSource
 import cn.cloudself.helpers.initLogger
 import cn.cloudself.helpers.query.SettingQueryPro
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class LogicDeleteTest {
     private fun prepareData() {
@@ -30,6 +32,8 @@ class LogicDeleteTest {
 
         prepareData()
 
-        SettingQueryPro.deleteBy().id.equalsTo(1).run()
+        expectSqlResult("UPDATE `setting` SET `deleted` = ? WHERE `setting`.`id` = ?", listOf(true, 1))
+        SettingQueryPro.deleteBy().id.equalsTo(1).run().also { assert(it) }
+        SettingQueryPro.selectBy().id.equalsTo(1).runLimit1().also { assertEquals(it, null) }
     }
 }

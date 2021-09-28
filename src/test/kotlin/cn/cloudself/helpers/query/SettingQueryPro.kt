@@ -23,6 +23,9 @@ data class Setting(
     /**  */
     @Column(name = "value")
     var value: String? = null,
+    /**  */
+    @Column(name = "deleted")
+    var deleted: Boolean? = null,
 )
 
 class ImplSettingQueryPro {
