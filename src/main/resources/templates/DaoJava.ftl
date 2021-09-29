@@ -7,12 +7,15 @@ import ${m.entityPackage}.${EntityName};
 <#if m.hasBigDecimal>import java.math.BigDecimal;
 </#if><#if m.hasDate>import java.util.Date;
 </#if>import cn.cloudself.query.*;
+import cn.cloudself.query.exception.IllegalCall;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+@SuppressWarnings("unused")
 public class ${ClassName} {
     private static QueryStructure defQueryStructure() {
         final QueryStructure queryStructure = new QueryStructure();
@@ -21,31 +24,39 @@ public class ${ClassName} {
     }
 
     private static QueryPro<
+            ${EntityName},
             __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
             __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            __Impl.UpdateSetField,
             __Impl.WhereField${"<"}Boolean, Boolean>,
             __Impl.WhereField${"<"}Boolean, Boolean>
     > createQuery(QueryStructure queryStructure) {
         return new QueryPro<>(
+                ${EntityName}.class,
                 queryStructure, 
                 qs -> new __Impl.WhereField<>(qs, ${EntityName}.class),
                 qs -> new __Impl.OrderByField<>(qs, ${EntityName}.class),
+                __Impl.UpdateSetField::new,
                 qs -> new __Impl.WhereField<>(qs, Boolean.class),
                 qs -> new __Impl.WhereField<>(qs, Boolean.class)
         );
     }
 
     private static final QueryPro<
+            ${EntityName},
             __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
             __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            __Impl.UpdateSetField,
             __Impl.WhereField${"<"}Boolean, Boolean>,
             __Impl.WhereField${"<"}Boolean, Boolean>
     > queryPro = createQuery(defQueryStructure());
 
     public static final QueryProEx<
             QueryPro<
+                    ${EntityName},
                     __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
                     __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+                    __Impl.UpdateSetField,
                     __Impl.WhereField${"<"}Boolean, Boolean>,
                     __Impl.WhereField${"<"}Boolean, Boolean>
             >,
@@ -68,10 +79,6 @@ public class ${ClassName} {
 
     public static __Impl.WhereField${"<"}Boolean, Boolean> deleteBy() {
         return queryPro.deleteBy();
-    }
-
-    public static __Impl.WhereField${"<"}Boolean, Boolean> updateBy() {
-        return queryPro.updateBy();
     }
 
     public static class __Impl {
@@ -151,10 +158,12 @@ public class ${ClassName} {
             @Override
             protected QueryFieldType getField_type() { return QueryFieldType.OTHER_FIELD; }
 
+            @SuppressWarnings("DuplicatedCode")
             private ColumnsLimiterField${"<"}T, RUN_RES> createColumnsLimiterField(String column) {
                 final QueryStructure oldQueryStructure = getQueryStructure();
                 final QueryStructure newQueryStructure = oldQueryStructure.copy(
                         oldQueryStructure.getAction(),
+                        oldQueryStructure.getUpdate(),
                         new ArrayList${"<"}Field>(oldQueryStructure.getFields()) {{
                             add(createField(column));
                         }},
@@ -163,11 +172,35 @@ public class ${ClassName} {
                         oldQueryStructure.getOrderBy(),
                         oldQueryStructure.getLimit()
                 );
-                return new ColumnsLimiterField${"<"}T, RUN_RES>(newQueryStructure, super.getField_clazz());
+                return new ColumnsLimiterField${"<"}>(newQueryStructure, super.getField_clazz());
             }
 
         <#list m.columns as field>
             public ColumnsLimiterField${"<"}T, RUN_RES> ${field.propertyName}() { return createColumnsLimiterField("${field.db_name}"); }
+        </#list>
+        }
+
+        public static class UpdateSetField extends UpdateField${"<"}WhereField${"<"}Boolean, Boolean>> {
+            private final QueryStructure queryStructure;
+            public UpdateSetField(QueryStructure queryStructure) {
+                super(queryStructure, qs -> new WhereField<>(qs, Boolean.class));
+                this.queryStructure = queryStructure;
+            }
+
+            @SuppressWarnings("DuplicatedCode")
+            private UpdateSetField createUpdateSetField(String key, Object value) {
+                final Update update = queryStructure.getUpdate();
+                if (update == null) {
+                    throw new IllegalCall("usage like: UserQueryPro.updateSet().id(1).name(name).run()");
+                }
+                @SuppressWarnings("unchecked") final Map${"<"}String, Object> map = (Map${"<"}String, Object>) update.getData();
+                assert map != null;
+                map.put(key, value);
+                return this;
+            }
+
+        <#list m.columns as field>
+            public UpdateSetField ${field.propertyName}(Object ${field.propertyName}) { return createUpdateSetField("${field.propertyName}", ${field.propertyName}); }
         </#list>
         }
 

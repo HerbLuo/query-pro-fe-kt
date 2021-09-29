@@ -178,7 +178,7 @@ class QueryProFileMakerSample {
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
-            .tables("user_pri")
+            .tables("setting", "user")
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
             .replaceMode()
             /* 显示更多输出 */

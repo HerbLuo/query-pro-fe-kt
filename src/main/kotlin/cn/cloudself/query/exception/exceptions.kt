@@ -3,32 +3,32 @@ package cn.cloudself.query.exception
 import java.lang.Exception
 import java.text.MessageFormat
 
-class ConfigException: Exception {
+class ConfigException: RuntimeException {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }
 
-class UnSupportException: Exception {
+class UnSupportException: RuntimeException {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }
 
-class IllegalImplements: Exception {
+class IllegalImplements: RuntimeException {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }
 
-class IllegalParameters: Exception {
+class IllegalParameters: RuntimeException {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }
 
-class MissingParameter: Exception {
+class MissingParameter: RuntimeException {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }
 
-class IllegalCall: Exception {
+class IllegalCall: RuntimeException {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }
