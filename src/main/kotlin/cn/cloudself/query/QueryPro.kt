@@ -51,7 +51,7 @@ class QueryPro<
      * 如果需要更新的值更新的值为null, 会将其更新为null
      */
     @JvmOverloads
-    fun updateSet(obj: T, override: Boolean = false): UpdateField<UPDATE_BY_FIELD> {
+    fun updateSet(obj: T, override: @ParameterName("override") Boolean = false): UpdateField<UPDATE_BY_FIELD> {
         val update = Update(data = obj, override = override, id = parseClass(clazz).idColumn)
         return UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = update), createUpdateByField)
     }

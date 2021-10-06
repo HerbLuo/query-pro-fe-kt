@@ -1,17 +1,26 @@
 package cn.cloudself.query.util
 
-import cn.cloudself.query.structure_reolsver.BeanProxy
+import cn.cloudself.demo.dao.zz.SettingQueryPro
+import cn.cloudself.query.QueryPro
+import cn.cloudself.query.exception.UnSupportException
 import freemarker.template.Configuration
 import java.io.File
+import java.lang.reflect.Modifier
+import java.lang.reflect.ParameterizedType
 import java.nio.file.OpenOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
+import java.util.*
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
+import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.functions
+import kotlin.reflect.javaType
+import kotlin.reflect.jvm.javaMethod
 
 private val logger = LogFactory.getLog(QueryProFileMaker::class.java)
 
@@ -536,10 +545,59 @@ class QueryProFileMaker private constructor(
                 columns = modelColumns,
                 id = id,
                 hasBigDecimal = modelColumns.find { it.ktTypeStr == "BigDecimal" } != null,
-                hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null
+                hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null,
             )
+            queryProDelegate().forEach{ println(it) }
             tableNameMapTemplateModel[tableName] = templateModel
         }
+    }
+
+    private fun queryProDelegate(): List<String> {
+        val settingQueryPro = SettingQueryPro::class.java
+        val queryProField = settingQueryPro.getDeclaredField("queryPro")
+        queryProField.isAccessible = true
+        val queryPro = queryProField.get(settingQueryPro)
+        println(queryPro)
+
+        val genericSuperclass1 = queryPro.javaClass.genericSuperclass
+        println(genericSuperclass1)
+        val genericSuperclass: ParameterizedType = genericSuperclass1
+                as ParameterizedType
+//        val actualTypeArguments = genericSuperclass.actualTypeArguments
+//        println(actualTypeArguments)
+
+
+        return queryProField.type.kotlin.declaredFunctions
+//            .filter { Modifier.isPublic(it.modifiers) && !Modifier.isStatic(it.modifiers) }
+            .map {
+                val parameters = it.parameters
+
+                val method = it.javaMethod ?: throw UnSupportException("QueryPro Kotlin方法必须有对应的Java方法")
+                val sb = StringBuilder()
+
+                sb.append("public ")
+                sb.append(method.returnType.simpleName).append(' ')
+                sb.append(method.name)
+                sb.append('(')
+                val sj = StringJoiner(", ")
+
+                for ((i, param) in method.parameters.withIndex()) {
+                    val kParam = parameters[i + 1]
+                    sj.add(param.type.simpleName + " " + kParam.name)
+                }
+                sb.append(sj.toString())
+                sb.append(')')
+
+                val exceptionTypes = method.exceptionTypes
+                if (exceptionTypes.isNotEmpty()) {
+                    val joiner = StringJoiner(",", " throws ", "")
+                    for (exceptionType in exceptionTypes) {
+                        joiner.add(exceptionType.typeName)
+                    }
+                    sb.append(joiner.toString())
+                }
+                sb.toString()
+            }
     }
 
     private fun <T> T.debugPrint(): T {
