@@ -70,8 +70,8 @@ public class ${ClassName} {
     );
 
 <#list m.queryProDelegate as di>
-    <#assign evelReturnType = di.returnType?interpret>
-    ${di.modifiers} <@evelReturnType/> ${di.method}(<#list di.args as arg><#assign evalArgType = arg.variableType?interpret><@evalArgType/> ${arg.variableName}<#sep>, </#list>) {
+    <#--noinspection FtlReferencesInspection-->
+    ${di.modifiers} <@di.returnType?interpret /> ${di.method}(<#list di.args as arg><@arg.variableType?interpret /> <#if arg.vararg>...</#if>${arg.variableName}<#sep>, </#list>) {
         return queryPro.${di.method}(<#list di.args as arg>${arg.variableName}<#sep>, </#list>);
     }
 

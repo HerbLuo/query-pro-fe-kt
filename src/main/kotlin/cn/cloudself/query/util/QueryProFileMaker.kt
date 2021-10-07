@@ -2,7 +2,6 @@ package cn.cloudself.query.util
 
 import cn.cloudself.query.QueryPro
 import cn.cloudself.query.exception.IllegalCall
-import cn.cloudself.query.exception.IllegalImplements
 import cn.cloudself.query.exception.IllegalTemplate
 import cn.cloudself.query.exception.UnSupportException
 import freemarker.template.Configuration
@@ -307,6 +306,7 @@ data class TemplateModel(
 
 data class DelegateInfoArg(
     var variableType: String,
+    var vararg: Boolean,
     var variableName: String,
 )
 
@@ -635,7 +635,16 @@ class QueryProFileMaker private constructor(
                     method.parameters.withIndex().map { (i, param) ->
                         val kParam = parameters[i + 1]
                         val paramType = toActualType(param.parameterizedType.typeName) ?: param.type.typeName
-                        DelegateInfoArg(noPackage(paramType), kParam.name ?: "obj$i")
+                        val isVararg = kParam.isVararg
+                        val finalParamType = if (isVararg) {
+                            if (!paramType.endsWith("[]")) {
+                                throw IllegalTemplate("vararg参数类型不可以不是数组")
+                            }
+                            noPackage(paramType.substring(0, paramType.length - 2))
+                        } else {
+                            noPackage(paramType)
+                        }
+                        DelegateInfoArg(finalParamType, isVararg, kParam.name ?: "obj$i")
                     }
                 )
             }
