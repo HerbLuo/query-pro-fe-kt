@@ -1,6 +1,5 @@
 package cn.cloudself.query.exception
 
-import java.lang.Exception
 import java.text.MessageFormat
 
 class ConfigException: RuntimeException {
@@ -14,6 +13,11 @@ class UnSupportException: RuntimeException {
 }
 
 class IllegalImplements: RuntimeException {
+    constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
+    constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
+}
+
+class IllegalTemplate: RuntimeException {
     constructor(message: String, vararg args: Any?): super(MessageFormat.format(message, *args))
     constructor(cause: Throwable, message: String, vararg args: Any?): super(MessageFormat.format(message, args), cause)
 }

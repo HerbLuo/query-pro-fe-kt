@@ -69,18 +69,13 @@ public class ${ClassName} {
             ${EntityName}QueryPro::createQuery
     );
 
-    public static __Impl.WhereField<${EntityName}, List<${EntityName}>> selectBy() {
-        return queryPro.selectBy();
+<#list m.queryProDelegate as di>
+    <#assign evelReturnType = di.returnType?interpret>
+    ${di.modifiers} <@evelReturnType/> ${di.method}(<#list di.args as arg><#assign evalArgType = arg.variableType?interpret><@evalArgType/> ${arg.variableName}<#sep>, </#list>) {
+        return queryPro.${di.method}(<#list di.args as arg>${arg.variableName}<#sep>, </#list>);
     }
 
-    public static __Impl.OrderByField<${EntityName}, List<${EntityName}>> orderBy() {
-        return queryPro.orderBy();
-    }
-
-    public static __Impl.WhereField${"<"}Boolean, Boolean> deleteBy() {
-        return queryPro.deleteBy();
-    }
-
+</#list>
     public static class __Impl {
         private static final Class${"<"}${EntityName}> CLAZZ = ${EntityName}.class;
         public static final String TABLE_NAME = "${m.db_name}";

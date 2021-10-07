@@ -1,10 +1,10 @@
 package cn.cloudself.samples
 
+import cn.cloudself.helpers.initLogger
 import cn.cloudself.query.util.DbInfoBuilder
 import cn.cloudself.query.util.DbNameToJava
 import cn.cloudself.query.util.PathFrom
 import cn.cloudself.query.util.QueryProFileMaker
-import org.junit.AfterClass
 import org.junit.Test
 
 class QueryProFileMakePathFromSample {
@@ -120,6 +120,10 @@ class QueryProFileMakerDbJavaNameConverterSample {
  * @see entityAndDaoMode
  */
 class QueryProFileMakerSample {
+    init {
+        initLogger()
+    }
+
     /**
      * 单文件模式
      */

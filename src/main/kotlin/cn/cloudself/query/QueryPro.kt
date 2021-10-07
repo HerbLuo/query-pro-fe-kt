@@ -4,7 +4,7 @@ import cn.cloudself.query.structure_reolsver.parseClass
 
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
-class QueryPro<
+open class QueryPro<
         T: Any,
         SELECT_BY_FIELD: QueryField<*, *, *, *, *, *>,
         ORDER_BY_FIELD: QueryField<*, *, *, *, *, *>,

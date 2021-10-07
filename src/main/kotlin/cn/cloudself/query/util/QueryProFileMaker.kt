@@ -1,12 +1,13 @@
 package cn.cloudself.query.util
 
-import cn.cloudself.demo.dao.zz.SettingQueryPro
 import cn.cloudself.query.QueryPro
+import cn.cloudself.query.exception.IllegalCall
+import cn.cloudself.query.exception.IllegalImplements
+import cn.cloudself.query.exception.IllegalTemplate
 import cn.cloudself.query.exception.UnSupportException
 import freemarker.template.Configuration
 import java.io.File
-import java.lang.reflect.Modifier
-import java.lang.reflect.ParameterizedType
+import java.io.InputStream
 import java.nio.file.OpenOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
@@ -18,8 +19,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
 import kotlin.reflect.full.declaredFunctions
-import kotlin.reflect.full.functions
-import kotlin.reflect.javaType
 import kotlin.reflect.jvm.javaMethod
 
 private val logger = LogFactory.getLog(QueryProFileMaker::class.java)
@@ -302,7 +301,20 @@ data class TemplateModel(
     var _ClassName: String? = null,
     var packagePath: String? = null,
     var noArgMode: Boolean? = null,
-    var columns: List<TemplateModelColumn> = listOf()
+    var columns: List<TemplateModelColumn> = listOf(),
+    var queryProDelegate: List<DelegateInfo> = listOf(),
+)
+
+data class DelegateInfoArg(
+    var variableType: String,
+    var variableName: String,
+)
+
+data class DelegateInfo(
+    var modifiers: String,
+    var returnType: String,
+    var method: String,
+    var args: List<DelegateInfoArg>,
 )
 
 class KtJavaType constructor(
@@ -443,6 +455,13 @@ class QueryProFileMaker private constructor(
                 model._ClassName = ClassName
                 model.packagePath = javaFilePath.packagePath
                 model.noArgMode = ktNoArgMode
+                val templateDir = "templates"
+                model.queryProDelegate = delegateQueryPro(
+                    templateName
+                ) {
+                    QueryProFileMaker::class.java.classLoader.getResourceAsStream("$templateDir/$templateName")
+                        ?: throw IllegalCall("没有找到相应的模板")
+                }.debugPrint()
                 for (column in model.columns) {
                     val propertyName =
                         nameConverter(ConvertInfo(column.db_name, JavaNameType.propertyName, templateName))
@@ -455,15 +474,14 @@ class QueryProFileMaker private constructor(
                 }
 
                 val configuration = Configuration(Configuration.VERSION_2_3_31)
-                configuration.setClassLoaderForTemplateLoading(QueryProFileMaker::class.java.classLoader, "templates")
+                configuration.setClassLoaderForTemplateLoading(QueryProFileMaker::class.java.classLoader, templateDir)
                 val template = configuration.getTemplate(templateName)
-
                 javaFilePath.dir.createDirectories()
-                val filePath = Path(javaFilePath.dir.toAbsolutePath().toString(), ClassName + ext)
                 val openOptions = mutableListOf<OpenOption>(StandardOpenOption.CREATE)
                 if (replaceMode) {
                     openOptions.add(StandardOpenOption.TRUNCATE_EXISTING)
                 }
+                val filePath = Path(javaFilePath.dir.toAbsolutePath().toString(), ClassName + ext)
                 val writer = filePath.outputStream(*openOptions.toTypedArray()).writer()
                 template.process(data, writer)
             }
@@ -547,62 +565,89 @@ class QueryProFileMaker private constructor(
                 hasBigDecimal = modelColumns.find { it.ktTypeStr == "BigDecimal" } != null,
                 hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null,
             )
-            queryProDelegate().forEach{ println(it) }
             tableNameMapTemplateModel[tableName] = templateModel
         }
     }
 
-    private fun queryProDelegate(): List<String> {
-        val settingQueryPro = SettingQueryPro::class.java
-        val queryProField = settingQueryPro.getDeclaredField("queryPro")
-        queryProField.isAccessible = true
-        val queryPro = queryProField.get(settingQueryPro)
-        println(queryPro)
+    private fun delegateQueryPro(templateName: String, templateLoader: () -> InputStream): List<DelegateInfo> {
+        if (!templateName.startsWith("DaoJava")) {
+            return listOf()
+        }
 
-        val genericSuperclass1 = queryPro.javaClass.genericSuperclass
-        println(genericSuperclass1)
-        val genericSuperclass: ParameterizedType = genericSuperclass1
-                as ParameterizedType
-//        val actualTypeArguments = genericSuperclass.actualTypeArguments
-//        println(actualTypeArguments)
+        val daoJavaTemplate = String(templateLoader().readAllBytes())
+        val result = Regex("static final QueryPro<([\\s\\S]+)>\\s+queryPro\\s+=").find(daoJavaTemplate)
+        val actualGenericTypeStr = result?.groups?.get(1)?.value ?: throw IllegalTemplate("找不到queryPro定义的位置")
 
+        val actualGenericTypes = actualGenericTypeStr.split(",\n")
+        val genericTypes = QueryPro::class.typeParameters
 
-        return queryProField.type.kotlin.declaredFunctions
-//            .filter { Modifier.isPublic(it.modifiers) && !Modifier.isStatic(it.modifiers) }
+        if (genericTypes.size != actualGenericTypes.size) {
+            throw IllegalTemplate("模板中QueryPro的参数长度与QueryPro的参数长度不一致")
+        }
+        val genericTypeMapActualGenericType = mutableMapOf<String, String>()
+        for ((i, genericType) in genericTypes.withIndex()) {
+            genericTypeMapActualGenericType[genericType.name] = actualGenericTypes[i].trim()
+        }
+        fun toActualType(genericType: String): String? {
+            val actualType = genericTypeMapActualGenericType[genericType]
+            if (actualType != null) {
+                return actualType
+            }
+            if (genericType.endsWith("[]")) {
+                return genericTypeMapActualGenericType[genericType.substring(0, genericType.length - 2)]?.let { "$it[]" }
+            }
+            if (genericType.endsWith('>')) {
+                var allFind = true
+                val indexOfLt = genericType.indexOf('<')
+                val paramsStr = genericType.substring(indexOfLt + 1, genericType.length - 1)
+                val resTypeBuilder = StringBuilder(genericType.substring(0, indexOfLt + 1))
+
+                val sj = StringJoiner(",")
+                for (param in paramsStr.split(',')) {
+                    val actual = genericTypeMapActualGenericType[param.replace("? extends ", "").trim()]
+                    if (actual != null) {
+                        sj.add(actual)
+                    } else {
+                        allFind = false
+                        break
+                    }
+                }
+
+                resTypeBuilder.append('>')
+                if (allFind) {
+                    return "${genericType.substring(0, indexOfLt + 1)}${sj}>"
+                }
+            }
+            return null
+        }
+
+        fun noPackage(className: String) = className.replace("cn.cloudself.query.", "")
+
+        return QueryPro::class.declaredFunctions
             .map {
                 val parameters = it.parameters
-
                 val method = it.javaMethod ?: throw UnSupportException("QueryPro Kotlin方法必须有对应的Java方法")
-                val sb = StringBuilder()
 
-                sb.append("public ")
-                sb.append(method.returnType.simpleName).append(' ')
-                sb.append(method.name)
-                sb.append('(')
-                val sj = StringJoiner(", ")
-
-                for ((i, param) in method.parameters.withIndex()) {
-                    val kParam = parameters[i + 1]
-                    sj.add(param.type.simpleName + " " + kParam.name)
-                }
-                sb.append(sj.toString())
-                sb.append(')')
-
-                val exceptionTypes = method.exceptionTypes
-                if (exceptionTypes.isNotEmpty()) {
-                    val joiner = StringJoiner(",", " throws ", "")
-                    for (exceptionType in exceptionTypes) {
-                        joiner.add(exceptionType.typeName)
+                DelegateInfo(
+                    "public",
+                    noPackage(toActualType(method.genericReturnType.typeName) ?: method.returnType.typeName),
+                    method.name,
+                    method.parameters.withIndex().map { (i, param) ->
+                        val kParam = parameters[i + 1]
+                        val paramType = toActualType(param.parameterizedType.typeName) ?: param.type.typeName
+                        DelegateInfoArg(noPackage(paramType), kParam.name ?: "obj$i")
                     }
-                    sb.append(joiner.toString())
-                }
-                sb.toString()
+                )
             }
     }
 
     private fun <T> T.debugPrint(): T {
         if (debug) {
-            logger.info(this)
+            if (this is Iterable<*>) {
+                this.forEach { logger.info(it) }
+            } else {
+                logger.info(this)
+            }
         }
         return this
     }
