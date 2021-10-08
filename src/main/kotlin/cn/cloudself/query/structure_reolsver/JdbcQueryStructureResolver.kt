@@ -126,12 +126,12 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                     return affectRows as T
                 }
                 else -> {
-                    if (Boolean::class.java.isAssignableFrom(clazz)) {
+                    if (Boolean::class.java.isAssignableFrom(clazz) || Boolean::class.javaObjectType.isAssignableFrom(clazz)) {
                         if (affectRows[0] == 0) {
                             return false as T
                         }
                         return (affectRows.sum() > 0) as T
-                    } else if (Int::class.java.isAssignableFrom(clazz)) {
+                    } else if (Int::class.java.isAssignableFrom(clazz) || Int::class.javaObjectType.isAssignableFrom(clazz)) {
                         return affectRows.sum() as T
                     }
                     throw UnSupportException("不支持的class, 目前只支持List::class.java, listOf<Int>().javaClass, Int, Boolean")

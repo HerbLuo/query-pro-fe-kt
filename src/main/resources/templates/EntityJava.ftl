@@ -32,8 +32,11 @@ public class ${ClassName} implements Serializable {
         return ${field.propertyName};
     }
 
-    public void set${field.propertyName?cap_first}(${field.javaTypeStr} ${field.propertyName}) {
+    public <#if m.chainForModel>${ClassName}</#if><#if !m.chainForModel>void</#if> set${field.propertyName?cap_first}(${field.javaTypeStr} ${field.propertyName}) {
         this.${field.propertyName} = ${field.propertyName};
+    <#if m.chainForModel>
+        return this;
+    </#if>
     }
 
 </#list>

@@ -174,15 +174,20 @@ class QueryProFileMakerSample {
      */
     @Test
     fun javaEntityAndDaoMode() {
+        val filePathResolver =
+            PathFrom.create().dirTest().javaPackage("cn.cloudself.java.helpers.query").daoPackage("").entityPackage("")
+                .getResolver()
         QueryProFileMaker
             /* 将entity文件生成至 <project>/src/main/java/cn/cloudself/demo/entity下 */
             /* 将dao文件生成至 <project>/src/main/java/cn/cloudself/demo/dao/zz下 */
 //            .javaEntityAndDaoMode(PathFrom.javaPackage("cn.cloudself.demo"))
-            .javaEntityAndDaoMode(PathFrom.ktPackage("cn.cloudself.demo"))
+            .javaEntityAndDaoMode(filePathResolver)
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
             .tables("setting", "user")
+            /* 生成的JavaBean允许链式调用 */
+            .chain()
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */
             .replaceMode()
             /* 显示更多输出 */

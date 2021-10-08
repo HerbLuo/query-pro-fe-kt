@@ -64,10 +64,13 @@ class PathFrom private constructor() {
     }
     private var subModuleName = ""
     private var lang = "kotlin"
+    private var mainDir = "main"
     private var packageName = "cn.cloudself"
     private var entityPackage = "entity"
     private var daoPackage = "dao.zz"
     private var abs = false
+
+    fun dirTest(dir: String = "test") = this.also { this.mainDir = dir }
 
     /**
      * 如果项目存在子模块, 使用这个设置项目的子模块
@@ -114,8 +117,8 @@ class PathFrom private constructor() {
             templateName.startsWith("Entity") -> entityPackage
             else -> daoPackage
         }
-        val packagePath = "$packageName.$entityOrDao"
-        JavaFilePath(templateName, Path(workspace, subModuleName, "src", "main", lang, packageNameToPath(packagePath)), packagePath)
+        val packagePath = "$packageName${if (entityOrDao.isEmpty()) "" else "."}$entityOrDao"
+        JavaFilePath(templateName, Path(workspace, subModuleName, "src", mainDir, lang, packageNameToPath(packagePath)), packagePath)
     }
 
     private fun packageNameToPath(packageName: String) = packageName.replace(".", File.separator)
@@ -295,6 +298,7 @@ data class TemplateModel(
     var hasBigDecimal: Boolean,
     var hasDate: Boolean,
 
+    var chainForModel: Boolean? = false,
     var entityPackage: String? = null,
     var _EntityName: String? = null,
     var _ClassName: String? = null,
@@ -364,6 +368,7 @@ class QueryProFileMaker private constructor(
     private var tables: Array<out String> = arrayOf("*")
     private var replaceMode = false
     private var ktNoArgMode = true
+    private var chainForModel = false
     private var entityFileTemplatePath: String? = null
     private val dbMetaTypeMapKtJavaType = mutableMapOf(
         "BIGINT" to KtJavaType("Long"),
@@ -382,6 +387,11 @@ class QueryProFileMaker private constructor(
         "when", "while",
     )
     private var nameConverter = DbNameToJava.createDefault().getConverter()
+
+    /**
+     * 生成的JavaBean允许链式set
+     */
+    fun chain() = this.also { this.chainForModel = true }
 
     /**
      * 显示更多输出
@@ -452,6 +462,7 @@ class QueryProFileMaker private constructor(
                     model.entityPackage = entityFilePath.packagePath
                 }
 
+                model.chainForModel = chainForModel
                 model._ClassName = ClassName
                 model.packagePath = javaFilePath.packagePath
                 model.noArgMode = ktNoArgMode
@@ -629,7 +640,7 @@ class QueryProFileMaker private constructor(
                 val method = it.javaMethod ?: throw UnSupportException("QueryPro Kotlin方法必须有对应的Java方法")
 
                 DelegateInfo(
-                    "public",
+                    "public static",
                     noPackage(toActualType(method.genericReturnType.typeName) ?: method.returnType.typeName),
                     method.name,
                     method.parameters.withIndex().map { (i, param) ->

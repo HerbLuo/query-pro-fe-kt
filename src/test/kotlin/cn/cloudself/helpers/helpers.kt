@@ -9,13 +9,12 @@ import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 var dbInitialized = false
 const val DB_NAME = "query_pro_test"
 
-fun initDb() {
+private fun initDb() {
     if (dbInitialized) {
         return
     }
@@ -48,6 +47,7 @@ fun initDb() {
     dbInitialized = true
 }
 
+@JvmOverloads
 fun getDataSource(dbName: String? = DB_NAME, skipInit: Boolean = false): DataSource {
     if (!skipInit) {
         initDb()
@@ -75,6 +75,10 @@ fun expectSqlResult(@Language("SQL") sql: String, params: List<Any?>) {
         }
         QueryStructureToSql.beforeReturnForTest = null
     }
+}
+
+fun assertEqualsForJava(obj1: Any?, obj2: Any?) {
+    assertEquals(obj1, obj2)
 }
 
 private fun isNumber(obj: Any?): Boolean {

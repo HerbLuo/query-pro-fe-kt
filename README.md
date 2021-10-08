@@ -29,7 +29,6 @@ global配置
 request配置
 thread配置
 rpc context配置
-生成的java文件 委托模拟
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
 
 一些优化
