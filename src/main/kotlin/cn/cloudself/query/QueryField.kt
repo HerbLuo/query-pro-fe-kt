@@ -151,6 +151,7 @@ abstract class QueryField<
         return this as WHERE_FIELD
     }
 
+    @JvmOverloads
     fun or(factor: ((f: WHERE_FIELD) -> WHERE_FIELD)? = null): WHERE_FIELD {
         if (field_type != QueryFieldType.WHERE_FIELD) {
             throw RuntimeException("$field_type can not call and, usage: .orderBy().id.desc().name.asc()")
