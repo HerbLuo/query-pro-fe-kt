@@ -8,7 +8,7 @@ import java.lang.StringBuilder
 class QueryStructureToSql(
     private val qs: QueryStructure,
 ) {
-    private val beautify = QueryProConfig.beautifySql
+    private val beautify = QueryProConfig.final.beautifySql()
     private val sql = StringBuilder()
     private val indexedParams = mutableListOf<Any?>()
 

@@ -33,9 +33,9 @@ class UpdateTest {
     fun test() {
         initLogger()
 
-        QueryProConfig.beautifySql = false
-        QueryProConfig.logicDelete = false
-        QueryProConfig.setDataSource(getDataSource())
+        QueryProConfig.global.setBeautifySql(false)
+        QueryProConfig.global.setLogicDelete(false)
+        QueryProConfig.global.setDataSource(getDataSource())
 
         prepareData()
 

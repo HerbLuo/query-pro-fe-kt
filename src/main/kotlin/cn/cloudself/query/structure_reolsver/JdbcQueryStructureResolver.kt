@@ -21,7 +21,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
 
-        if (QueryProConfig.printSql) {
+        if (QueryProConfig.final.printSql()) {
             logger.info(sql)
             logger.info(params)
         } else {
@@ -29,7 +29,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             logger.debug(params)
         }
 
-        if (QueryProConfig.dryRun) {
+        if (QueryProConfig.final.dryRun()) {
             logger.info("dry run mode, skip querying.")
             @Suppress("UNCHECKED_CAST")
             return if (queryStructure.action == QueryStructureAction.SELECT) {
@@ -221,7 +221,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             var beanNeedType = resultProxy.getJavaType(columnName)
 
             if (beanNeedType == null) {
-                for ((tester, jt) in QueryProConfig.dbColumnInfoToJavaType) {
+                for ((tester, jt) in QueryProConfig.final.dbColumnInfoToJavaType()) {
                     if (tester(DbColumnInfo(columnType, columnName))) {
                         beanNeedType = jt
                         break
@@ -232,12 +232,12 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             val value = if (beanNeedType == null) {
                 resultSet.getObject(i)
             } else {
-                val parser = QueryProConfig.getResultSetParser(beanNeedType)
+                val parser = QueryProConfig.final.resultSetParser(beanNeedType)
                 if (parser != null) {
                     parser(resultSet)(i) /* value */
                 } else {
                     var valueOpt: Optional<Any>? = null
-                    for (resultSetParserEx in QueryProConfig.resultSetParserEx) {
+                    for (resultSetParserEx in QueryProConfig.final.resultSetParserEx()) {
                         val valueOptMay = resultSetParserEx(resultSet, beanNeedType, i)
                         if (valueOptMay.isPresent) {
                             valueOpt = valueOptMay
@@ -253,7 +253,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                             resultSet.getObject(i)
                         } else {
                             throw ConfigException("不支持将name: {0}, type: {1}转换为{2}, " +
-                                    "使用QueryProConfig(.INSTANCE).addResultSetParser添加转换器",
+                                    "使用QueryProConfig.global.addResultSetParser添加转换器",
                                 columnName, columnType, beanNeedType.name)
                         }
                     }
@@ -267,12 +267,14 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     }
 
     private fun getConnection(): Connection {
-        val dataSource = QueryProConfig.getDataSourceOrInit {
-            try {
+        var dataSource = QueryProConfig.final.dataSourceNullable()
+        if (dataSource == null) {
+            dataSource = try {
                 SpringUtils.getBean(DataSource::class.java)
             } catch (e: NoClassDefFoundError) {
                 null
-            } ?: throw ConfigException("无法找到DataSource, 使用QueryProConfig(.INSTANCE).setDataSource设置")
+            } ?: throw ConfigException("无法找到DataSource, 使用QueryProConfig.setDataSource设置")
+            QueryProConfig.global.setDataSource(dataSource)
         }
         return dataSource.connection
     }

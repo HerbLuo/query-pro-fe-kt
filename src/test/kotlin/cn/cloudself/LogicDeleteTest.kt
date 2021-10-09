@@ -26,9 +26,9 @@ class LogicDeleteTest {
     fun test() {
         initLogger()
 
-        QueryProConfig.beautifySql = false
-        QueryProConfig.logicDelete = true
-        QueryProConfig.setDataSource(getDataSource())
+        QueryProConfig.global.setBeautifySql(false)
+        QueryProConfig.global.setLogicDelete(false)
+        QueryProConfig.global.setDataSource(getDataSource())
 
         prepareData()
 

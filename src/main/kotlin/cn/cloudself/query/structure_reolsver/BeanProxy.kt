@@ -73,7 +73,7 @@ class BeanProxy<T, R>(
                     )
                 }
                 // 需要的类型是一个数据库基本类型(Long, Int, Date等)
-                QueryProConfig.getSupportedColumnType().any { it.isAssignableFrom(clazz) } -> {
+                QueryProConfig.final.supportedColumnType().any { it.isAssignableFrom(clazz) } -> {
                     BeanProxy<Ref<R?>, R>(
                         { Ref(null)  },
                         { throw UnSupportException("不支持基本类型转properties") },

@@ -32,9 +32,9 @@ public class SelectTest {
     @Test
     public void test() {
         initLogger();
-        QueryProConfig.INSTANCE.setBeautifySql(false);
-        QueryProConfig.INSTANCE.setLogicDelete(false);
-        QueryProConfig.INSTANCE.setDataSource(getDataSource());
+        QueryProConfig.global.setBeautifySql(false);
+        QueryProConfig.global.setLogicDelete(false);
+        QueryProConfig.global.setDataSource(getDataSource());
 
         prepareData();
 

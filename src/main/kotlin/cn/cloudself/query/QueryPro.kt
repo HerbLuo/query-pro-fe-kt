@@ -74,5 +74,5 @@ open class QueryPro<
     /**
      * 批量插入
      */
-    fun insert(collection: Collection<T>) = QueryProConfig.QueryStructureResolver.insert(collection, clazz)
+    fun insert(collection: Collection<T>) = QueryProConfig.final.queryStructureResolver().insert(collection, clazz)
 }

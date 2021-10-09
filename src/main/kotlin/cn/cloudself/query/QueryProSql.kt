@@ -106,7 +106,7 @@ class QueryProSql {
          * @param clazz [SupportedUpdatedBatchClazz]
          */
         fun <T> update(clazz: Class<T>): T {
-            return QueryProConfig.QueryStructureResolver.updateBatch(sqlArr, params, clazz)
+            return QueryProConfig.final.queryStructureResolver().updateBatch(sqlArr, params, clazz)
         }
 
         /**
@@ -134,14 +134,14 @@ class QueryProSql {
          * @param clazz 支持JavaBean, 支持Map, 支持基本类型(Long, String, Date, Enum等, 具体参考[QueryProConfig.addResultSetParser])
          */
         fun <T> query(clazz: Class<T>): List<T> {
-            return QueryProConfig.QueryStructureResolver.resolve(sql, params, clazz, QueryStructureAction.SELECT)
+            return QueryProConfig.final.queryStructureResolver().resolve(sql, params, clazz, QueryStructureAction.SELECT)
         }
 
         /**
          * 使用单条语句执行更新，创建，删除等非select语句
          */
         fun update(): Int {
-            return QueryProConfig.QueryStructureResolver.resolve(sql, params, Int::class.java, QueryStructureAction.UPDATE)[0]
+            return QueryProConfig.final.queryStructureResolver().resolve(sql, params, Int::class.java, QueryStructureAction.UPDATE)[0]
         }
     }
 }

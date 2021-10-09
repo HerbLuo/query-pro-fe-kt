@@ -1,5 +1,6 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.exception.IllegalImplements
 import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
 import java.math.BigDecimal
 import java.sql.ResultSet
@@ -10,7 +11,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
 import javax.sql.DataSource
-import kotlin.concurrent.getOrSet
 import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING", "HasPlatformType")
@@ -25,84 +25,91 @@ data class DbColumnInfo(
     val label: String,
 )
 
-object QueryProConfig {
+interface IQueryProConfigDb<DataSource, Boolean, String, IQueryStructureResolver> {
+    fun dataSource(): DataSource
+    fun beautifySql(): Boolean
+    fun printSql(): Boolean
+    fun dryRun(): Boolean
+    fun queryProFieldComment(): Boolean
+    fun logicDelete(): Boolean
+    fun logicDeleteField(): String
+    fun queryStructureResolver(): IQueryStructureResolver
+}
+
+interface IQueryProConfigDbWriteable {
+    fun setDataSource(dataSource: DataSource): IQueryProConfigDbWriteable
+    fun setBeautifySql(beautifySql: Boolean): IQueryProConfigDbWriteable
+    fun setPrintSql(printSql: Boolean): IQueryProConfigDbWriteable
+    fun setDryRun(dryRun: Boolean): IQueryProConfigDbWriteable
+    fun setQueryProFieldComment(queryProFieldComment: Boolean): IQueryProConfigDbWriteable
+    fun setLogicDelete(logicDelete: Boolean): IQueryProConfigDbWriteable
+    fun setLogicDeleteField(logicDeleteField: String): IQueryProConfigDbWriteable
+    fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver): IQueryProConfigDbWriteable
+}
+
+typealias NullableQueryProConfigDb = IQueryProConfigDb<DataSource?, Boolean?, String?, IQueryStructureResolver?>
+typealias NonNullQueryProConfigDb = IQueryProConfigDb<DataSource, Boolean, String, IQueryStructureResolver>
+
+open class QueryProConfigDb: NullableQueryProConfigDb, IQueryProConfigDbWriteable {
     private var dataSource: DataSource? = null
-    private val dataSourceThreadLocal: ThreadLocal<DataSource> = ThreadLocal()
-    private var supportedColumnType = mutableSetOf<Class<*>>()
+    private var beautifySql: Boolean? = null
+    private var printSql: Boolean? = null
+    private var dryRun: Boolean? = null
+    private var queryProFieldComment: Boolean? = null
+    private var logicDelete: Boolean? = null
+    private var logicDeleteField: String? = null
+    private var queryStructureResolver: IQueryStructureResolver? = null
+
+    override fun dataSource() = dataSource
+    override fun beautifySql() = beautifySql
+    override fun printSql() = printSql
+    override fun dryRun() = dryRun
+    override fun queryProFieldComment() = queryProFieldComment
+    override fun logicDelete() = logicDelete
+    override fun logicDeleteField() = logicDeleteField
+    override fun queryStructureResolver() = queryStructureResolver
+
+    override fun setDataSource(dataSource: DataSource) = this.also { this.dataSource = dataSource }
+    override fun setBeautifySql(beautifySql: Boolean) = this.also { this.beautifySql = beautifySql }
+    override fun setPrintSql(printSql: Boolean) = this.also { this.printSql = printSql }
+    override fun setDryRun(dryRun: Boolean) = this.also { this.dryRun = dryRun }
+    override fun setQueryProFieldComment(queryProFieldComment: Boolean) = this.also { this.queryProFieldComment = queryProFieldComment }
+    override fun setLogicDelete(logicDelete: Boolean) = this.also { this.logicDelete = logicDelete }
+    override fun setLogicDeleteField(logicDeleteField: String) = this.also { this.logicDeleteField = logicDeleteField }
+    override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver) = this.also { this.queryStructureResolver = queryStructureResolver }
+}
+
+interface OnlyGlobalConfig {
+    fun supportedColumnType(): Set<Class<*>>
+    fun resultSetParserEx(): List<ResultSetParserEx>
+    fun dbColumnInfoToJavaType(): Map<(column: DbColumnInfo) -> Boolean, Class<*>>
+    fun <T> resultSetParser(clazz: Class<T>): ResultSetGetter<T>?
+}
+
+class GlobalQueryProConfigDb: QueryProConfigDb(), OnlyGlobalConfig {
+    private val supportedColumnType = mutableSetOf<Class<*>>()
+    private val resultSetParser = mutableMapOf<Class<*>, ResultSetGetter<*>>()
+    internal val resultSetParserEx = mutableListOf<ResultSetParserEx>()
+    internal val dbColumnInfoToJavaType = mutableMapOf<(column: DbColumnInfo) -> Boolean, Class<*>>()
+
+    override fun supportedColumnType(): Set<Class<*>> = supportedColumnType
+    override fun resultSetParserEx(): List<ResultSetParserEx> = resultSetParserEx
+    override fun dbColumnInfoToJavaType(): Map<(column: DbColumnInfo) -> Boolean, Class<*>> = dbColumnInfoToJavaType
+
     /**
      * ResultSet解析器
      * 内置支持的类型有:
      * BigDecimal, Byte, ByteArray, Date, LocalDate, LocalTime, LocalDateTime, java.sql.Date, Double, Float, Int,
      * Long, Time, Timestamp, Short, String,
      */
-    private val resultSetParser = mutableMapOf<Class<*>, ResultSetGetter<*>>()
-        .also { map ->
-            @Suppress("UNCHECKED_CAST")
-            fun <T: Any> put(clazz: KClass<T>, value: ResultSetGetter<T>) {
-                val primitiveType = (clazz).javaPrimitiveType
-                if (primitiveType != null && primitiveType != clazz.java) {
-                    supportedColumnType.add(primitiveType)
-                    map[primitiveType] = value
-                }
-                val objectType = clazz.javaObjectType
-                if (objectType != clazz.java) {
-                    supportedColumnType.add(objectType)
-                    map[objectType] = value
-                }
-
-                supportedColumnType.add(clazz.java)
-                map[clazz.java] = value
-            }
-
-            put(BigDecimal::class) { it::getBigDecimal }
-            put(Byte::class) { it::getByte }
-            put(ByteArray::class) { it::getBytes }
-            put(Date::class) { it::getDate }
-            put(LocalDate::class) { rs -> { i -> rs.getDate(i).toLocalDate() } }
-            put(LocalTime::class) { rs -> { i -> rs.getTime(i).toLocalTime() } }
-            put(LocalDateTime::class) { rs -> { i -> rs.getTimestamp(i).toLocalDateTime() } }
-            put(java.sql.Date::class) { it::getDate }
-            put(Double::class) { it::getDouble }
-            put(Float::class) { it::getFloat }
-            put(Int::class) { it::getInt }
-            put(Long::class) { it::getLong }
-            put(Time::class) { it::getTime }
-            put(Timestamp::class) { it::getTimestamp }
-            put(Short::class) { it::getShort }
-            put(String::class) { it::getString }
-
-            // 如果是未知的类型，使用meta data获取默认的java类型，如果一致，直接getObject
-            // 否则抛出异常
-        }
-    val resultSetParserEx = mutableListOf<ResultSetParserEx>(
-        { rs, clazz, i ->
-            if (!clazz.isEnum) {
-                Optional.empty()
-            } else {
-                @Suppress("UNCHECKED_CAST")
-                Optional.ofNullable(enumValueOfAny(clazz, rs.getString(i)))
-            }
-        }
-    )
-
-    var beautifySql = true
-    var printSql = true
-    var dryRun: Boolean = false
-    var queryProFieldComment = true
-    var logicDelete = true
-    var logicDeleteField = "deleted"
-    var QueryStructureResolver: IQueryStructureResolver = JdbcQueryStructureResolver()
-    val dbColumnInfoToJavaType = mutableMapOf<(column: DbColumnInfo) -> Boolean, Class<*>>(
-        { column: DbColumnInfo -> (column.label == "id" || column.label.endsWith("_id")) && column.type.startsWith("BIGINT") } to Long::class.java,
-    )
-
     @Suppress("UNCHECKED_CAST")
-    fun <T> getResultSetParser(clazz: Class<T>): ResultSetGetter<T>? {
+    override fun <T> resultSetParser(clazz: Class<T>): ResultSetGetter<T>? {
         var res = this.resultSetParser[clazz] as ResultSetGetter<T>?
         if (res == null) {
             for ((key, value) in this.resultSetParser) {
                 if (key.isAssignableFrom(clazz)) {
                     res = value as ResultSetGetter<T>
+                    break
                 }
             }
         }
@@ -122,17 +129,98 @@ object QueryProConfig {
         supportedColumnType.add(clazz)
     }
 
-    fun getSupportedColumnType() = supportedColumnType
+    @Suppress("UNCHECKED_CAST")
+    internal fun <T: Any> putToResultSetParser(clazz: KClass<T>, value: ResultSetGetter<T>) {
+        val primitiveType = (clazz).javaPrimitiveType
+        if (primitiveType != null && primitiveType != clazz.java) {
+            supportedColumnType.add(primitiveType)
+            resultSetParser[primitiveType] = value
+        }
+        val objectType = clazz.javaObjectType
+        if (objectType != clazz.java) {
+            supportedColumnType.add(objectType)
+            resultSetParser[objectType] = value
+        }
 
-    fun setDataSource(dataSource: DataSource) = this.also {
-        this.dataSource = dataSource
+        supportedColumnType.add(clazz.java)
+        resultSetParser[clazz.java] = value
+    }
+}
+
+class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>): NonNullQueryProConfigDb, OnlyGlobalConfig {
+    private fun <R> getBy(getter: (db: NullableQueryProConfigDb) -> R?): R = getByNullable(getter)
+        ?: throw IllegalImplements("遍历了所有配置但仍然无法找到有效配置")
+    private fun <R> getByNullable(getter: (db: NullableQueryProConfigDb) -> R?): R? {
+        for (config in configs) {
+            val res = getter(config)
+            if (res != null) {
+                return res
+            }
+        }
+        return null
     }
 
-    fun setDataSourceThreadLocal(dataSource: DataSource) = this.also {
-        dataSourceThreadLocal.set(dataSource)
-    }
 
-    fun getDataSourceOrInit(init: () -> DataSource): DataSource {
-        return dataSourceThreadLocal.getOrSet { dataSource ?: init() }
-    }
+    override fun dataSource() = getBy(NullableQueryProConfigDb::dataSource)
+    override fun beautifySql() = getBy(NullableQueryProConfigDb::beautifySql)
+    override fun printSql() = getBy(NullableQueryProConfigDb::printSql)
+    override fun dryRun() = getBy(NullableQueryProConfigDb::dryRun)
+    override fun queryProFieldComment() = getBy(NullableQueryProConfigDb::queryProFieldComment)
+    override fun logicDelete() = getBy(NullableQueryProConfigDb::logicDelete)
+    override fun logicDeleteField() = getBy(NullableQueryProConfigDb::logicDeleteField)
+    override fun queryStructureResolver() = getBy(NullableQueryProConfigDb::queryStructureResolver)
+
+    override fun supportedColumnType() = QueryProConfig.global.supportedColumnType()
+    override fun resultSetParserEx() = QueryProConfig.global.resultSetParserEx()
+    override fun dbColumnInfoToJavaType() = QueryProConfig.global.dbColumnInfoToJavaType()
+    override fun <T> resultSetParser(clazz: Class<T>) = QueryProConfig.global.resultSetParser(clazz)
+
+    fun dataSourceNullable() = getByNullable(NullableQueryProConfigDb::dataSource)
+}
+
+object QueryProConfig {
+    @JvmField
+    val global = GlobalQueryProConfigDb()
+        .apply {
+            setBeautifySql(true)
+            setPrintSql(true)
+            setDryRun(false)
+            setQueryProFieldComment(true)
+            setLogicDelete(true)
+            setLogicDeleteField("deleted")
+            setQueryStructureResolver(JdbcQueryStructureResolver())
+
+            // 数据库字段转Java字段 key: columnTester, value: JavaClass
+            dbColumnInfoToJavaType[
+                    // 将BIGINT类型的id列设置为Long类型
+                    { column: DbColumnInfo -> (column.label == "id" || column.label.endsWith("_id")) && column.type.startsWith("BIGINT") }
+            ] = Long::class.java
+
+            /* jdbc查询的结果: resultSet转enum */
+            @Suppress("UNCHECKED_CAST")
+            resultSetParserEx.add { rs, clazz, i -> if (!clazz.isEnum) { Optional.empty() } else { Optional.ofNullable(enumValueOfAny(clazz, rs.getString(i))) } }
+
+            putToResultSetParser(BigDecimal::class) { it::getBigDecimal }
+            putToResultSetParser(Byte::class) { it::getByte }
+            putToResultSetParser(ByteArray::class) { it::getBytes }
+            putToResultSetParser(Date::class) { it::getDate }
+            putToResultSetParser(LocalDate::class) { rs -> { i -> rs.getDate(i).toLocalDate() } }
+            putToResultSetParser(LocalTime::class) { rs -> { i -> rs.getTime(i).toLocalTime() } }
+            putToResultSetParser(LocalDateTime::class) { rs -> { i -> rs.getTimestamp(i).toLocalDateTime() } }
+            putToResultSetParser(java.sql.Date::class) { it::getDate }
+            putToResultSetParser(Double::class) { it::getDouble }
+            putToResultSetParser(Float::class) { it::getFloat }
+            putToResultSetParser(Int::class) { it::getInt }
+            putToResultSetParser(Long::class) { it::getLong }
+            putToResultSetParser(Time::class) { it::getTime }
+            putToResultSetParser(Timestamp::class) { it::getTimestamp }
+            putToResultSetParser(Short::class) { it::getShort }
+            putToResultSetParser(String::class) { it::getString }
+        }
+
+    @JvmField
+    val request = QueryProConfigDb()
+
+    @JvmField
+    val final = FinalQueryProConfigDb(arrayOf(request, global))
 }

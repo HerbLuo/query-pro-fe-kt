@@ -36,8 +36,8 @@ class QueryProSqlTest {
     fun test() {
         initLogger()
 
-        QueryProConfig.beautifySql = false
-        QueryProConfig.setDataSource(getDataSource())
+        QueryProConfig.global.setBeautifySql(false)
+        QueryProConfig.global.setDataSource(getDataSource())
 
         prepareData()
 

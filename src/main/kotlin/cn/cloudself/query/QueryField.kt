@@ -2,7 +2,6 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
-import cn.cloudself.query.structure_reolsver.parseClass
 
 enum class QueryFieldType {
     WHERE_FIELD,
@@ -67,7 +66,8 @@ abstract class FinalSelectField<
             throw IllegalCall("非SELECT语句不能使用count方法")
         }
         val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
-        return QueryProConfig.QueryStructureResolver.resolve(queryStructureForCount, Int::class.java)[0]
+
+        return QueryProConfig.final.queryStructureResolver().resolve(queryStructureForCount, Int::class.java)[0]
     }
 
     fun runLimit1(): T? {
@@ -95,24 +95,24 @@ abstract class FinalSelectField<
     }
 
     fun runAsList(): List<T> {
-        return QueryProConfig.QueryStructureResolver.resolve(preRun(queryStructure), field_clazz)
+        return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructure), field_clazz)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsMap(): List<Map<String, Any?>> {
-        return QueryProConfig.QueryStructureResolver.resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
+        return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
     }
 
     fun pageable(): Pageable<T> {
         return Pageable.create(
             { count() },
-            { start, limit -> QueryProConfig.QueryStructureResolver.resolve(queryStructure.copy(limit = start to limit), field_clazz) }
+            { start, limit -> QueryProConfig.final.queryStructureResolver().resolve(queryStructure.copy(limit = start to limit), field_clazz) }
         )
     }
 
     private fun preRun(qs: QueryStructure): QueryStructure {
         var queryStructure = qs
-        if (QueryProConfig.logicDelete) {
+        if (QueryProConfig.final.logicDelete()) {
             queryStructure = if (queryStructure.action == QueryStructureAction.DELETE) {
                 val update = Update(data = mutableMapOf("deleted" to true), override = false)
                 queryStructure.copy(action = QueryStructureAction.UPDATE, update = update)
