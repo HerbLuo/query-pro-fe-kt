@@ -44,7 +44,7 @@ class QueryProSqlTest {
         val user1 = User(1, "hb", 18)
         val user2 = User(2, "hb", 10)
 
-        val setting1 = Setting(1, 1, "language", "English")
+        val setting1 = Setting(1, 1, "language", "English", false)
 
         println("单条查询语句")
         QueryProSql.create("SELECT * FROM user").query(User::class.java)
@@ -94,7 +94,7 @@ class QueryProSqlTest {
         ).update()
 
         QueryProSql.create("SELECT * FROM setting WHERE user_id = 5").queryOne(Setting::class.java)
-            .also { setting: Setting? -> assertEquals(setting, Setting(2, 5, "language", "简体中文")) }
+            .also { setting: Setting? -> assertEquals(setting, Setting(2, 5, "language", "简体中文", false)) }
 
         println("批量更新接口 多条语句多组参数(不等数量, 报错)")
         assertFailsWith(IllegalParameters::class) {
