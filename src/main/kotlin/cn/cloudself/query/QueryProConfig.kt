@@ -2,6 +2,8 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalImplements
 import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
+import org.springframework.web.context.request.RequestAttributes
+import org.springframework.web.context.request.RequestContextHolder
 import java.math.BigDecimal
 import java.sql.ResultSet
 import java.sql.Time
@@ -50,33 +52,28 @@ interface IQueryProConfigDbWriteable {
 typealias NullableQueryProConfigDb = IQueryProConfigDb<DataSource?, Boolean?, String?, IQueryStructureResolver?>
 typealias NonNullQueryProConfigDb = IQueryProConfigDb<DataSource, Boolean, String, IQueryStructureResolver>
 
-open class QueryProConfigDb: NullableQueryProConfigDb, IQueryProConfigDbWriteable {
-    private var dataSource: DataSource? = null
-    private var beautifySql: Boolean? = null
-    private var printSql: Boolean? = null
-    private var dryRun: Boolean? = null
-    private var queryProFieldComment: Boolean? = null
-    private var logicDelete: Boolean? = null
-    private var logicDeleteField: String? = null
-    private var queryStructureResolver: IQueryStructureResolver? = null
+interface Store {
+    fun get(key: String): Any?
+    fun set(key: String, value: Any?)
+}
 
-    override fun dataSource() = dataSource
-    override fun beautifySql() = beautifySql
-    override fun printSql() = printSql
-    override fun dryRun() = dryRun
-    override fun queryProFieldComment() = queryProFieldComment
-    override fun logicDelete() = logicDelete
-    override fun logicDeleteField() = logicDeleteField
-    override fun queryStructureResolver() = queryStructureResolver
-
-    override fun setDataSource(dataSource: DataSource) = this.also { this.dataSource = dataSource }
-    override fun setBeautifySql(beautifySql: Boolean) = this.also { this.beautifySql = beautifySql }
-    override fun setPrintSql(printSql: Boolean) = this.also { this.printSql = printSql }
-    override fun setDryRun(dryRun: Boolean) = this.also { this.dryRun = dryRun }
-    override fun setQueryProFieldComment(queryProFieldComment: Boolean) = this.also { this.queryProFieldComment = queryProFieldComment }
-    override fun setLogicDelete(logicDelete: Boolean) = this.also { this.logicDelete = logicDelete }
-    override fun setLogicDeleteField(logicDeleteField: String) = this.also { this.logicDeleteField = logicDeleteField }
-    override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver) = this.also { this.queryStructureResolver = queryStructureResolver }
+open class QueryProConfigDb(internal val store: Store): NullableQueryProConfigDb, IQueryProConfigDbWriteable {
+    override fun dataSource()             = store.get("dataSource") as DataSource?
+    override fun beautifySql()            = store.get("beautifySql") as Boolean?
+    override fun printSql()               = store.get("printSql") as Boolean?
+    override fun dryRun()                 = store.get("dryRun") as Boolean?
+    override fun queryProFieldComment()   = store.get("queryProFieldComment") as Boolean?
+    override fun logicDelete()            = store.get("logicDelete") as Boolean?
+    override fun logicDeleteField()       = store.get("logicDeleteField") as String?
+    override fun queryStructureResolver() = store.get("queryStructureResolver") as IQueryStructureResolver?
+    override fun setDataSource(dataSource: DataSource)                                      = this.also { this.store.set("dataSource", dataSource) }
+    override fun setBeautifySql(beautifySql: Boolean)                                       = this.also { this.store.set("beautifySql", beautifySql) }
+    override fun setPrintSql(printSql: Boolean)                                             = this.also { this.store.set("printSql", printSql) }
+    override fun setDryRun(dryRun: Boolean)                                                 = this.also { this.store.set("dryRun", dryRun) }
+    override fun setQueryProFieldComment(queryProFieldComment: Boolean)                     = this.also { this.store.set("queryProFieldComment", queryProFieldComment) }
+    override fun setLogicDelete(logicDelete: Boolean)                                       = this.also { this.store.set("logicDelete", logicDelete) }
+    override fun setLogicDeleteField(logicDeleteField: String)                              = this.also { this.store.set("logicDeleteField", logicDeleteField) }
+    override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver) = this.also { this.store.set("queryStructureResolver", queryStructureResolver) }
 }
 
 interface OnlyGlobalConfig {
@@ -86,7 +83,40 @@ interface OnlyGlobalConfig {
     fun <T> resultSetParser(clazz: Class<T>): ResultSetGetter<T>?
 }
 
-class GlobalQueryProConfigDb: QueryProConfigDb(), OnlyGlobalConfig {
+class HashMapStore: Store {
+    private val store = mutableMapOf<String, Any?>()
+    override fun get(key: String): Any? = store[key]
+    override fun set(key: String, value: Any?) { store[key] = value }
+}
+
+private const val KEY_PREFIX = "QUERY_PRO_CONFIG:REQUEST_CONTEXT:"
+class RequestContextStore: Store {
+    private val isRequestContextHolderPresent = try {
+        Class.forName("org.springframework.web.context.request.RequestContextHolder")
+        true
+    } catch (e: Throwable) {
+        false
+    }
+
+    override fun get(key: String): Any? {
+        if (!isRequestContextHolderPresent) {
+            return null
+        }
+
+        return try {
+            RequestContextHolder.currentRequestAttributes().getAttribute("$KEY_PREFIX$key", RequestAttributes.SCOPE_REQUEST)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override fun set(key: String, value: Any?) {
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+        RequestContextHolder.currentRequestAttributes().setAttribute("$KEY_PREFIX$key", value, RequestAttributes.SCOPE_REQUEST)
+    }
+}
+
+class GlobalQueryProConfigDb: QueryProConfigDb(HashMapStore()), OnlyGlobalConfig {
     private val supportedColumnType = mutableSetOf<Class<*>>()
     private val resultSetParser = mutableMapOf<Class<*>, ResultSetGetter<*>>()
     internal val resultSetParserEx = mutableListOf<ResultSetParserEx>()
@@ -160,7 +190,6 @@ class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>
         return null
     }
 
-
     override fun dataSource() = getBy(NullableQueryProConfigDb::dataSource)
     override fun beautifySql() = getBy(NullableQueryProConfigDb::beautifySql)
     override fun printSql() = getBy(NullableQueryProConfigDb::printSql)
@@ -219,7 +248,7 @@ object QueryProConfig {
         }
 
     @JvmField
-    val request = QueryProConfigDb()
+    val request = QueryProConfigDb(RequestContextStore())
 
     @JvmField
     val final = FinalQueryProConfigDb(arrayOf(request, global))
