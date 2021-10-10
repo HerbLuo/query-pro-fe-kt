@@ -10,12 +10,12 @@ import org.junit.Test
 class QueryProFileMakePathFromSample {
     /**
      * 指示生成的文件应该放在packageName指定的包下面
-     * [PathFrom.ktPackage] 会自动在包后面加上 dao 或 entity， 加上abs可以阻止该行为
+     * [PathFrom.ktPackageName] 会自动在包后面加上 dao 或 entity， 加上abs可以阻止该行为
      */
     fun ktAbsPackage() {
         QueryProFileMaker
             /* 将文件生成至 <project>/src/main/java/cn/cloudself/foo下 */
-            .singleFileMode(PathFrom.create().ktPackage("cn.cloudself.demo").abs().getResolver())
+            .singleFileMode(PathFrom.create().ktPackageName("cn.cloudself.demo").abs().getResolver())
             .create()
     }
 
@@ -35,7 +35,7 @@ class QueryProFileMakePathFromSample {
     fun subModule() {
         QueryProFileMaker
             /* 将文件生成至 <project>/zz-example-api/src/main/kotlin/cn/cloudself/foo/dao/zz下 */
-            .singleFileMode(PathFrom.create().subModule("zz-example-api").ktPackage("cn.cloudself.demo").getResolver())
+            .singleFileMode(PathFrom.create().subModule("zz-example-api").ktPackageName("cn.cloudself.demo").getResolver())
             .create()
     }
 
@@ -53,7 +53,7 @@ class QueryProFileMakePathFromSample {
         val filePathResolver = PathFrom.create()
             .entityPackage("beans")
             .daoPackage("dao")
-            .ktPackage("cn.cloudself.demo")
+            .ktPackageName("cn.cloudself.demo")
             .getResolver()
         QueryProFileMaker
             .entityAndDaoMode(filePathResolver)
@@ -175,7 +175,7 @@ class QueryProFileMakerSample {
     @Test
     fun javaEntityAndDaoMode() {
         val filePathResolver =
-            PathFrom.create().dirTest().javaPackage("cn.cloudself.java.helpers.query").daoPackage("").entityPackage("")
+            PathFrom.create().dirTest().javaPackageName("cn.cloudself.java.helpers.query").daoPackage("").entityPackage("")
                 .getResolver()
         QueryProFileMaker
             /* 将entity文件生成至 <project>/src/main/java/cn/cloudself/demo/entity下 */

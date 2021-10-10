@@ -42,8 +42,9 @@ typealias FilePathResolver = (templateName: String) -> JavaFilePath
 class PathFrom private constructor() {
     companion object {
         /**
-         * 使用builder模式创建一个PathFrom, 另外还有两个快捷方法 [PathFrom.ktPackage], [PathFrom.javaPackage]
+         * 使用builder模式创建一个PathFrom, 另外还有两个快捷方法 [PathFrom.ktPackageName], [PathFrom.javaPackageName]
          */
+        @JvmStatic
         fun create() = PathFrom()
 
         /**
@@ -53,15 +54,18 @@ class PathFrom private constructor() {
          * @sample cn.cloudself.samples.QueryProFileMakerSample.singleFileMode
          * @sample cn.cloudself.samples.QueryProFileMakePathFromSample.ktAbsPackage
          */
-        fun ktPackage(packageName: String) = create().ktPackage(packageName).getResolver()
+        @JvmStatic
+        fun ktPackage(packageName: String) = create().ktPackageName(packageName).getResolver()
 
         /**
          * 指示生成的文件应该放在哪个包下面
-         * @see ktPackage
+         * @see ktPackageName
          * @sample cn.cloudself.samples.QueryProFileMakePathFromSample.javaPackage
          */
-        fun javaPackage(packageName: String) = create().javaPackage(packageName).getResolver()
+        @JvmStatic
+        fun javaPackage(packageName: String) = create().javaPackageName(packageName).getResolver()
     }
+
     private var subModuleName = ""
     private var lang = "kotlin"
     private var mainDir = "main"
@@ -80,22 +84,22 @@ class PathFrom private constructor() {
 
     /**
      * 指示生成的文件应该放在packageName指定的包下面
-     * [PathFrom.ktPackage] 会自动在包后面加上 dao 或 entity， 加上abs可以阻止该行为
+     * [PathFrom.ktPackageName] 会自动在包后面加上 dao 或 entity， 加上abs可以阻止该行为
      * @sample cn.cloudself.samples.QueryProFileMakePathFromSample.ktAbsPackage
      */
     fun abs() = this.also { this.abs = true }
 
     /**
      * 指示生成的文件应该放在packageName指定的包下面,
-     * 存在以下简写 [PathFrom.ktPackage]
+     * 存在以下简写 [PathFrom.ktPackageName]
      */
-    fun ktPackage(packageName: String) = this.also { lang = "kotlin"; this.packageName = packageName }
+    fun ktPackageName(packageName: String) = this.also { lang = "kotlin"; this.packageName = packageName }
 
     /**
      * 指示生成的文件应该放在packageName指定的包下面,
-     * 存在以下简写 [PathFrom.javaPackage]
+     * 存在以下简写 [PathFrom.javaPackageName]
      */
-    fun javaPackage(packageName: String) = this.also { lang = "java"; this.packageName = packageName }
+    fun javaPackageName(packageName: String) = this.also { lang = "java"; this.packageName = packageName }
 
     /**
      * 设置生成的entity文件放在哪个包下 默认: entity。
@@ -143,6 +147,7 @@ class DbInfoBuilder constructor(
     private var driver: String = "com.mysql.cj.jdbc.Driver"
 ) {
     companion object {
+        @JvmStatic
         fun mysql(host: String, schema: String) = DbInfoBuilder("mysql", host, schema)
     }
 
@@ -152,6 +157,7 @@ class DbInfoBuilder constructor(
         "characterEncoding" to "utf-8",
         "serverTimezone" to "Asia/Shanghai",
         "useInformationSchema" to "true",
+        "allowPublicKeyRetrieval" to "true",
     )
 
     /**
@@ -219,6 +225,7 @@ class DbNameToJava private constructor() {
          * @see [QueryProFileMaker.dbJavaNameConverter]
          * @sample
          */
+        @JvmStatic
         fun createDefault() = DbNameToJava()
     }
 
@@ -337,6 +344,7 @@ class QueryProFileMaker private constructor(
          * @param filePathResolver [FilePathResolver] 文件位置解析器，即指示生成的文件应该放在哪里。可使用[PathFrom]生成
          * @sample cn.cloudself.samples.QueryProFileMakerSample.singleFileMode
          */
+        @JvmStatic
         fun singleFileMode(filePathResolver: FilePathResolver) =
             QueryProFileMaker(listOf(filePathResolver("SingleFileKt.ftl")))
 
@@ -345,6 +353,7 @@ class QueryProFileMaker private constructor(
          * @param filePathResolver [FilePathResolver] 文件位置解析器，即指示生成的文件应该放在哪里。可使用[PathFrom]生成
          * @sample cn.cloudself.samples.QueryProFileMakerSample.entityAndDaoMode
          */
+        @JvmStatic
         fun entityAndDaoMode(filePathResolver: FilePathResolver) =
             QueryProFileMaker(listOf(
                 filePathResolver("DaoKt.ftl"),
@@ -356,6 +365,7 @@ class QueryProFileMaker private constructor(
          * @param filePathResolver [FilePathResolver] 文件位置解析器，即指示生成的文件应该放在哪里。可使用[PathFrom]生成
          * @sample cn.cloudself.samples.QueryProFileMakerSample.javaEntityAndDaoMode
          */
+        @JvmStatic
         fun javaEntityAndDaoMode(filePathResolver: FilePathResolver) =
             QueryProFileMaker(listOf(
                 filePathResolver("DaoJava.ftl"),
