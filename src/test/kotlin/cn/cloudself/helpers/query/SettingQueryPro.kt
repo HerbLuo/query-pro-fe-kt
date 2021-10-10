@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package cn.cloudself.helpers.query
 
 import javax.persistence.*
@@ -30,7 +32,6 @@ data class Setting(
 
 class ImplSettingQueryPro {
     companion object {
-        val CLAZZ = Setting::class.java
         const val TABLE_NAME = "setting"
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }

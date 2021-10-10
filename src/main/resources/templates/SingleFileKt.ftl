@@ -2,6 +2,8 @@
 <#assign ClassName = m._ClassName/>
 <#assign EntityName = m._EntityName/>
 <#assign IdType = m.id.ktTypeStr/>
+@file:Suppress("unused")
+
 package ${m.packagePath}
 
 <#if m.hasBigDecimal>import java.math.BigDecimal
@@ -30,7 +32,6 @@ data class ${EntityName}(
 
 class Impl${ClassName} {
     companion object {
-        val CLAZZ = ${EntityName}::class.java
         const val TABLE_NAME = "${m.db_name}"
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }

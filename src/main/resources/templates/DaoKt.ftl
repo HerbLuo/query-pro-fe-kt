@@ -2,6 +2,8 @@
 <#assign ClassName = m._ClassName/>
 <#assign EntityName = m._EntityName/>
 <#assign IdType = m.id.ktTypeStr/>
+@file:Suppress("unused")
+
 package ${m.packagePath}
 
 import ${m.entityPackage}.${EntityName}
@@ -11,7 +13,6 @@ import ${m.entityPackage}.${EntityName}
 
 class Impl${ClassName} {
     companion object {
-        val CLAZZ = ${EntityName}::class.java
         const val TABLE_NAME = "${m.db_name}"
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }

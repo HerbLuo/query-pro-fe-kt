@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package cn.cloudself.helpers.query
 
 import javax.persistence.*
@@ -24,7 +26,6 @@ data class User(
 
 class ImplUserQueryPro {
     companion object {
-        val CLAZZ = User::class.java
         const val TABLE_NAME = "user"
         private fun createField(column: String) = Field(TABLE_NAME, column)
     }
