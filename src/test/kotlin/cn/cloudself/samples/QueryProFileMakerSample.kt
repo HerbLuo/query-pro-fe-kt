@@ -131,7 +131,7 @@ class QueryProFileMakerSample {
     fun singleFileMode() {
         QueryProFileMaker
             /* 将文件生成至 <project>/src/main/kotlin/cn/cloudself/foo/dao/zz下 */
-            .singleFileMode(PathFrom.create().dirTest("test").ktPackageName("cn.cloudself.helpers.query").getResolver())
+            .singleFileMode(PathFrom.create().dirTest("test").daoPackage("").ktPackageName("cn.cloudself.helpers.query").getResolver())
             /* 指定数据源 */
             .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */

@@ -55,6 +55,7 @@ class ImplSettingQueryPro {
         val userId = createWhereField("user_id")
         val kee = createWhereField("kee")
         val value = createWhereField("value")
+        val deleted = createWhereField("deleted")
     }
 
     class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -67,6 +68,7 @@ class ImplSettingQueryPro {
         fun userId() = createOrderByField("user_id")
         fun kee() = createOrderByField("kee")
         fun value() = createOrderByField("value")
+        fun deleted() = createOrderByField("deleted")
     }
 
     class ColumnLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -76,6 +78,7 @@ class ImplSettingQueryPro {
         fun userId() = getColumn(createField("user_id"), Long::class.java)
         fun kee() = getColumn(createField("kee"), String::class.java)
         fun value() = getColumn(createField("value"), String::class.java)
+        fun deleted() = getColumn(createField("deleted"), Boolean::class.java)
     }
 
     class ColumnsLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -88,6 +91,7 @@ class ImplSettingQueryPro {
         fun userId() = createColumnsLimiterField("user_id")
         fun kee() = createColumnsLimiterField("kee")
         fun value() = createColumnsLimiterField("value")
+        fun deleted() = createColumnsLimiterField("deleted")
     }
 
     class UpdateSetField(private val queryStructure: QueryStructure): UpdateField<WhereField<Boolean, Boolean>>(queryStructure, { qs: QueryStructure -> WhereField(qs, Boolean::class.java) }) {
@@ -100,6 +104,7 @@ class ImplSettingQueryPro {
         fun userId(userId: Any) = createUpdateSetField("user_id", userId)
         fun kee(kee: Any) = createUpdateSetField("kee", kee)
         fun value(value: Any) = createUpdateSetField("value", value)
+        fun deleted(deleted: Any) = createUpdateSetField("deleted", deleted)
     }
 
 
@@ -110,6 +115,7 @@ class ImplSettingQueryPro {
         fun userId() = this.also { fields.add(createField("user_id")) }
         fun kee() = this.also { fields.add(createField("kee")) }
         fun value() = this.also { fields.add(createField("value")) }
+        fun deleted() = this.also { fields.add(createField("deleted")) }
     }
 }
 
@@ -122,7 +128,7 @@ private fun createQuery(queryStructure: QueryStructure) =
             ImplSettingQueryPro.UpdateSetField,
             ImplSettingQueryPro.WhereField<Boolean, Boolean>,
             ImplSettingQueryPro.WhereField<Boolean, Boolean>,
-    >(
+    > (
         Setting::class.java,
         queryStructure,
         { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs, Setting::class.java) },

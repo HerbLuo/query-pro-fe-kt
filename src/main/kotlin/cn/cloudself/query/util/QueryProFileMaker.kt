@@ -248,9 +248,17 @@ class DbNameToJava private constructor() {
         tName
     }
 
-    fun addPrefixBeforeConvertToClassName(prefix: String) = this.also { preHandles.add { prefix + it.name } }
+    fun addPrefixBeforeConvertToClassName(prefix: String) = this.also {
+        preHandles.add {
+            if (it.toType == JavaNameType.ClassName) prefix + it.name else it.name
+        }
+    }
 
-    fun removePrefixBeforeConvertToClassName() = this.also { preHandles.add { it.name.replace(matchFirst_, "") } }
+    fun removePrefixBeforeConvertToClassName() = this.also {
+        preHandles.add {
+            if (it.toType == JavaNameType.ClassName) it.name.replace(matchFirst_, "") else it.name
+        }
+    }
 
     fun addSuffixToEntity(suffix: String) = this.also {
         postHandles.add {
