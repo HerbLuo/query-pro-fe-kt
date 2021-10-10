@@ -7,6 +7,7 @@ import cn.cloudself.helpers.query.UserQueryPro
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import org.junit.Test
+import kotlin.test.assertContentEquals
 
 class InsertTest {
     private fun prepareData() {
@@ -22,12 +23,14 @@ class InsertTest {
 
         prepareData()
 
-        UserQueryPro.insert(User(name = "hb", age = 18)).also { assert(it == 1) }
+        UserQueryPro.insert(User(name = "hb", age = 18)).also { assert(it == 1L) }
+
+        UserQueryPro.insert(User(name = "hb2", age = 18)).also { assert(it == 2L) }
 
         UserQueryPro.insert(
             User(name = "hb", age = 19),
             User(name = "hb", age = 20),
-            User(5, "hb", 21),
-        )
+            User(7, "hb", 21),
+        ).also { assertContentEquals(it, listOf(3L, 4L, 7L)) }
     }
 }

@@ -42,5 +42,8 @@ class DeleteTest {
 
         UserQueryPro.selectBy().id.equalsTo(1).runLimit1()
             .also { user: User? -> assertEquals(user, null) }
+
+        UserQueryPro.deleteByPrimaryKey(2)
+            .also { success: Boolean -> assert(success) }
     }
 }

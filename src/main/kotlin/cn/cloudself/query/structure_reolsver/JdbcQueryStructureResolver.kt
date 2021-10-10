@@ -46,7 +46,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         return resolvePri(sql, params, clazz, type)
     }
 
-    override fun <T> insert(objs: Collection<Any>, clazz: Class<T>): Int {
+    override fun <T> insert(objs: Collection<Any>, clazz: Class<T>): List<Any> {
         val bean = BeanProxy.fromClass(clazz).newInstance()
         val parsedClass = bean.getParsedClass()
         val columns = parsedClass.columns.values
@@ -68,9 +68,32 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             }
         }
         sqlBuilder.append(')')
-        val params = objs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
 
-        return updateBatch(arrayOf(sqlBuilder.toString()), params, Int::class.java)
+        val sql = sqlBuilder.toString()
+        val paramsArr = objs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
+        val idColumnType = parseClass(clazz).idColumnType
+        if (idColumnType == null) {
+            logger.warn("没有找到主键或其对应的Class, 返回了空结果")
+            return listOf()
+        }
+
+        val idColumnProxy = BeanProxy.fromClass(idColumnType)
+
+        getConnection().use { connection ->
+            val preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+            for (params in paramsArr) {
+                setParam(preparedStatement, params, false)
+                preparedStatement.addBatch()
+            }
+            preparedStatement.executeBatch()
+            val resultSet = preparedStatement.generatedKeys
+
+            val results = mutableListOf<Any>()
+            while (resultSet.next()) {
+                results.add(mapRow(idColumnProxy, resultSet))
+            }
+            return results
+        }
     }
 
     override fun <T> updateBatch(sqlArr: Array<String>, paramsArr: Array<Array<Any?>>, clazz: Class<T>): T {
@@ -93,9 +116,9 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 }
                 preparedStatement.executeBatch()
             } else {
-                val anyParams = paramsArr.filter { it.isNotEmpty() }.any()
+                val anyParams = paramsArr.any { it.isNotEmpty() }
                 if (anyParams) {
-                    logger.debug("log: 存在参数")
+                    logger.debug("log: sql的长度大于1且存在参数且参数长度与sql长度相等")
                     val affectRows = IntArray(sqlArraySize) { 0 }
                     for (i in sqlArr.indices) {
                         val sql = sqlArr[i]

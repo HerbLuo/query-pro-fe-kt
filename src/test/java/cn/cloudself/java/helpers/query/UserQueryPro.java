@@ -68,15 +68,15 @@ public class UserQueryPro {
         return queryPro.deleteBy();
     }
 
-    public static int insert(User obj) {
+    public static Object insert(User obj) {
         return queryPro.insert(obj);
     }
 
-    public static int insert(User ...objs) {
+    public static List<Object> insert(User ...objs) {
         return queryPro.insert(objs);
     }
 
-    public static int insert(java.util.Collection<User> collection) {
+    public static List<Object> insert(java.util.Collection<User> collection) {
         return queryPro.insert(collection);
     }
 

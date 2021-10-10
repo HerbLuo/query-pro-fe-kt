@@ -26,8 +26,9 @@ interface IQueryStructureResolver {
      *
      * @param objs 对象集合
      * @param clazz [SupportedInsertClazz]
+     * @return 主键
      */
-    fun <T> insert(objs: Collection<Any>, clazz: Class<T>): Int
+    fun <T> insert(objs: Collection<Any>, clazz: Class<T>): List<Any>
 
     /**
      * 使用多条语句和参数执行更新，创建，删除等非select语句

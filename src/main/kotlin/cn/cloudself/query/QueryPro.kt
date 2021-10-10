@@ -62,9 +62,18 @@ open class QueryPro<
     fun deleteBy() = createDeleteByField(queryStructure.copy(action = QueryStructureAction.DELETE))
 
     /**
+     * 使用主键删除
+     */
+    fun deleteByPrimaryKey(keyValue: Any): Boolean =
+        createDeleteByField(queryStructure.copy(
+            action = QueryStructureAction.DELETE,
+            where = listOf(WhereClause(Field(null, parseClass(clazz).idColumn ?: "id"), "=", keyValue))
+        )).run() == true
+
+    /**
      * 插入操作
      */
-    fun insert(obj: T) = insert(listOf(obj))
+    fun insert(obj: T) = insert(listOf(obj)).getOrNull(0)
 
     /**
      * 插入操作

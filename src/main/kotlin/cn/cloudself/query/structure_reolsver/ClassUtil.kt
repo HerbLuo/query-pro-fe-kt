@@ -20,6 +20,7 @@ data class ParsedClass(
     val dbName: String,
     val columns: Map<String, ParsedColumn>,
     val idColumn: String?,
+    val idColumnType: Class<*>?,
 )
 
 @Suppress("FunctionName")
@@ -31,6 +32,7 @@ fun parseClass(clazz: Class<*>): ParsedClass {
         val columns = mutableMapOf<String, ParsedColumn>()
         var idColumn: String? = null
         var idColumnMay: String? = null
+        var idColumnType: Class<*>? = null
 
         val tableAnnotation: Table? = clazz.getAnnotation(Table::class.java)
         val dbNameForTable = tableAnnotation?.name ?: to_snake_case(clazz.name)
@@ -47,9 +49,11 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                         throw UnSupportException("不支持联合主键")
                     }
                     idColumn = fieldName
+                    idColumnType = field.type
                 }
                 if (fieldName == "id") {
                     idColumnMay = fieldName
+                    idColumnType = field.type
                 }
 
                 val setterMethodName = "set${fieldName[0].uppercaseChar()}${fieldName.substring(1)}"
@@ -97,6 +101,6 @@ fun parseClass(clazz: Class<*>): ParsedClass {
             classOrSuperClass = classOrSuperClass.superclass
         }
 
-        ParsedClass(dbNameForTable, columns, idColumn ?: idColumnMay)
+        ParsedClass(dbNameForTable, columns, idColumn ?: idColumnMay, idColumnType)
     }
 }
