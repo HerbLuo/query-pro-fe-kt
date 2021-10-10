@@ -295,6 +295,8 @@ data class TemplateModelColumn(
 
 data class ModelId(
     val column: String,
+    var ktTypeStr: String? = null,
+    var javaTypeStr: String? = null,
     var autoIncrement: Boolean = false
 )
 
@@ -578,6 +580,12 @@ class QueryProFileMaker private constructor(
                 ))
             }
 
+            val idColumnStr = id?.column
+            if (id != null && idColumnStr != null) {
+                val idColumn = modelColumns.find { it.db_name == idColumnStr }
+                id.ktTypeStr = idColumn?.ktTypeStr
+                id.javaTypeStr = idColumn?.javaTypeStr
+            }
             val templateModel = TemplateModel(
                 db_name = tableName,
                 remark = tableRemark,
@@ -636,10 +644,10 @@ class QueryProFileMaker private constructor(
                 }
 
                 resTypeBuilder.append('>')
-                if (allFind) {
-                    return "${genericType.substring(0, indexOfLt + 1)}${sj}>"
+                return if (allFind) {
+                    "${genericType.substring(0, indexOfLt + 1)}${sj}>"
                 } else {
-                    return genericType
+                    genericType
                 }
             }
             return null

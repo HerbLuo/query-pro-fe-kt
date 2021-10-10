@@ -23,9 +23,9 @@ class InsertTest {
 
         prepareData()
 
-        UserQueryPro.insert(User(name = "hb", age = 18)).also { assert(it == 1L) }
+        UserQueryPro.insert(User(name = "hb", age = 18)).also { id: Long? -> assert(id == 1L) }
 
-        UserQueryPro.insert(User(name = "hb2", age = 18)).also { assert(it == 2L) }
+        UserQueryPro.insert(User(name = "hb2", age = 18)).also { id: Long? -> assert(id == 2L) }
 
         UserQueryPro.insert(
             User(name = "hb", age = 19),

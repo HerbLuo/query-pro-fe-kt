@@ -20,6 +20,7 @@ public class SettingQueryPro {
 
     private static QueryPro<
             Setting,
+            Long,
             __Impl.WhereField<Setting, List<Setting>>,
             __Impl.OrderByField<Setting, List<Setting>>,
             __Impl.UpdateSetField,
@@ -39,6 +40,7 @@ public class SettingQueryPro {
 
     private static final QueryPro<
             Setting,
+            Long,
             __Impl.WhereField<Setting, List<Setting>>,
             __Impl.OrderByField<Setting, List<Setting>>,
             __Impl.UpdateSetField,
@@ -49,6 +51,7 @@ public class SettingQueryPro {
     public static final QueryProEx<
             QueryPro<
                     Setting,
+                    Long,
                     __Impl.WhereField<Setting, List<Setting>>,
                     __Impl.OrderByField<Setting, List<Setting>>,
                     __Impl.UpdateSetField,
@@ -72,15 +75,15 @@ public class SettingQueryPro {
         return queryPro.deleteByPrimaryKey(keyValue);
     }
 
-    public static Object insert(Setting obj) {
+    public static Long insert(Setting obj) {
         return queryPro.insert(obj);
     }
 
-    public static java.util.List<Object> insert(Setting ...objs) {
+    public static java.util.List<Long> insert(Setting ...objs) {
         return queryPro.insert(objs);
     }
 
-    public static java.util.List<Object> insert(java.util.Collection<Setting> collection) {
+    public static java.util.List<Long> insert(java.util.Collection<Setting> collection) {
         return queryPro.insert(collection);
     }
 

@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="m" type="cn.cloudself.query.util.TemplateModel" -->
 <#assign ClassName = m._ClassName/>
 <#assign EntityName = m._EntityName/>
+<#assign IdType = m.id.ktTypeStr/>
 package ${m.packagePath}
 
 <#if m.hasBigDecimal>import java.math.BigDecimal
@@ -108,14 +109,22 @@ class Impl${ClassName} {
 }
 
 private fun createQuery(queryStructure: QueryStructure) =
-    QueryPro(
+    QueryPro<
+            ${EntityName},
+            ${IdType},
+            Impl${ClassName}.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            Impl${ClassName}.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
+            Impl${ClassName}.UpdateSetField,
+            Impl${ClassName}.WhereField${"<"}Boolean, Boolean>,
+            Impl${ClassName}.WhereField${"<"}Boolean, Boolean>,
+    > (
         ${EntityName}::class.java,
         queryStructure,
-        { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>(qs, ${EntityName}::class.java) },
-        { qs: QueryStructure -> Impl${ClassName}.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>(qs, ${EntityName}::class.java) },
+        { qs: QueryStructure -> Impl${ClassName}.WhereField(qs, ${EntityName}::class.java) },
+        { qs: QueryStructure -> Impl${ClassName}.OrderByField(qs, ${EntityName}::class.java) },
         { qs: QueryStructure -> Impl${ClassName}.UpdateSetField(qs) },
         { qs: QueryStructure -> Impl${ClassName}.WhereField(qs, Boolean::class.java) },
-        { qs: QueryStructure -> Impl${ClassName}.WhereField${"<"}Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> Impl${ClassName}.WhereField(qs, Boolean::class.java) },
     )
 
 val ${ClassName} = createQuery(QueryStructure(from = QueryStructureFrom(Impl${ClassName}.TABLE_NAME)))

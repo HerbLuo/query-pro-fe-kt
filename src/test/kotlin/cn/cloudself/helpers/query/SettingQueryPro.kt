@@ -114,14 +114,22 @@ class ImplSettingQueryPro {
 }
 
 private fun createQuery(queryStructure: QueryStructure) =
-    QueryPro(
+    QueryPro<
+            Setting,
+            Long,
+            ImplSettingQueryPro.WhereField<Setting, List<Setting>>,
+            ImplSettingQueryPro.OrderByField<Setting, List<Setting>>,
+            ImplSettingQueryPro.UpdateSetField,
+            ImplSettingQueryPro.WhereField<Boolean, Boolean>,
+            ImplSettingQueryPro.WhereField<Boolean, Boolean>,
+    >(
         Setting::class.java,
         queryStructure,
-        { qs: QueryStructure -> ImplSettingQueryPro.WhereField<Setting, List<Setting>>(qs, Setting::class.java) },
-        { qs: QueryStructure -> ImplSettingQueryPro.OrderByField<Setting, List<Setting>>(qs, Setting::class.java) },
+        { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs, Setting::class.java) },
+        { qs: QueryStructure -> ImplSettingQueryPro.OrderByField(qs, Setting::class.java) },
         { qs: QueryStructure -> ImplSettingQueryPro.UpdateSetField(qs) },
         { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs, Boolean::class.java) },
-        { qs: QueryStructure -> ImplSettingQueryPro.WhereField<Boolean, Boolean>(qs, Boolean::class.java) },
+        { qs: QueryStructure -> ImplSettingQueryPro.WhereField(qs, Boolean::class.java) },
     )
 
 val SettingQueryPro = createQuery(QueryStructure(from = QueryStructureFrom(ImplSettingQueryPro.TABLE_NAME)))

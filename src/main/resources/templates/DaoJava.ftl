@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="m" type="cn.cloudself.query.util.TemplateModel" -->
 <#assign ClassName = m._ClassName/>
 <#assign EntityName = m._EntityName/>
+<#assign IdType = m.id.javaTypeStr/>
 package ${m.packagePath};
 
 import ${m.entityPackage}.${EntityName};
@@ -25,6 +26,7 @@ public class ${ClassName} {
 
     private static QueryPro<
             ${EntityName},
+            ${IdType},
             __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
             __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
             __Impl.UpdateSetField,
@@ -44,6 +46,7 @@ public class ${ClassName} {
 
     private static final QueryPro<
             ${EntityName},
+            ${IdType},
             __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
             __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
             __Impl.UpdateSetField,
@@ -54,6 +57,7 @@ public class ${ClassName} {
     public static final QueryProEx<
             QueryPro<
                     ${EntityName},
+                    ${IdType},
                     __Impl.WhereField${"<"}${EntityName}, List${"<"}${EntityName}>>,
                     __Impl.OrderByField${"<"}${EntityName}, List${"<"}${EntityName}>>,
                     __Impl.UpdateSetField,

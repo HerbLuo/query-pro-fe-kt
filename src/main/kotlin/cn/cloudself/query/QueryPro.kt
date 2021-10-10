@@ -6,6 +6,7 @@ typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
 open class QueryPro<
         T: Any,
+        ID: Any,
         SELECT_BY_FIELD: QueryField<*, *, *, *, *, *>,
         ORDER_BY_FIELD: QueryField<*, *, *, *, *, *>,
         UPDATE_SET_FIELD: UpdateField<UPDATE_BY_FIELD>,
@@ -73,15 +74,18 @@ open class QueryPro<
     /**
      * 插入操作
      */
-    fun insert(obj: T) = insert(listOf(obj)).getOrNull(0)
+    @Suppress("UNCHECKED_CAST")
+    fun insert(obj: T): ID? = insert(listOf(obj)).getOrNull(0) as ID?
 
     /**
      * 插入操作
      */
-    fun insert(vararg objs: T) = insert(listOf(*objs))
+    @Suppress("UNCHECKED_CAST")
+    fun insert(vararg objs: T) = insert(listOf(*objs)) as List<ID?>
 
     /**
      * 批量插入
      */
-    fun insert(collection: Collection<T>) = QueryProConfig.final.queryStructureResolver().insert(collection, clazz)
+    @Suppress("UNCHECKED_CAST")
+    fun insert(collection: Collection<T>) = QueryProConfig.final.queryStructureResolver().insert(collection, clazz) as List<ID?>
 }

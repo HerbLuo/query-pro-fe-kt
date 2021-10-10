@@ -27,14 +27,14 @@ public class QueryProFileMakerSample {
                                 .toDbInfo("root", "123456")
                 )
                 .tables("setting", "user")
-                .dbJavaNameConverter( // 可选，用于将数据库名称转为Java名称
-                        DbNameToJava
-                                .createDefault()
-                                .removePrefixBeforeConvertToClassName()
-                                .addPrefixBeforeConvertToClassName("zz_")
-                                .addPreHandle(it -> it.getName().startsWith("view_") ? it.getName().replace("view_", "") : it.getName())
-                                .getConverter()
-                )
+//                .dbJavaNameConverter( // 可选，用于将数据库名称转为Java名称
+//                        DbNameToJava
+//                                .createDefault()
+//                                .removePrefixBeforeConvertToClassName()
+//                                .addPrefixBeforeConvertToClassName("zz_")
+//                                .addPreHandle(it -> it.getName().startsWith("view_") ? it.getName().replace("view_", "") : it.getName())
+//                                .getConverter()
+//                )
                 .chain()
                 .replaceMode()
                 .debug()

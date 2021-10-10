@@ -20,6 +20,7 @@ public class UserQueryPro {
 
     private static QueryPro<
             User,
+            Long,
             __Impl.WhereField<User, List<User>>,
             __Impl.OrderByField<User, List<User>>,
             __Impl.UpdateSetField,
@@ -39,6 +40,7 @@ public class UserQueryPro {
 
     private static final QueryPro<
             User,
+            Long,
             __Impl.WhereField<User, List<User>>,
             __Impl.OrderByField<User, List<User>>,
             __Impl.UpdateSetField,
@@ -49,6 +51,7 @@ public class UserQueryPro {
     public static final QueryProEx<
             QueryPro<
                     User,
+                    Long,
                     __Impl.WhereField<User, List<User>>,
                     __Impl.OrderByField<User, List<User>>,
                     __Impl.UpdateSetField,
@@ -72,15 +75,15 @@ public class UserQueryPro {
         return queryPro.deleteByPrimaryKey(keyValue);
     }
 
-    public static Object insert(User obj) {
+    public static Long insert(User obj) {
         return queryPro.insert(obj);
     }
 
-    public static java.util.List<Object> insert(User ...objs) {
+    public static java.util.List<Long> insert(User ...objs) {
         return queryPro.insert(objs);
     }
 
-    public static java.util.List<Object> insert(java.util.Collection<User> collection) {
+    public static java.util.List<Long> insert(java.util.Collection<User> collection) {
         return queryPro.insert(collection);
     }
 
