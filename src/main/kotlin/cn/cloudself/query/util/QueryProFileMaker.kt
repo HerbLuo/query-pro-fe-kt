@@ -614,6 +614,7 @@ class QueryProFileMaker private constructor(
             if (actualType != null) {
                 return actualType
             }
+            println(genericType)
             if (genericType.endsWith("[]")) {
                 return genericTypeMapActualGenericType[genericType.substring(0, genericType.length - 2)]?.let { "$it[]" }
             }
@@ -637,12 +638,16 @@ class QueryProFileMaker private constructor(
                 resTypeBuilder.append('>')
                 if (allFind) {
                     return "${genericType.substring(0, indexOfLt + 1)}${sj}>"
+                } else {
+                    return genericType
                 }
             }
             return null
         }
 
-        fun noPackage(className: String) = className.replace("cn.cloudself.query.", "")
+        fun noPackage(className: String) = className
+            .replace("cn.cloudself.query.", "")
+            .replace("java.lang.", "")
 
         return QueryPro::class.declaredFunctions
             .map {

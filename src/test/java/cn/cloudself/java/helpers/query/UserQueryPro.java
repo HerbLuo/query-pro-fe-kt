@@ -68,15 +68,19 @@ public class UserQueryPro {
         return queryPro.deleteBy();
     }
 
+    public static boolean deleteByPrimaryKey(Object keyValue) {
+        return queryPro.deleteByPrimaryKey(keyValue);
+    }
+
     public static Object insert(User obj) {
         return queryPro.insert(obj);
     }
 
-    public static List<Object> insert(User ...objs) {
+    public static java.util.List<Object> insert(User ...objs) {
         return queryPro.insert(objs);
     }
 
-    public static List<Object> insert(java.util.Collection<User> collection) {
+    public static java.util.List<Object> insert(java.util.Collection<User> collection) {
         return queryPro.insert(collection);
     }
 
