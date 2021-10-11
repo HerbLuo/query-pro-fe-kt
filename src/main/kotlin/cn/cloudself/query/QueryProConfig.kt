@@ -190,21 +190,29 @@ class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>
         return null
     }
 
-    override fun dataSource() = getBy(NullableQueryProConfigDb::dataSource)
-    override fun beautifySql() = getBy(NullableQueryProConfigDb::beautifySql)
-    override fun printSql() = getBy(NullableQueryProConfigDb::printSql)
-    override fun dryRun() = getBy(NullableQueryProConfigDb::dryRun)
-    override fun queryProFieldComment() = getBy(NullableQueryProConfigDb::queryProFieldComment)
-    override fun logicDelete() = getBy(NullableQueryProConfigDb::logicDelete)
-    override fun logicDeleteField() = getBy(NullableQueryProConfigDb::logicDeleteField)
-    override fun queryStructureResolver() = getBy(NullableQueryProConfigDb::queryStructureResolver)
+//    fun dataSourceNullable() = getByNullable(NullableQueryProConfigDb::dataSource)
+//    override fun dataSource() = getBy(NullableQueryProConfigDb::dataSource)
+//    override fun beautifySql() = getBy(NullableQueryProConfigDb::beautifySql)
+//    override fun printSql() = getBy(NullableQueryProConfigDb::printSql)
+//    override fun dryRun() = getBy(NullableQueryProConfigDb::dryRun)
+//    override fun queryProFieldComment() = getBy(NullableQueryProConfigDb::queryProFieldComment)
+//    override fun logicDelete() = getBy(NullableQueryProConfigDb::logicDelete)
+//    override fun logicDeleteField() = getBy(NullableQueryProConfigDb::logicDeleteField)
+//    override fun queryStructureResolver() = getBy(NullableQueryProConfigDb::queryStructureResolver)
+    fun dataSourceNullable() = getByNullable { it.dataSource() }
+    override fun dataSource() = getBy { it.dataSource() }
+    override fun beautifySql() = getBy { it.beautifySql() }
+    override fun printSql() = getBy { it.printSql() }
+    override fun dryRun() = getBy { it.dryRun() }
+    override fun queryProFieldComment() = getBy { it.queryProFieldComment() }
+    override fun logicDelete() = getBy { it.logicDelete() }
+    override fun logicDeleteField() = getBy { it.logicDeleteField() }
+    override fun queryStructureResolver() = getBy { it.queryStructureResolver() }
 
     override fun supportedColumnType() = QueryProConfig.global.supportedColumnType()
     override fun resultSetParserEx() = QueryProConfig.global.resultSetParserEx()
     override fun dbColumnInfoToJavaType() = QueryProConfig.global.dbColumnInfoToJavaType()
     override fun <T> resultSetParser(clazz: Class<T>) = QueryProConfig.global.resultSetParser(clazz)
-
-    fun dataSourceNullable() = getByNullable(NullableQueryProConfigDb::dataSource)
 }
 
 object QueryProConfig {

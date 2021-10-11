@@ -7,6 +7,7 @@ import cn.cloudself.query.exception.UnSupportException
 import freemarker.template.Configuration
 import java.io.File
 import java.io.InputStream
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.OpenOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
@@ -17,6 +18,7 @@ import java.util.*
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
+import kotlin.io.path.pathString
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.jvm.javaMethod
 
@@ -256,7 +258,7 @@ class DbNameToJava private constructor() {
 
     fun removePrefixBeforeConvertToClassName() = this.also {
         preHandles.add {
-            if (it.toType == JavaNameType.ClassName) it.name.replace(matchFirst_, "") else it.name
+            if (it.toType == JavaNameType.ClassName) it.name.replaceFirst(matchFirst_, "") else it.name
         }
     }
 
@@ -387,6 +389,7 @@ class QueryProFileMaker private constructor(
     private var db: DbInfo? = null
     private var tables: Array<out String> = arrayOf("*")
     private var replaceMode = false
+    private var skipRepalceEntity = false
     private var ktNoArgMode = true
     private var chainForModel = false
     private var entityFileTemplatePath: String? = null
@@ -400,6 +403,7 @@ class QueryProFileMaker private constructor(
         "DECIMAL" to KtJavaType("BigDecimal"),
         "DOUBLE" to KtJavaType("Double"),
         "INT" to KtJavaType("Int", "Integer"),
+        "TEXT" to KtJavaType("String", "String"),
     )
     private val ktKeywords = arrayOf(
         "as", "break", "class", "continue", "do", "else", "false", "for", "fun", "if", "in", "interface", "is", "null",
@@ -438,6 +442,9 @@ class QueryProFileMaker private constructor(
     @JvmOverloads
     fun replaceMode(replaceMode: Boolean = true) = this.also { this.replaceMode = replaceMode }
 
+    @JvmOverloads
+    fun skipReplaceEntity(skipRepalceEntity: Boolean = true) = this.also { this.skipRepalceEntity = skipRepalceEntity }
+
     /**
      * 关闭Kotlin的no-arg模式
      *
@@ -470,6 +477,7 @@ class QueryProFileMaker private constructor(
 
                 val noExtTemplateName = templateName.substring(0, templateName.lastIndexOf("."))
                 val areKt = noExtTemplateName.endsWith("Kt")
+                val areEntity = templateName.startsWith("Entity")
 
                 val ext = if (areKt) ".kt" else ".java"
 
@@ -504,7 +512,7 @@ class QueryProFileMaker private constructor(
                         }
                 }
 
-                val configuration = Configuration(Configuration.VERSION_2_3_31)
+                val configuration = Configuration(Configuration.VERSION_2_3_30)
                 configuration.setClassLoaderForTemplateLoading(QueryProFileMaker::class.java.classLoader, templateDir)
                 val template = configuration.getTemplate(templateName)
                 javaFilePath.dir.createDirectories()
@@ -512,9 +520,17 @@ class QueryProFileMaker private constructor(
                 if (replaceMode) {
                     openOptions.add(StandardOpenOption.TRUNCATE_EXISTING)
                 }
+                if (areEntity && skipRepalceEntity) {
+                    openOptions.clear()
+                    openOptions.add(StandardOpenOption.CREATE_NEW)
+                }
                 val filePath = Path(javaFilePath.dir.toAbsolutePath().toString(), ClassName + ext)
-                val writer = filePath.outputStream(*openOptions.toTypedArray()).writer()
-                template.process(data, writer)
+                try {
+                    val writer = filePath.outputStream(*openOptions.toTypedArray()).writer()
+                    template.process(data, writer)
+                } catch (e: FileAlreadyExistsException) {
+                    logger.warn("文件已存在: " + filePath.pathString, e)
+                }
             }
         }
     }
@@ -611,7 +627,7 @@ class QueryProFileMaker private constructor(
             return listOf()
         }
 
-        val daoJavaTemplate = String(templateLoader().readAllBytes())
+        val daoJavaTemplate = String(templateLoader().readBytes())
         val result = Regex("static final QueryPro<([\\s\\S]+)>\\s+queryPro\\s+=").find(daoJavaTemplate)
         val actualGenericTypeStr = result?.groups?.get(1)?.value ?: throw IllegalTemplate("找不到queryPro定义的位置")
 

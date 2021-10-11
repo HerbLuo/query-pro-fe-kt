@@ -22,10 +22,10 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
 
         if (QueryProConfig.final.printSql()) {
-            logger.info(sql)
+            logger.info("\n" + sql)
             logger.info(params)
         } else {
-            logger.debug(sql)
+            logger.debug("\n" + sql)
             logger.debug(params)
         }
 

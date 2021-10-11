@@ -74,7 +74,7 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                     javaName = fieldName,
                     javaType = field.type,
                     setter = { o, v ->
-                        if (field.canAccess(o)) {
+                        if (field.isAccessible) {
                             field.set(o, v)
                         } else {
                             if (setter == null) {
@@ -87,7 +87,7 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                         if (o is Map<*, *>) {
                             return@ParsedColumn o[fieldName]
                         }
-                        if (field.canAccess(o)) {
+                        if (field.isAccessible) {
                             return@ParsedColumn field.get(o)
                         }
                         if (getter == null) {

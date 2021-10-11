@@ -70,7 +70,7 @@ public class ${ClassName} {
             defQueryStructure(),
             qs -> new __Impl.WhereField<>(qs, ${EntityName}.class),
             __Impl.FieldsGenerator::new,
-            ${EntityName}QueryPro::createQuery
+            ${ClassName}::createQuery
     );
 
 <#list m.queryProDelegate as di>
