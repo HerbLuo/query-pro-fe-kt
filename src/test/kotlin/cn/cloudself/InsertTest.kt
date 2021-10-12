@@ -8,6 +8,7 @@ import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import org.junit.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 
 class InsertTest {
     private fun prepareData() {
@@ -31,6 +32,6 @@ class InsertTest {
             User(name = "hb", age = 19),
             User(name = "hb", age = 20),
             User(7, "hb", 21),
-        ).also { assertContentEquals(it, listOf(3L, 4L, 7L)) }
+        ).also { assertEquals(it, listOf(3L, 4L, 7L)) }
     }
 }

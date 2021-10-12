@@ -49,7 +49,7 @@ class SelectTest {
 
         expectSqlResult("SELECT `setting`.`id` FROM `setting` WHERE `setting`.`id` = ?", listOf(1))
         SettingQueryPro.selectBy().id.equalsTo(1).columnLimiter().id()
-            .also { ids: List<Long?> -> assertContentEquals(ids, listOf(1)) }
+            .also { ids: List<Long?> -> assertEquals(ids, listOf(1L)) }
 
         expectSqlResult("SELECT * FROM `user` WHERE `user`.`name` = ? AND `user`.`age` = ?", listOf("hb", 18))
         UserQueryPro.selectBy().name.`is`.equalsTo("hb").and().age.`is`.equalsTo(18).run()

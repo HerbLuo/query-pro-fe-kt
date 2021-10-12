@@ -7,18 +7,11 @@ import cn.cloudself.query.exception.UnSupportException
 import freemarker.template.Configuration
 import java.io.File
 import java.io.InputStream
-import java.nio.file.FileAlreadyExistsException
-import java.nio.file.OpenOption
-import java.nio.file.Path
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.util.*
-import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.outputStream
-import kotlin.io.path.pathString
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.jvm.javaMethod
 
@@ -124,7 +117,7 @@ class PathFrom private constructor() {
             else -> daoPackage
         }
         val packagePath = "$packageName${if (entityOrDao.isEmpty()) "" else "."}$entityOrDao"
-        JavaFilePath(templateName, Path(workspace, subModuleName, "src", mainDir, lang, packageNameToPath(packagePath)), packagePath)
+        JavaFilePath(templateName, Paths.get(workspace, subModuleName, "src", mainDir, lang, packageNameToPath(packagePath)), packagePath)
     }
 
     private fun packageNameToPath(packageName: String) = packageName.replace(".", File.separator)
@@ -278,10 +271,10 @@ class DbNameToJava private constructor() {
     fun getConverter(): NameConverter = { convertInfo ->
         preHandle(convertInfo)
             .split("_")
-            .joinToString("") { s -> if (s.isEmpty()) "" else s[0].uppercaseChar() + s.substring(1) }
+            .joinToString("") { s -> if (s.isEmpty()) "" else Character.toUpperCase(s[0]) + s.substring(1) }
             .let {
                 if (convertInfo.toType == JavaNameType.propertyName) {
-                    it[0].lowercaseChar() + it.substring(1)
+                    Character.toLowerCase(it[0]) + it.substring(1)
                 } else {
                     if (convertInfo.templateName.startsWith("Entity")) {
                         it
@@ -515,7 +508,7 @@ class QueryProFileMaker private constructor(
                 val configuration = Configuration(Configuration.VERSION_2_3_30)
                 configuration.setClassLoaderForTemplateLoading(QueryProFileMaker::class.java.classLoader, templateDir)
                 val template = configuration.getTemplate(templateName)
-                javaFilePath.dir.createDirectories()
+                Files.createDirectories(javaFilePath.dir)
                 val openOptions = mutableListOf<OpenOption>(StandardOpenOption.CREATE)
                 if (replaceMode) {
                     openOptions.add(StandardOpenOption.TRUNCATE_EXISTING)
@@ -524,12 +517,12 @@ class QueryProFileMaker private constructor(
                     openOptions.clear()
                     openOptions.add(StandardOpenOption.CREATE_NEW)
                 }
-                val filePath = Path(javaFilePath.dir.toAbsolutePath().toString(), ClassName + ext)
+                val filePath = Paths.get(javaFilePath.dir.toAbsolutePath().toString(), ClassName + ext)
                 try {
-                    val writer = filePath.outputStream(*openOptions.toTypedArray()).writer()
+                    val writer = Files.newOutputStream(filePath, *openOptions.toTypedArray()).writer()
                     template.process(data, writer)
                 } catch (e: FileAlreadyExistsException) {
-                    logger.warn("文件已存在: " + filePath.pathString, e)
+                    logger.warn("文件已存在: $filePath", e)
                 }
             }
         }

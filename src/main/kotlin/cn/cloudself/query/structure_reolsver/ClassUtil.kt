@@ -25,7 +25,7 @@ data class ParsedClass(
 
 @Suppress("FunctionName")
 private fun to_snake_case(javaName: String) =
-    javaName.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").lowercase()
+    javaName.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").toLowerCase()
 
 fun parseClass(clazz: Class<*>): ParsedClass {
     return caches.getOrPut(clazz) {
@@ -56,8 +56,8 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                     idColumnType = field.type
                 }
 
-                val setterMethodName = "set${fieldName[0].uppercaseChar()}${fieldName.substring(1)}"
-                val getterMethodName = "get${fieldName[0].uppercaseChar()}${fieldName.substring(1)}"
+                val setterMethodName = "set${Character.toUpperCase(fieldName[0])}${fieldName.substring(1)}"
+                val getterMethodName = "get${Character.toUpperCase(fieldName[0])}${fieldName.substring(1)}"
 
                 val setter = try {
                     clazz.getMethod(setterMethodName, field.type)

@@ -48,15 +48,15 @@ class QueryProSqlTest {
 
         println("单条查询语句")
         QueryProSql.create("SELECT * FROM user").query(User::class.java)
-            .also { users: List<User> -> assertContentEquals(users, listOf(user1, user2)) }
+            .also { users: List<User> -> assertEquals(users, listOf(user1, user2)) }
 
         println("单条查询语句 含分号")
         QueryProSql.create("SELECT * FROM user;").query(User::class.java)
-            .also { users: List<User> -> assertContentEquals(users, listOf(user1, user2)) }
+            .also { users: List<User> -> assertEquals(users, listOf(user1, user2)) }
 
         println("单条查询语句 (文件模式)")
         QueryProSql.create(File("temp.sql").inputStream()).query(Setting::class.java)
-            .also { settings: List<Setting> -> assertContentEquals(settings, listOf(setting1)) }
+            .also { settings: List<Setting> -> assertEquals(settings, listOf(setting1)) }
 
         println("单条更新语句")
         QueryProSql.create("INSERT INTO user (id, name, age) VALUES (3, 'herb', 18)").update()
