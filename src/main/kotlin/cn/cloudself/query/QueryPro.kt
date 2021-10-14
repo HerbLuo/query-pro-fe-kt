@@ -75,13 +75,13 @@ open class QueryPro<
      * 插入操作
      */
     @Suppress("UNCHECKED_CAST")
-    fun insert(obj: T): ID? = insert(listOf(obj)).getOrNull(0) as ID?
+    fun insert(obj: T): ID? = insert(listOf(obj)).getOrNull(0)
 
     /**
      * 插入操作
      */
     @Suppress("UNCHECKED_CAST")
-    fun insert(vararg objs: T) = insert(listOf(*objs)) as List<ID?>
+    fun insert(vararg objs: T) = insert(listOf(*objs))
 
     /**
      * 批量插入
