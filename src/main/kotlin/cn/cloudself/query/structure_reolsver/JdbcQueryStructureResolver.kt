@@ -6,7 +6,8 @@ import cn.cloudself.query.exception.IllegalParameters
 import cn.cloudself.query.exception.UnSupportException
 import cn.cloudself.query.util.LogFactory
 import cn.cloudself.query.util.SpringUtils
-import java.lang.StringBuilder
+import org.springframework.jdbc.datasource.DataSourceUtils
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.math.BigDecimal
 import java.sql.*
 import java.time.LocalDate
@@ -16,7 +17,6 @@ import java.util.*
 import javax.sql.DataSource
 
 class JdbcQueryStructureResolver: IQueryStructureResolver {
-    private companion object STATIC private val logger = LogFactory.getLog(JdbcQueryStructureResolver::class.java)
 
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
@@ -79,7 +79,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
         val idColumnProxy = BeanProxy.fromClass(idColumnType)
 
-        getConnection().use { connection ->
+        getConnection().autoUse { connection ->
             val preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             for (params in paramsArr) {
                 setParam(preparedStatement, params, false)
@@ -106,7 +106,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             throw IllegalParameters("sqlArr的长度必须为1或者与paramsArr长度一致")
         }
 
-        getConnection().use { connection ->
+        getConnection().autoUse { connection ->
             val affectRows = if (sqlArraySize == 1) {
                 logger.debug("sql长度为1")
                 val preparedStatement = connection.prepareStatement(sqlArr[0])
@@ -164,7 +164,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     }
 
     private fun <T> resolvePri(sql: String, params: Array<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
-        getConnection().use { connection ->
+        getConnection().autoUse { connection ->
             val preparedStatement = connection.prepareStatement(sql)
 
             setParam(preparedStatement, params, action != QueryStructureAction.INSERT)
@@ -299,6 +299,36 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             } ?: throw ConfigException("无法找到DataSource, 使用QueryProConfig.setDataSource设置")
             QueryProConfig.global.setDataSource(dataSource)
         }
-        return dataSource.connection
+        return if (isDataSourceUtilsPresent) {
+            // 这里是否去除Spring JDBC到依赖更加好? 虽然也不麻烦。
+            DataSourceUtils.getConnection(dataSource)
+        } else {
+            dataSource.connection
+        }
+    }
+
+    private inline fun <T : AutoCloseable?, R> T.autoUse(block: (T) -> R): R {
+        return if (shouldClose()) {
+            use(block)
+        } else {
+            block(this)
+        }
+    }
+
+    private fun shouldClose() = if (isDataSourceUtilsPresent) {
+        !TransactionSynchronizationManager.isActualTransactionActive()
+    } else {
+        true
+    }.also { if (it) logger.info("Will auto close connection.") }
+
+    companion object {
+        private val logger = LogFactory.getLog(JdbcQueryStructureResolver::class.java)
+
+        private val isDataSourceUtilsPresent = try {
+            Class.forName("org.springframework.jdbc.datasource.DataSourceUtils")
+            true
+        } catch (e: Throwable) {
+            false
+        }
     }
 }
