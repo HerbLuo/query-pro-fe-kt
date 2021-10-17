@@ -8,6 +8,7 @@ import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import cn.cloudself.query.QueryProTransaction
 import org.junit.Test
+import java.lang.RuntimeException
 import kotlin.test.assertEquals
 
 class TransactionTest {
@@ -16,13 +17,6 @@ class TransactionTest {
             """
                 TRUNCATE TABLE user;
                 INSERT INTO user (id, name, age) VALUES (1, 'hb', 18);
-                INSERT INTO user (id, name, age) VALUES (2, 'hb', 10);
-                INSERT INTO user (id, name, age) VALUES (3, 'herb', 18);
-                INSERT INTO user (id, name, age) VALUES (4, 'l', null);
-                TRUNCATE TABLE setting;
-                INSERT INTO setting (id, user_id, kee, value) VALUES (1, 1, 'lang', '简体中文');
-                INSERT INTO setting (id, user_id, kee, value) VALUES (2, 1, 'theme', 'dark');
-                INSERT INTO setting (id, user_id, kee, value) VALUES (3, 2, 'lang', '繁体中文');
             """
         ).update(Boolean::class.java)
     }
@@ -37,15 +31,20 @@ class TransactionTest {
 
         prepareData()
 
-        val user1 = User(1, "hb", 18)
-        val user2 = User(2, "hb", 10)
-        val user3 = User(3, "herb", 18)
-        val user4 = User(4, "l", null)
+        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 18)), users) }
 
-        QueryProTransaction.use {
-            expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ?", listOf(1))
-            UserQueryPro.selectBy().id.equalsTo(1).run()
-                .also { users: List<User> -> assertEquals(users, listOf(user1)) }
+        try {
+            QueryProTransaction.use {
+                expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(19, 1))
+                UserQueryPro.updateSet(User(age = 19)).where.id.equalsTo(1).run().also { assert(it) }
+                UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 19)), users) }
+
+                throw RuntimeException("test")
+            }
+        } catch (e: Exception) {
         }
+
+
+        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 18)), users) }
     }
 }

@@ -303,7 +303,15 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             // 这里是否去除Spring JDBC到依赖更加好? 虽然也不麻烦。
             DataSourceUtils.getConnection(dataSource)
         } else {
-            dataSource.connection
+            if (QueryProTransaction.isActualTransactionActive) {
+                val connection = QueryProTransaction.connectionThreadLocal.get()
+                connection ?: dataSource.connection.also {
+                    it.autoCommit = false
+                    QueryProTransaction.connectionThreadLocal.set(it)
+                }
+            } else {
+                dataSource.connection
+            }
         }
     }
 
