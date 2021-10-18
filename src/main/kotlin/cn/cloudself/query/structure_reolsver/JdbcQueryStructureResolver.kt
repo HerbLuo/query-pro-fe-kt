@@ -8,6 +8,9 @@ import cn.cloudself.query.util.LogFactory
 import cn.cloudself.query.util.SpringUtils
 import org.springframework.jdbc.datasource.DataSourceUtils
 import org.springframework.transaction.support.TransactionSynchronizationManager
+import cn.cloudself.query.util.compatibleWithBool
+import cn.cloudself.query.util.compatibleWithInt
+import java.lang.StringBuilder
 import java.math.BigDecimal
 import java.sql.*
 import java.time.LocalDate
@@ -39,7 +42,11 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             }
         }
 
-        return resolvePri(sql, params.toTypedArray(), clazz, queryStructure.action)
+        val result = resolvePri(sql, params.toTypedArray(), clazz, queryStructure.action)
+        if (QueryProConfig.final.printResult()) {
+            logger.info(result)
+        }
+        return result
     }
 
     override fun <T> resolve(sql: String, params: Array<Any?>, clazz: Class<T>, type: QueryStructureAction): List<T> {
@@ -47,9 +54,19 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     }
 
     override fun <T> insert(objs: Collection<Any>, clazz: Class<T>): List<Any> {
-        val bean = BeanProxy.fromClass(clazz).newInstance()
+        val beanProxy = BeanProxy.fromClass(clazz)
+        val bean = beanProxy.newInstance()
         val parsedClass = bean.getParsedClass()
         val columns = parsedClass.columns.values
+
+        @Suppress("UNCHECKED_CAST", "UNCHECKED_CAST")
+        val beforeInsert = QueryProConfig.final.lifecycle().beforeInsert(beanProxy as BeanProxy<Any, Any>, objs)
+
+
+        val preHandledObjs = beforeInsert.getOrElse {
+            logger.warn("beforeInsert钩子阻止了本次操作", beforeInsert.err())
+            return emptyList()
+        }
 
         val sqlBuilder = StringBuilder("INSERT INTO `")
         sqlBuilder.append(parsedClass.dbName, "` (")
@@ -70,7 +87,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         sqlBuilder.append(')')
 
         val sql = sqlBuilder.toString()
-        val paramsArr = objs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
+        val paramsArr = preHandledObjs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
         val idColumnType = parseClass(clazz).idColumnType
         if (idColumnType == null) {
             logger.warn("没有找到主键或其对应的Class, 返回了空结果")
@@ -149,12 +166,12 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                     return affectRows as T
                 }
                 else -> {
-                    if (Boolean::class.java.isAssignableFrom(clazz) || Boolean::class.javaObjectType.isAssignableFrom(clazz)) {
+                    if (clazz.compatibleWithBool()) {
                         if (affectRows[0] == 0) {
                             return false as T
                         }
                         return (affectRows.sum() > 0) as T
-                    } else if (Int::class.java.isAssignableFrom(clazz) || Int::class.javaObjectType.isAssignableFrom(clazz)) {
+                    } else if (clazz.compatibleWithInt()) {
                         return affectRows.sum() as T
                     }
                     throw UnSupportException("不支持的class, 目前只支持List::class.java, listOf<Int>().javaClass, Int, Boolean")
@@ -165,6 +182,8 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
     private fun <T> resolvePri(sql: String, params: Array<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
         getConnection().autoUse { connection ->
+            logger.info("成功获取到连接")
+
             val preparedStatement = connection.prepareStatement(sql)
 
             setParam(preparedStatement, params, action != QueryStructureAction.INSERT)
@@ -182,11 +201,17 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             fun doUpdate() {
                 val updatedCount = preparedStatement.executeUpdate()
                 @Suppress("UNCHECKED_CAST")
-                if (Boolean::class.java.isAssignableFrom(clazz)) {
-                    val success = updatedCount > 0
-                    resultList.add(success as T)
-                } else if (Int::class.java.isAssignableFrom(clazz)) {
-                    resultList.add(updatedCount as T)
+                when {
+                    clazz.compatibleWithBool() -> {
+                        val success = updatedCount > 0
+                        resultList.add(success as T)
+                    }
+                    clazz.compatibleWithInt() -> {
+                        resultList.add(updatedCount as T)
+                    }
+                    else -> {
+                        throw UnSupportException("不支持的class, 目前只支持List::class.java, listOf<Int>().javaClass, Int, Boolean")
+                    }
                 }
             }
 

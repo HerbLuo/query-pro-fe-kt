@@ -36,6 +36,10 @@ class BeanProxy<T, R>(
      */
     private val setProperty: (o: T, p: String, v: Any?) -> Unit,
     /**
+     * 获取属性
+     */
+    private val getProperty: (o: T, p: String) -> Any?,
+    /**
      * 获取某属性的类型
      */
     private val getJavaType: (p: String) -> Class<*>?,
@@ -69,6 +73,7 @@ class BeanProxy<T, R>(
                         createInstance,
                         { throw UnSupportException("不支持Map转properties") },
                         { result, property, value -> (result as MutableMap<String, Any?>)[property] = value },
+                        { result, property -> (result as MutableMap<String, Any?>)[property] },
                         { null }
                     )
                 }
@@ -78,6 +83,7 @@ class BeanProxy<T, R>(
                         { Ref(null)  },
                         { throw UnSupportException("不支持基本类型转properties") },
                         { o, _, v -> o.value = v as R },
+                        { o, _ -> o.value },
                         { clazz },
                     ).setToResult { it.value as R }
                 }
@@ -98,6 +104,14 @@ class BeanProxy<T, R>(
                                     return@BeanProxy
                                 }
                                 column.setter(r, v)
+                            },
+                            { r, p ->
+                                val column = columns[p]
+                                if (column == null) {
+                                    logger.warn("没有找到该列 $p")
+                                    return@BeanProxy null
+                                }
+                                column.getter(r)
                             },
                             { p -> columns[p]?.javaType }
                         )
@@ -123,9 +137,11 @@ class BeanProxy<T, R>(
         private val proxy: BeanProxy<T, R>,
     ) {
         fun setProperty(p: String, v: Any?) = this.also { proxy.setProperty(instance, p, v) }
+        fun getProperty(p: String) = proxy.getProperty(instance, p)
         fun getParsedClass() = proxy.getParsedClass()
         fun getJavaType(p: String) = proxy.getJavaType(p)
         fun toResult(): R = proxy.toResult(instance)
     }
     fun newInstance() = BeanInstance(createInstance(), this)
+    fun ofInstance(obj: T) = BeanInstance(obj, this)
 }

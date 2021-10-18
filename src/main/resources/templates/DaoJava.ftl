@@ -199,7 +199,7 @@ public class ${ClassName} {
             }
 
         <#list m.columns as field>
-            public UpdateSetField ${field.propertyName}(Object ${field.propertyName}) { return createUpdateSetField("${field.propertyName}", ${field.propertyName}); }
+            public UpdateSetField ${field.propertyName}(Object ${field.propertyName}) { return createUpdateSetField("${field.db_name}", ${field.propertyName}); }
         </#list>
         }
 

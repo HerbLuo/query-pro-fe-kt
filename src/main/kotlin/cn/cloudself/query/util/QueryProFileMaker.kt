@@ -522,7 +522,7 @@ class QueryProFileMaker private constructor(
                     val writer = Files.newOutputStream(filePath, *openOptions.toTypedArray()).writer()
                     template.process(data, writer)
                 } catch (e: FileAlreadyExistsException) {
-                    logger.warn("文件已存在: $filePath", e)
+                    logger.warn("文件已存在: $filePath, e: ${e.message}")
                 }
             }
         }

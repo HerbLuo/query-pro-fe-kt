@@ -1,5 +1,6 @@
 package cn.cloudself.query.structure_reolsver
 
+import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.exception.UnSupportException
 import java.lang.Exception
 import javax.persistence.Column
@@ -41,6 +42,10 @@ fun parseClass(clazz: Class<*>): ParsedClass {
         while (classOrSuperClass != null) {
             for (field in classOrSuperClass.declaredFields) {
                 val fieldName = field.name
+                if (QueryProConfig.final.shouldIgnoreFields().contains(fieldName)) {
+                    continue
+                }
+
                 val idAnnotation: Id? = field.getAnnotation(Id::class.java)
                 val columnAnnotation: Column? = field.getAnnotation(Column::class.java)
                 val dbName = columnAnnotation?.name ?: to_snake_case(fieldName)
@@ -78,7 +83,7 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                             field.set(o, v)
                         } else {
                             if (setter == null) {
-                                throw UnSupportException("无法访问私有且无setter的属性")
+                                throw UnSupportException("无法访问私有且无setter的属性 {0}", fieldName)
                             }
                             setter.invoke(o, v)
                         }
@@ -91,7 +96,7 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                             return@ParsedColumn field.get(o)
                         }
                         if (getter == null) {
-                            throw UnSupportException("无法访问私有且无getter的属性")
+                            throw UnSupportException("无法访问私有且无getter的属性 {0}", fieldName)
                         }
                         return@ParsedColumn getter.invoke(o)
                     },

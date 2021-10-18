@@ -37,3 +37,5 @@ QueryStructure 不复制
 更多的测试用例
 大于maxActive的并发测试, 以及出错时的测试
 再看一下ThreadLocal与线程池的问题
+添加空列返回测试
+添加带下划线驼峰式的列（更新操作）
