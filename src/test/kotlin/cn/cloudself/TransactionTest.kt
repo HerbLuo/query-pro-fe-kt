@@ -42,6 +42,7 @@ class TransactionTest {
                 throw RuntimeException("test")
             }
         } catch (e: Exception) {
+            e.printStackTrace()
         }
 
 

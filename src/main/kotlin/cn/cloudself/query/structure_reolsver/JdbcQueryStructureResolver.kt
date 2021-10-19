@@ -324,7 +324,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             } ?: throw ConfigException("无法找到DataSource, 使用QueryProConfig.setDataSource设置")
             QueryProConfig.global.setDataSource(dataSource)
         }
-        return if (isDataSourceUtilsPresent) {
+        return if (isDataSourceUtilsPresent && TransactionSynchronizationManager.isActualTransactionActive()) {
             // 这里是否去除Spring JDBC到依赖更加好? 虽然也不麻烦。
             DataSourceUtils.getConnection(dataSource)
         } else {
@@ -349,10 +349,12 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     }
 
     private fun shouldClose() = if (isDataSourceUtilsPresent) {
-        !TransactionSynchronizationManager.isActualTransactionActive()
-    } else {
-        true
-    }.also { if (it) logger.info("Will auto close connection.") }
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            false
+        } else {
+            !QueryProTransaction.isActualTransactionActive
+        }
+    } else (!QueryProTransaction.isActualTransactionActive).also { if (it) logger.info("Will auto close connection.") }
 
     companion object {
         private val logger = LogFactory.getLog(JdbcQueryStructureResolver::class.java)
