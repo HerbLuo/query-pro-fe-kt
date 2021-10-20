@@ -26,9 +26,9 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
         if (QueryProConfig.final.printSql()) {
             logger.info("\n" + sql)
-            logger.info(params)
+            logger.info("params: $params")
         } else {
-            logger.debug("\n" + sql)
+            logger.debug("\n{0}", sql)
             logger.debug(params)
         }
 
@@ -44,7 +44,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
         val result = resolvePri(sql, params.toTypedArray(), clazz, queryStructure.action)
         if (QueryProConfig.final.printResult()) {
-            logger.info(result)
+            logger.info("result: $result")
         }
         return result
     }

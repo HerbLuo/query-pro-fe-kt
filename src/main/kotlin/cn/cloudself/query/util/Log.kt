@@ -25,6 +25,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.spi.LocationAwareLogger
 import java.io.Serializable
+import java.text.MessageFormat
 import kotlin.jvm.Volatile
 import java.util.logging.LogRecord
 
@@ -37,16 +38,22 @@ interface Log {
     val isTraceEnabled: Boolean
     fun fatal(message: Any?)
     fun fatal(message: Any?, exception: Throwable?)
+    fun fatal(message: String, vararg args: Any) { if (isFatalEnabled) fatal(MessageFormat.format(message, *args) as Any)  }
     fun error(message: Any?)
     fun error(message: Any?, exception: Throwable?)
+    fun error(message: String, vararg args: Any) { if (isErrorEnabled) error(MessageFormat.format(message, *args) as Any) }
     fun warn(message: Any?)
     fun warn(message: Any?, exception: Throwable?)
+    fun warn(message: String, vararg args: Any) { if (isWarnEnabled) warn(MessageFormat.format(message, *args) as Any) }
     fun info(message: Any?)
     fun info(message: Any?, exception: Throwable?)
+    fun info(message: String, vararg args: Any) { if (isInfoEnabled) info(MessageFormat.format(message, *args) as Any) }
     fun debug(message: Any?)
     fun debug(message: Any?, exception: Throwable?)
+    fun debug(message: String, vararg args: Any) { if (isDebugEnabled) debug(MessageFormat.format(message, *args) as Any) }
     fun trace(message: Any?)
     fun trace(message: Any?, exception: Throwable?)
+    fun trace(message: String, vararg args: Any) { if (isTraceEnabled) trace(MessageFormat.format(message, *args) as Any) }
 }
 
 object LogFactory {
