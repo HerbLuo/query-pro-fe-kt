@@ -1,7 +1,6 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalImplements
-import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
 import cn.cloudself.query.util.LogFactory
 import java.sql.Connection
 
@@ -21,7 +20,11 @@ object QueryProTransaction {
             connection.rollback()
             throw e
         } finally {
-            connectionThreadLocal.get().also { it?.autoCommit = true }
+            connectionThreadLocal.get().also {
+                val connection = it!!
+                connection.commit()
+                connection.autoCommit = true
+            }
             connectionThreadLocal.set(null)
             isActualTransactionActive = false
         }

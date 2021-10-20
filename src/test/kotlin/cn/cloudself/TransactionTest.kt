@@ -17,6 +17,7 @@ class TransactionTest {
             """
                 TRUNCATE TABLE user;
                 INSERT INTO user (id, name, age) VALUES (1, 'hb', 18);
+                INSERT INTO user (id, name, age) VALUES (2, 'herb', 19);
             """
         ).update(Boolean::class.java)
     }
@@ -39,13 +40,39 @@ class TransactionTest {
                 UserQueryPro.updateSet(User(age = 19)).where.id.equalsTo(1).run().also { assert(it) }
                 UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 19)), users) }
 
+                expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 2))
+                UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(2).run().also { assert(it) }
+                UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20)), users) }
+
+                expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 1))
+                UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(1).run().also { assert(it) }
+                UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20)), users) }
+
                 throw RuntimeException("test")
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
-
         UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 18)), users) }
+        UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 19)), users) }
+
+        QueryProTransaction.use {
+            expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(19, 1))
+            UserQueryPro.updateSet(User(age = 19)).where.id.equalsTo(1).run().also { assert(it) }
+            UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 19)), users) }
+
+            expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 2))
+            UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(2).run().also { assert(it) }
+            UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20)), users) }
+
+            expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 1))
+            UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(1).run().also { assert(it) }
+            UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20)), users) }
+        }
+
+
+        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20)), users) }
+        UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20)), users) }
     }
 }
