@@ -230,7 +230,7 @@ public class SettingQueryPro {
             }
 
             public UpdateSetField id(Object id) { return createUpdateSetField("id", id); }
-            public UpdateSetField userId(Object userId) { return createUpdateSetField("userId", userId); }
+            public UpdateSetField userId(Object userId) { return createUpdateSetField("user_id", userId); }
             public UpdateSetField kee(Object kee) { return createUpdateSetField("kee", kee); }
             public UpdateSetField value(Object value) { return createUpdateSetField("value", value); }
             public UpdateSetField deleted(Object deleted) { return createUpdateSetField("deleted", deleted); }
