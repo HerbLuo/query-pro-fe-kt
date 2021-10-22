@@ -140,9 +140,17 @@ public class UserQueryPro {
                 return new QueryKeywords<>(createField(column), super.getQueryStructure(), super.getCreate_where_field());
             }
 
+            private WhereField<T, RUN_RES> createWhereField(String column, Object[] objs) {
+                final QueryKeywords<WhereField<T, RUN_RES>> whereField = createWhereField(column);
+                return objs.length == 1 ? whereField.equalsTo(objs[0]) : whereField.in(objs);
+            }
+
             public QueryKeywords<WhereField<T, RUN_RES>> id() { return createWhereField("id"); }
+            public WhereField<T, RUN_RES> id(Object... ids) { return createWhereField("id", ids); }
             public QueryKeywords<WhereField<T, RUN_RES>> name() { return createWhereField("name"); }
+            public WhereField<T, RUN_RES> name(Object... names) { return createWhereField("name", names); }
             public QueryKeywords<WhereField<T, RUN_RES>> age() { return createWhereField("age"); }
+            public WhereField<T, RUN_RES> age(Object... ages) { return createWhereField("age", ages); }
         }
 
         public static class OrderByField<T, RUN_RES> extends CommonField<T, RUN_RES> {

@@ -52,11 +52,19 @@ class ImplSettingQueryPro {
         private fun createWhereField(column: String) =
             QueryKeywords(createField(column), queryStructure, create_where_field)
 
+        private fun createWhereField(column: String, objs: Array<out Any>) =
+            createWhereField(column).let { if (objs.size == 1) it.equalsTo(objs[0]) else it.`in`(*objs) }
+
         val id = createWhereField("id")
+        fun id(vararg ids: Any) = createWhereField("id", ids)
         val userId = createWhereField("user_id")
+        fun userId(vararg userIds: Any) = createWhereField("user_id", userIds)
         val kee = createWhereField("kee")
+        fun kee(vararg kees: Any) = createWhereField("kee", kees)
         val value = createWhereField("value")
+        fun value(vararg values: Any) = createWhereField("value", values)
         val deleted = createWhereField("deleted")
+        fun deleted(vararg deleteds: Any) = createWhereField("deleted", deleteds)
     }
 
     class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {

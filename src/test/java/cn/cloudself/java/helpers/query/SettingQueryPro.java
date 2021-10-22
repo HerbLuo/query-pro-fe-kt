@@ -140,11 +140,21 @@ public class SettingQueryPro {
                 return new QueryKeywords<>(createField(column), super.getQueryStructure(), super.getCreate_where_field());
             }
 
+            private WhereField<T, RUN_RES> createWhereField(String column, Object[] objs) {
+                final QueryKeywords<WhereField<T, RUN_RES>> whereField = createWhereField(column);
+                return objs.length == 1 ? whereField.equalsTo(objs[0]) : whereField.in(objs);
+            }
+
             public QueryKeywords<WhereField<T, RUN_RES>> id() { return createWhereField("id"); }
+            public WhereField<T, RUN_RES> id(Object... ids) { return createWhereField("id", ids); }
             public QueryKeywords<WhereField<T, RUN_RES>> userId() { return createWhereField("user_id"); }
+            public WhereField<T, RUN_RES> userId(Object... userIds) { return createWhereField("user_id", userIds); }
             public QueryKeywords<WhereField<T, RUN_RES>> kee() { return createWhereField("kee"); }
+            public WhereField<T, RUN_RES> kee(Object... kees) { return createWhereField("kee", kees); }
             public QueryKeywords<WhereField<T, RUN_RES>> value() { return createWhereField("value"); }
+            public WhereField<T, RUN_RES> value(Object... values) { return createWhereField("value", values); }
             public QueryKeywords<WhereField<T, RUN_RES>> deleted() { return createWhereField("deleted"); }
+            public WhereField<T, RUN_RES> deleted(Object... deleteds) { return createWhereField("deleted", deleteds); }
         }
 
         public static class OrderByField<T, RUN_RES> extends CommonField<T, RUN_RES> {

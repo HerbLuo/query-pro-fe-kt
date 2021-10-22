@@ -25,12 +25,12 @@ QueryStructure ------------> sql & params ----------> ResultSet -----------> Lis
 
 
 #### 后续规划
-request配置
-thread配置
-rpc context配置
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
+添加时默认的字段
 
 一些优化
+thread配置
+rpc context配置
 QueryStructure 不复制
 更多日志
 仅关键字转义

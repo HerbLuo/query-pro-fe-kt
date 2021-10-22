@@ -52,8 +52,12 @@ class Impl${ClassName} {
         private fun createWhereField(column: String) =
             QueryKeywords(createField(column), queryStructure, create_where_field)
 
+        private fun createWhereField(column: String, objs: Array${"<"}out Any>) =
+            createWhereField(column).let { if (objs.size == 1) it.equalsTo(objs[0]) else it.`in`(*objs) }
+
     <#list m.columns as field>
         val ${field.propertyName} = createWhereField("${field.db_name}")
+        fun ${field.propertyName}(vararg ${field.propertyName}s: Any) = createWhereField("${field.db_name}", ${field.propertyName}s)
     </#list>
     }
 

@@ -46,9 +46,15 @@ class ImplUserQueryPro {
         private fun createWhereField(column: String) =
             QueryKeywords(createField(column), queryStructure, create_where_field)
 
+        private fun createWhereField(column: String, objs: Array<out Any>) =
+            createWhereField(column).let { if (objs.size == 1) it.equalsTo(objs[0]) else it.`in`(*objs) }
+
         val id = createWhereField("id")
+        fun id(vararg ids: Any) = createWhereField("id", ids)
         val name = createWhereField("name")
+        fun name(vararg names: Any) = createWhereField("name", names)
         val age = createWhereField("age")
+        fun age(vararg ages: Any) = createWhereField("age", ages)
     }
 
     class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {

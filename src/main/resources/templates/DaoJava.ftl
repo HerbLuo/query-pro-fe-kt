@@ -117,8 +117,14 @@ public class ${ClassName} {
                 return new QueryKeywords<>(createField(column), super.getQueryStructure(), super.getCreate_where_field());
             }
 
+            private WhereField${"<"}T, RUN_RES> createWhereField(String column, Object[] objs) {
+                final QueryKeywords${"<"}WhereField${"<"}T, RUN_RES>> whereField = createWhereField(column);
+                return objs.length == 1 ? whereField.equalsTo(objs[0]) : whereField.in(objs);
+            }
+
         <#list m.columns as field>
             public QueryKeywords${"<"}WhereField${"<"}T, RUN_RES>> ${field.propertyName}() { return createWhereField("${field.db_name}"); }
+            public WhereField${"<"}T, RUN_RES> ${field.propertyName}(Object... ${field.propertyName}s) { return createWhereField("${field.db_name}", ${field.propertyName}s); }
         </#list>
         }
 
