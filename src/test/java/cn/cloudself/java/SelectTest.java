@@ -43,6 +43,11 @@ public class SelectTest {
         User user3 = new User().setId(3L).setName("herb").setAge(18);
         User user4 = new User().setId(4L).setName("l").setAge(null);
 
+
+        expectSqlResult("SELECT * FROM `user` WHERE `id` = ? LIMIT 1", Helpers.listOf(1));
+        final User user0 = UserQueryPro.selectByPrimaryKey(1);
+        assertEqualsForJava(user0, user1);
+
         expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ?", Helpers.listOf(1));
         final List<User> usersRun1 = UserQueryPro.selectBy().id().equalsTo(1).run();
         assertEqualsForJava(usersRun1, Helpers.listOf(user1));

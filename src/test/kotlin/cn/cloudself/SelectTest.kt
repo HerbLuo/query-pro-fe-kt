@@ -43,6 +43,9 @@ class SelectTest {
         val user3 = User(3, "herb", 18)
         val user4 = User(4, "l", null)
 
+        expectSqlResult("SELECT * FROM `user` WHERE `id` = ? LIMIT 1", listOf(1))
+        UserQueryPro.selectByPrimaryKey(1).also { user: User? -> assertEquals(user, user1) }
+
         expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ?", listOf(1))
         UserQueryPro.selectBy().id.equalsTo(1).run()
             .also { users: List<User> -> assertEquals(users, listOf(user1)) }

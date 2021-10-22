@@ -1,5 +1,6 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.structure_reolsver.parseClass
 
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
@@ -25,6 +26,21 @@ open class QueryPro<
      * 查询操作
      */
     fun selectBy() = createSelectByField(queryStructure.copy(action = QueryStructureAction.SELECT))
+
+    /**
+     * 使用主键查询
+     */
+    fun selectByPrimaryKey(value: Any): T? {
+        val idColumn = parseClass(clazz).idColumn ?: throw IllegalCall("Class {0} 没有找到主键", clazz.name)
+        val whereClause = WhereClause(Field(null, idColumn), "=", value)
+        val newQueryStructure = queryStructure.copy(
+            action = QueryStructureAction.SELECT,
+            where = listOf(whereClause),
+            limit = 0 to 1
+        )
+        @Suppress("UNCHECKED_CAST")
+        return createSelectByField(newQueryStructure).runLimit1() as T?
+    }
 
     /**
      * 排序操作

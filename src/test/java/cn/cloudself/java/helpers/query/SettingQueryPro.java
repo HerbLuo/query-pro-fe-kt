@@ -95,6 +95,10 @@ public class SettingQueryPro {
         return queryPro.selectBy();
     }
 
+    public static Setting selectByPrimaryKey(Object value) {
+        return queryPro.selectByPrimaryKey(value);
+    }
+
     public static __Impl.UpdateSetField updateSet() {
         return queryPro.updateSet();
     }
