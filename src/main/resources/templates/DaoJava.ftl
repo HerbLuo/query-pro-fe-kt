@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="m" type="cn.cloudself.query.util.TemplateModel" -->
 <#assign ClassName = m._ClassName/>
 <#assign EntityName = m._EntityName/>
-<#assign IdType = m.id.javaTypeStr/>
+<#assign IdType = (m.id.javaTypeStr)!"Long"/>
 package ${m.packagePath};
 
 import ${m.entityPackage}.${EntityName};
@@ -124,7 +124,7 @@ public class ${ClassName} {
 
         <#list m.columns as field>
             public QueryKeywords${"<"}WhereField${"<"}T, RUN_RES>> ${field.propertyName}() { return createWhereField("${field.db_name}"); }
-            public WhereField${"<"}T, RUN_RES> ${field.propertyName}(Object... ${field.propertyName}s) { return createWhereField("${field.db_name}", ${field.propertyName}s); }
+            public WhereField${"<"}T, RUN_RES> ${field.propertyName}(${field.javaTypeStr}... ${field.propertyName}s) { return createWhereField("${field.db_name}", ${field.propertyName}s); }
         </#list>
         }
 

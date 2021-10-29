@@ -316,6 +316,7 @@ data class TemplateModel(
     var _ClassName: String? = null,
     var packagePath: String? = null,
     var noArgMode: Boolean? = null,
+    var entityExMethods: String? = null,
     var columns: List<TemplateModelColumn> = listOf(),
     var queryProDelegate: List<DelegateInfo> = listOf(),
 )
@@ -346,6 +347,7 @@ class QueryProFileMaker private constructor(
     companion object {
         /**
          * 生成单个Kotlin文件
+         * 注意对于特殊构造的数据库结构，可能被注入Java代码到生成的(Entity, Dao)源文件中，所以可能有任意代码执行的风险
          * @param filePathResolver [FilePathResolver] 文件位置解析器，即指示生成的文件应该放在哪里。可使用[PathFrom]生成
          * @sample cn.cloudself.samples.QueryProFileMakerSample.singleFileMode
          */
@@ -355,6 +357,7 @@ class QueryProFileMaker private constructor(
 
         /**
          * 生成entity和dao至两个文件
+         * 注意对于特殊构造的数据库结构，可能被注入Java代码到生成的(Entity, Dao)源文件中，所以可能有任意代码执行的风险
          * @param filePathResolver [FilePathResolver] 文件位置解析器，即指示生成的文件应该放在哪里。可使用[PathFrom]生成
          * @sample cn.cloudself.samples.QueryProFileMakerSample.entityAndDaoMode
          */
@@ -367,6 +370,7 @@ class QueryProFileMaker private constructor(
 
         /**
          * 生成entity和dao至两个文件 Java版, 参考 [QueryProFileMaker.entityAndDaoMode]
+         * 注意对于特殊构造的数据库结构，可能被注入Java代码到生成的(Entity, Dao)源文件中，所以可能有任意代码执行的风险
          * @param filePathResolver [FilePathResolver] 文件位置解析器，即指示生成的文件应该放在哪里。可使用[PathFrom]生成
          * @sample cn.cloudself.samples.QueryProFileMakerSample.javaEntityAndDaoMode
          */
@@ -380,7 +384,9 @@ class QueryProFileMaker private constructor(
 
     private var debug = false
     private var db: DbInfo? = null
-    private var tables: Array<out String> = arrayOf("*")
+    private var tables: Array<out String> = arrayOf("")
+    private var excludeTables: Array<out String> = arrayOf()
+    private var entityExMethods = ""
     private var replaceMode = false
     private var skipRepalceEntity = false
     private var ktNoArgMode = true
@@ -390,13 +396,18 @@ class QueryProFileMaker private constructor(
         "BIGINT" to KtJavaType("Long"),
         "VARCHAR" to KtJavaType("String"),
         "CHAR" to KtJavaType("String"),
+        "MEDIUMTEXT" to KtJavaType("String"),
         "BIT" to KtJavaType("Boolean"),
         "TINYINT" to KtJavaType("Short"),
+        "DATE" to KtJavaType("Date"),
         "DATETIME" to KtJavaType("Date"),
         "DECIMAL" to KtJavaType("BigDecimal"),
         "DOUBLE" to KtJavaType("Double"),
+        "SMALLINT" to KtJavaType("Int", "Integer"),
         "INT" to KtJavaType("Int", "Integer"),
         "TEXT" to KtJavaType("String", "String"),
+        "BLOB" to KtJavaType("ByteArray", "byte[]"),
+        "LONGBLOB" to KtJavaType("ByteArray", "byte[]"),
     )
     private val ktKeywords = arrayOf(
         "as", "break", "class", "continue", "do", "else", "false", "for", "fun", "if", "in", "interface", "is", "null",
@@ -423,10 +434,22 @@ class QueryProFileMaker private constructor(
     fun db(db: DbInfo) = this.also { this.db = db }
 
     /**
-     * 指定需要生成QueryPro文件的表名，默认为"*"，代表所有
+     * 指定需要生成QueryPro文件的表名，允许为"*"，代表所有，
+     * 注意对于特殊构造的数据库结构，可能被注入Java代码到生成的(Entity, Dao)源文件中，所以可能有任意代码执行的风险
      * @sample cn.cloudself.samples.QueryProFileMakerSample.entityAndDaoMode
      */
     fun tables(vararg tables: String) = this.also { this.tables = tables }
+
+    /**
+     * 指定需要生成QueryPro文件的表名，默认为"*"，代表所有
+     * @sample cn.cloudself.samples.QueryProFileMakerSample.entityAndDaoMode
+     */
+    fun excludeTables(vararg tables: String) = this.also { this.excludeTables = tables }
+
+    /**
+     * 加入实体类的额外方法
+     */
+    fun entityExMethods(methods: String) = this.also { this.entityExMethods = methods }
 
     /**
      * 是否替换掉已有的文件 默认false
@@ -541,6 +564,10 @@ class QueryProFileMaker private constructor(
                 }
             }
 
+            for (excludeTable in excludeTables) {
+                tableNameMapTemplateModel.remove(excludeTable)
+            }
+
             return@let tableNameMapTemplateModel
         } ?: throw RuntimeException("db信息没有注册，参考，需使用.db方法注册")
     }
@@ -593,7 +620,7 @@ class QueryProFileMaker private constructor(
                     db_name = columnName,
                     ktTypeStr = ktJavaType?.ktType ?: throw RuntimeException("找不到数据库类型${typeName}对应的kt类型, 列名$columnName"),
                     javaTypeStr = ktJavaType.javaType,
-                    remark = remarks
+                    remark = remarks.replace("*/", "").replace("/*", "")
                 ))
             }
 
@@ -610,6 +637,7 @@ class QueryProFileMaker private constructor(
                 id = id,
                 hasBigDecimal = modelColumns.find { it.ktTypeStr == "BigDecimal" } != null,
                 hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null,
+                entityExMethods = entityExMethods
             )
             tableNameMapTemplateModel[tableName] = templateModel
         }

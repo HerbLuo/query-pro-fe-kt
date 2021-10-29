@@ -74,4 +74,6 @@ public class User implements Serializable {
                 ", age=" + age +
                 '}';
     }
+
+    public <T> T copyTo(Class<T> clazz) { return null; }
 }

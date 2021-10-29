@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
-* ${m.remark}
-*/
+ * ${m.remark}
+ */
 <#if m.id??>@Entity</#if>
 @Table(name = "${m.db_name}")
 public class ${ClassName} implements Serializable {
@@ -61,4 +61,7 @@ public class ${ClassName} implements Serializable {
             </#list>
                 '}';
     }
+
+    <#--noinspection FtlReferencesInspection-->
+    <@m.entityExMethods?interpret />
 }

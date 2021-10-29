@@ -186,6 +186,8 @@ class QueryProFileMakerSample {
             .db(DbInfoBuilder.mysql("127.0.0.1", "query_pro_test").toDbInfo("root", "123456"))
             /* 指定需要生成QueryPro文件的表名, 默认为"*"代表所有 */
             .tables("setting", "user")
+            /* 往Entity中加入额外的方法 */
+            .entityExMethods("    public <T> T copyTo(Class<T> clazz) { return null; }\n")
             /* 生成的JavaBean允许链式调用 */
             .chain()
             /* 如文件已存在, 替换掉已有的文件 默认跳过已存在的文件 */

@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="m" type="cn.cloudself.query.util.TemplateModel" -->
 <#assign ClassName = m._ClassName/>
 <#assign EntityName = m._EntityName/>
-<#assign IdType = m.id.ktTypeStr/>
+<#assign IdType = (m.id.javaTypeStr)!"Long"/>
 @file:Suppress("unused")
 
 package ${m.packagePath}
@@ -57,7 +57,7 @@ class Impl${ClassName} {
 
     <#list m.columns as field>
         val ${field.propertyName} = createWhereField("${field.db_name}")
-        fun ${field.propertyName}(vararg ${field.propertyName}s: Any) = createWhereField("${field.db_name}", ${field.propertyName}s)
+        fun ${field.propertyName}(vararg ${field.propertyName}s: ${field.ktTypeStr}) = createWhereField("${field.db_name}", ${field.propertyName}s)
     </#list>
     }
 

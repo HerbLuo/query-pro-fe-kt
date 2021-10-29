@@ -23,6 +23,8 @@ QueryStructure的设计哲学: 易于序列化, 以便多端生成，并传输
 QueryStructure ------------> sql & params ----------> ResultSet -----------> List<T>
 ```
 
+# 注意，使用QueryProFileMaker的*
+
 
 #### 后续规划
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
