@@ -23,21 +23,22 @@ QueryStructure的设计哲学: 易于序列化, 以便多端生成，并传输
 QueryStructure ------------> sql & params ----------> ResultSet -----------> List<T>
 ```
 
-# 注意，使用QueryProFileMaker的*
+**注意，使用QueryProFileMaker的`*`可能有被 **
 
 
 #### 后续规划
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
 添加时默认的字段
+对条件的支持
+对sum, concat, group_concat, discount等 的支持
+对生命周期的支持
 
 一些优化
 thread配置
 rpc context配置
 QueryStructure 不复制
-更多日志
-仅关键字转义
-更多的测试用例
-大于maxActive的并发测试, 以及出错时的测试
-再看一下ThreadLocal与线程池的问题
 添加空列返回测试
 添加带下划线驼峰式的列（更新操作）
+
+更多日志
+更多的测试用例

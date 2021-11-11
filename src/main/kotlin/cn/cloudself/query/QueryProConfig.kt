@@ -33,6 +33,7 @@ interface IQueryProConfigDb<DataSource, Boolean, String, IQueryStructureResolver
     fun dataSource(): DataSource
     fun beautifySql(): Boolean
     fun printSql(): Boolean
+    fun printCallByInfo(): Boolean
     fun printResult(): Boolean
     fun dryRun(): Boolean
     fun queryProFieldComment(): Boolean
@@ -45,6 +46,7 @@ interface IQueryProConfigDbWriteable {
     fun setDataSource(dataSource: DataSource): IQueryProConfigDbWriteable
     fun setBeautifySql(beautifySql: Boolean): IQueryProConfigDbWriteable
     fun setPrintSql(printSql: Boolean): IQueryProConfigDbWriteable
+    fun setPrintCallByInfo(printCallByInfo: Boolean): IQueryProConfigDbWriteable
     fun setPrintResult(printResult: Boolean): IQueryProConfigDbWriteable
     fun setDryRun(dryRun: Boolean): IQueryProConfigDbWriteable
     fun setQueryProFieldComment(queryProFieldComment: Boolean): IQueryProConfigDbWriteable
@@ -65,6 +67,7 @@ open class QueryProConfigDb(private val store: Store): NullableQueryProConfigDb,
     override fun dataSource()             = store.get("dataSource") as DataSource?
     override fun beautifySql()            = store.get("beautifySql") as Boolean?
     override fun printSql()               = store.get("printSql") as Boolean?
+    override fun printCallByInfo()        = store.get("printCallByInfo") as Boolean?
     override fun printResult()            = store.get("printResult") as Boolean?
     override fun dryRun()                 = store.get("dryRun") as Boolean?
     override fun queryProFieldComment()   = store.get("queryProFieldComment") as Boolean?
@@ -74,6 +77,7 @@ open class QueryProConfigDb(private val store: Store): NullableQueryProConfigDb,
     override fun setDataSource(dataSource: DataSource)                                      = this.also { this.store.set("dataSource", dataSource) }
     override fun setBeautifySql(beautifySql: Boolean)                                       = this.also { this.store.set("beautifySql", beautifySql) }
     override fun setPrintSql(printSql: Boolean)                                             = this.also { this.store.set("printSql", printSql) }
+    override fun setPrintCallByInfo(printCallByInfo: Boolean)                               = this.also { this.store.set("printCallByInfo", printCallByInfo) }
     override fun setPrintResult(printResult: Boolean)                                       = this.also { this.store.set("printResult", printResult) }
     override fun setDryRun(dryRun: Boolean)                                                 = this.also { this.store.set("dryRun", dryRun) }
     override fun setQueryProFieldComment(queryProFieldComment: Boolean)                     = this.also { this.store.set("queryProFieldComment", queryProFieldComment) }
@@ -219,6 +223,7 @@ class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>
     override fun dataSource() = getBy { it.dataSource() }
     override fun beautifySql() = getBy { it.beautifySql() }
     override fun printSql() = getBy { it.printSql() }
+    override fun printCallByInfo() = getBy { it.printCallByInfo() }
     override fun printResult() = getBy { it.printResult() }
     override fun dryRun() = getBy { it.dryRun() }
     override fun queryProFieldComment() = getBy { it.queryProFieldComment() }
@@ -240,6 +245,7 @@ object QueryProConfig {
         .apply {
             setBeautifySql(true)
             setPrintSql(true)
+            setPrintCallByInfo(true)
             setPrintResult(true)
             setDryRun(false)
             setQueryProFieldComment(true)

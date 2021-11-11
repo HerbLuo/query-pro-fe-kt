@@ -5,8 +5,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
-* 
-*/
+ * 
+ */
 @Entity
 @Table(name = "user")
 public class User implements Serializable {

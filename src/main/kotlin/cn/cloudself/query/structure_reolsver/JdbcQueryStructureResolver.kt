@@ -24,11 +24,28 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
 
+        val callInfo = if (QueryProConfig.final.printCallByInfo()) {
+            val stacks = Thread.currentThread().stackTrace
+            var callByInfo = ""
+            for (stack in stacks) {
+                val className = stack.className
+                if (className.startsWith("cn.cloudself.query.") || className.startsWith("java.lang.")) {
+                    continue
+                } else {
+                    callByInfo = "${stack.className}.${stack.methodName}(${stack.lineNumber})"
+                    break
+                }
+            }
+            callByInfo
+        } else {
+            ""
+        }
+
         if (QueryProConfig.final.printSql()) {
-            logger.info("\n" + sql)
+            logger.info(callInfo + "\n" + sql)
             logger.info("params: $params")
         } else {
-            logger.debug("\n{0}", sql)
+            logger.debug("{0}\n{1}", callInfo, sql)
             logger.debug(params)
         }
 

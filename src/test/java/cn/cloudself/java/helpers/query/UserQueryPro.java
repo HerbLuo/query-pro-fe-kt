@@ -91,6 +91,10 @@ public class UserQueryPro {
         return queryPro.orderBy();
     }
 
+    public static __Impl.WhereField<User, List<User>> selectAll() {
+        return queryPro.selectAll();
+    }
+
     public static __Impl.WhereField<User, List<User>> selectBy() {
         return queryPro.selectBy();
     }
@@ -150,11 +154,14 @@ public class UserQueryPro {
             }
 
             public QueryKeywords<WhereField<T, RUN_RES>> id() { return createWhereField("id"); }
-            public WhereField<T, RUN_RES> id(Object... ids) { return createWhereField("id", ids); }
+            public WhereField<T, RUN_RES> id(List<Long> idList) { return createWhereField("id", idList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> id(Long... ids) { return createWhereField("id", ids); }
             public QueryKeywords<WhereField<T, RUN_RES>> name() { return createWhereField("name"); }
-            public WhereField<T, RUN_RES> name(Object... names) { return createWhereField("name", names); }
+            public WhereField<T, RUN_RES> name(List<String> nameList) { return createWhereField("name", nameList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> name(String... names) { return createWhereField("name", names); }
             public QueryKeywords<WhereField<T, RUN_RES>> age() { return createWhereField("age"); }
-            public WhereField<T, RUN_RES> age(Object... ages) { return createWhereField("age", ages); }
+            public WhereField<T, RUN_RES> age(List<Integer> ageList) { return createWhereField("age", ageList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> age(Integer... ages) { return createWhereField("age", ages); }
         }
 
         public static class OrderByField<T, RUN_RES> extends CommonField<T, RUN_RES> {

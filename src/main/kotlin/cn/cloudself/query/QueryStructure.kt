@@ -40,6 +40,7 @@ data class WhereClause(
     val operator: String,
     val value: Any? = null, // null arrayOr<string boolean integer long date> List<WhereClause>
     val commands: WhereClauseCommands? = null,
+    val sql: String? = null,
 )
 
 enum class QueryStructureAction {
@@ -75,7 +76,7 @@ data class QueryStructureFrom(
 typealias SupportedInsertClazz = Class<*>
 
 /**
- * 支持JavaBean, 支持Map<String, *> 支持基本类型(Long, String, Date, Enum等, 具体参考[QueryProConfig.addResultSetParser]),
+ * 支持JavaBean, 支持Map<String, *> 支持基本类型(Long, String, Date, Enum等, 具体参考[QueryProConfig.global.addResultSetParser]),
  */
 typealias SupportedQueryClazz = Class<*>
 

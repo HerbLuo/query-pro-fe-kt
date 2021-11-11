@@ -25,6 +25,11 @@ open class QueryPro<
     /**
      * 查询操作
      */
+    fun selectAll() = selectBy()
+
+    /**
+     * 查询操作
+     */
     fun selectBy() = createSelectByField(queryStructure.copy(action = QueryStructureAction.SELECT))
 
     /**

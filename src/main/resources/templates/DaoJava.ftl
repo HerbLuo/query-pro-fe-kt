@@ -124,6 +124,7 @@ public class ${ClassName} {
 
         <#list m.columns as field>
             public QueryKeywords${"<"}WhereField${"<"}T, RUN_RES>> ${field.propertyName}() { return createWhereField("${field.db_name}"); }
+            public WhereField${"<"}T, RUN_RES> ${field.propertyName}(List<${field.javaTypeStr}> ${field.propertyName}List) { return createWhereField("${field.db_name}", ${field.propertyName}List.toArray(new Object[0])); }
             public WhereField${"<"}T, RUN_RES> ${field.propertyName}(${field.javaTypeStr}... ${field.propertyName}s) { return createWhereField("${field.db_name}", ${field.propertyName}s); }
         </#list>
         }

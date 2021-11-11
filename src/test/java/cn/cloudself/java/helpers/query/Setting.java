@@ -5,8 +5,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
-* 
-*/
+ * 
+ */
 @Entity
 @Table(name = "setting")
 public class Setting implements Serializable {
@@ -102,4 +102,6 @@ public class Setting implements Serializable {
                 ", deleted=" + deleted +
                 '}';
     }
+
+    public <T> T copyTo(Class<T> clazz) { return null; }
 }

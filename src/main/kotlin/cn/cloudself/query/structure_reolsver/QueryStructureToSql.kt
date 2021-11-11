@@ -73,7 +73,11 @@ class QueryStructureToSql(
 
     private fun buildFields(fields: List<Field>) {
         if (fields.isEmpty()) {
-            sql.append("*")
+            if (qs.from.joins.isNotEmpty()) {
+                sql.append('`', qs.from.main, '`', ".*")
+            } else {
+                sql.append('*')
+            }
             return
         }
 
@@ -143,6 +147,7 @@ class QueryStructureToSql(
             val field = whereClause.field
             val operator = whereClause.operator
             val value = whereClause.value
+            val whereSql = whereClause.sql
 
             buildField(field, upper)
             sql.append(' ', operator, ' ')
@@ -182,7 +187,11 @@ class QueryStructureToSql(
                 }
                 sql.append(')')
             } else {
-                buildValue(value, upper)
+                if (whereSql != null) {
+                    sql.append(whereSql)
+                } else {
+                    buildValue(value, upper)
+                }
             }
         }
         if (wheres.isEmpty()) {

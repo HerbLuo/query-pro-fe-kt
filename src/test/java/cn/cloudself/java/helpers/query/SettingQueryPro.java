@@ -91,6 +91,10 @@ public class SettingQueryPro {
         return queryPro.orderBy();
     }
 
+    public static __Impl.WhereField<Setting, List<Setting>> selectAll() {
+        return queryPro.selectAll();
+    }
+
     public static __Impl.WhereField<Setting, List<Setting>> selectBy() {
         return queryPro.selectBy();
     }
@@ -150,15 +154,20 @@ public class SettingQueryPro {
             }
 
             public QueryKeywords<WhereField<T, RUN_RES>> id() { return createWhereField("id"); }
-            public WhereField<T, RUN_RES> id(Object... ids) { return createWhereField("id", ids); }
+            public WhereField<T, RUN_RES> id(List<Long> idList) { return createWhereField("id", idList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> id(Long... ids) { return createWhereField("id", ids); }
             public QueryKeywords<WhereField<T, RUN_RES>> userId() { return createWhereField("user_id"); }
-            public WhereField<T, RUN_RES> userId(Object... userIds) { return createWhereField("user_id", userIds); }
+            public WhereField<T, RUN_RES> userId(List<Long> userIdList) { return createWhereField("user_id", userIdList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> userId(Long... userIds) { return createWhereField("user_id", userIds); }
             public QueryKeywords<WhereField<T, RUN_RES>> kee() { return createWhereField("kee"); }
-            public WhereField<T, RUN_RES> kee(Object... kees) { return createWhereField("kee", kees); }
+            public WhereField<T, RUN_RES> kee(List<String> keeList) { return createWhereField("kee", keeList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> kee(String... kees) { return createWhereField("kee", kees); }
             public QueryKeywords<WhereField<T, RUN_RES>> value() { return createWhereField("value"); }
-            public WhereField<T, RUN_RES> value(Object... values) { return createWhereField("value", values); }
+            public WhereField<T, RUN_RES> value(List<String> valueList) { return createWhereField("value", valueList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> value(String... values) { return createWhereField("value", values); }
             public QueryKeywords<WhereField<T, RUN_RES>> deleted() { return createWhereField("deleted"); }
-            public WhereField<T, RUN_RES> deleted(Object... deleteds) { return createWhereField("deleted", deleteds); }
+            public WhereField<T, RUN_RES> deleted(List<Boolean> deletedList) { return createWhereField("deleted", deletedList.toArray(new Object[0])); }
+            public WhereField<T, RUN_RES> deleted(Boolean... deleteds) { return createWhereField("deleted", deleteds); }
         }
 
         public static class OrderByField<T, RUN_RES> extends CommonField<T, RUN_RES> {
