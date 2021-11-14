@@ -38,7 +38,8 @@ class Impl${ClassName} {
 
     <#list m.columns as field>
         val ${field.propertyName} = createWhereField("${field.db_name}")
-        fun ${field.propertyName}(vararg ${field.propertyName}s: ${field.ktTypeStr}) = createWhereField("${field.db_name}", ${field.propertyName}s)
+        fun ${field.propertyName}(${field.propertyName}List: List<${field.ktTypeStr}>) = createWhereField("${field.db_name}", ${field.propertyName}List.toTypedArray())
+        fun ${field.propertyName}(vararg ${field.propertyName}s: ${field.ktTypeStr}) = createWhereField("${field.db_name}", <#if field.primary>${field.propertyName}s.toTypedArray()</#if><#if !field.primary>${field.propertyName}s</#if>)
     </#list>
     }
 

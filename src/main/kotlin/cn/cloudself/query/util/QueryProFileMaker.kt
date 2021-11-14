@@ -1,5 +1,6 @@
 package cn.cloudself.query.util
 
+import cn.cloudself.query.QueryField
 import cn.cloudself.query.QueryPro
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalTemplate
@@ -291,6 +292,7 @@ data class TemplateModelColumn(
     var db_name: String,
     var ktTypeStr: String,
     var javaTypeStr: String,
+    var primary: Boolean,
     var remark: String?,
 
     var propertyName: String? = null,
@@ -340,6 +342,8 @@ class KtJavaType constructor(
 ) {
     constructor(type: String) : this(type, type)
 }
+
+val QueryProKeywords = QueryField::class.java.methods.map { it.name }.also { println(it) }
 
 class QueryProFileMaker private constructor(
     private val templateFileNameAndPaths: List<JavaFilePath>
@@ -405,7 +409,7 @@ class QueryProFileMaker private constructor(
         "DOUBLE" to KtJavaType("Double"),
         "SMALLINT" to KtJavaType("Int", "Integer"),
         "INT" to KtJavaType("Int", "Integer"),
-        "TEXT" to KtJavaType("String", "String"),
+        "TEXT" to KtJavaType("String"),
         "BLOB" to KtJavaType("ByteArray", "byte[]"),
         "LONGBLOB" to KtJavaType("ByteArray", "byte[]"),
     )
@@ -523,6 +527,8 @@ class QueryProFileMaker private constructor(
                     column.propertyName =
                         if (areKt && ktKeywords.contains(propertyName)) {
                             "`$propertyName`"
+                        } else if (QueryProKeywords.contains(propertyName)) {
+                            "${propertyName}Column"
                         } else {
                             propertyName
                         }
@@ -616,10 +622,24 @@ class QueryProFileMaker private constructor(
                     id.autoIncrement = columnSet.getString("IS_AUTOINCREMENT") == "YES"
                 }
 
+                val isPrimaryMap = mapOf(
+                    "Boolean" to true,
+                    "Char" to true,
+                    "Byte" to true,
+                    "Short" to true,
+                    "Int" to true,
+                    "Float" to true,
+                    "Long" to true,
+                    "Double" to true,
+                )
+
+                val ktTypeStr =
+                    ktJavaType?.ktType ?: throw RuntimeException("找不到数据库类型${typeName}对应的kt类型, 列名$columnName")
                 modelColumns.add(TemplateModelColumn(
                     db_name = columnName,
-                    ktTypeStr = ktJavaType?.ktType ?: throw RuntimeException("找不到数据库类型${typeName}对应的kt类型, 列名$columnName"),
+                    ktTypeStr = ktTypeStr,
                     javaTypeStr = ktJavaType.javaType,
+                    primary = isPrimaryMap[ktTypeStr] ?: false,
                     remark = remarks.replace("*/", "").replace("/*", "")
                 ))
             }
