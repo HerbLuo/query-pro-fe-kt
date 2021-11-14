@@ -71,20 +71,20 @@ class BeanProxy<T, R>(
                     }
                     BeanProxy(
                         createInstance,
-                        { throw UnSupportException("不支持Map转properties") },
-                        { result, property, value -> (result as MutableMap<String, Any?>)[property] = value },
-                        { result, property -> (result as MutableMap<String, Any?>)[property] },
-                        { null }
+                        getParsedClass = { throw UnSupportException("不支持Map转properties") },
+                        setProperty = { result, property, value -> (result as MutableMap<String, Any?>)[property] = value },
+                        getProperty = { result, property -> (result as MutableMap<String, Any?>)[property] },
+                        getJavaType = { null }
                     )
                 }
                 // 需要的类型是一个数据库基本类型(Long, Int, Date等)
                 QueryProConfig.final.supportedColumnType().any { it.isAssignableFrom(clazz) } -> {
                     BeanProxy<Ref<R?>, R>(
-                        { Ref(null)  },
-                        { throw UnSupportException("不支持基本类型转properties") },
-                        { o, _, v -> o.value = v as R },
-                        { o, _ -> o.value },
-                        { clazz },
+                        createInstance = { Ref(null)  },
+                        getParsedClass = { throw UnSupportException("不支持基本类型转properties") },
+                        setProperty = { o, _, v -> o.value = v as R },
+                        getProperty = { o, _ -> o.value },
+                        getJavaType = { clazz },
                     ).setToResult { it.value as R }
                 }
                 // 需要返回的是一个JavaBean
@@ -95,9 +95,9 @@ class BeanProxy<T, R>(
                         val columns = parsedClass.columns
 
                         BeanProxy<R, R>(
-                            { noArgConstructor.newInstance() },
-                            { parsedClass },
-                            { r, p, v ->
+                            createInstance = { noArgConstructor.newInstance() },
+                            getParsedClass = { parsedClass },
+                            setProperty = { r, p, v ->
                                 val column = columns[p]
                                 if (column == null) {
                                     logger.warn("数据库返回了多余的数据 $p")
@@ -105,7 +105,7 @@ class BeanProxy<T, R>(
                                 }
                                 column.setter(r, v)
                             },
-                            { r, p ->
+                            getProperty = { r, p ->
                                 val column = columns[p]
                                 if (column == null) {
                                     logger.warn("没有找到该列 $p")
@@ -113,7 +113,7 @@ class BeanProxy<T, R>(
                                 }
                                 column.getter(r)
                             },
-                            { p -> columns[p]?.javaType }
+                            getJavaType = { p -> columns[p]?.javaType }
                         )
                     } catch (e: Exception) {
                         throw UnSupportException(e, "{0} 没有找到无参构造函数，该类是一个JavaBean吗, " +
