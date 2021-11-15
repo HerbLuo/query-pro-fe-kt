@@ -7,7 +7,6 @@ import cn.cloudself.helpers.query.*
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import org.junit.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class SelectTest {
