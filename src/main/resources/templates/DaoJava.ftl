@@ -10,6 +10,7 @@ import ${m.entityPackage}.${EntityName};
 </#if>import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
 import kotlin.jvm.functions.Function1;
+import org.jetbrains.annotations.Contract
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -123,8 +124,11 @@ public class ${ClassName} {
             }
 
         <#list m.columns as field>
+            @Contract(pure = true)
             public QueryKeywords${"<"}WhereField${"<"}T, RUN_RES>> ${field.propertyName}() { return createWhereField("${field.db_name}"); }
+            @Contract(pure = true)
             public WhereField${"<"}T, RUN_RES> ${field.propertyName}(List<${field.javaTypeStr}> ${field.propertyName}List) { return createWhereField("${field.db_name}", ${field.propertyName}List.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField${"<"}T, RUN_RES> ${field.propertyName}(${field.javaTypeStr}... ${field.propertyName}s) { return createWhereField("${field.db_name}", ${field.propertyName}s); }
         </#list>
         }
@@ -141,6 +145,7 @@ public class ${ClassName} {
             }
 
         <#list m.columns as field>
+            @Contract(pure = true)
             public QueryOrderByKeywords${"<"}OrderByField${"<"}T, RUN_RES>> ${field.propertyName}() { return createOrderByField("${field.db_name}"); }
         </#list>
         }
@@ -182,6 +187,7 @@ public class ${ClassName} {
             }
 
         <#list m.columns as field>
+            @Contract(pure = true)
             public ColumnsLimiterField${"<"}T, RUN_RES> ${field.propertyName}() { return createColumnsLimiterField("${field.db_name}"); }
         </#list>
         }
@@ -206,6 +212,7 @@ public class ${ClassName} {
             }
 
         <#list m.columns as field>
+            @Contract(pure = true)
             public UpdateSetField ${field.propertyName}(Object ${field.propertyName}) { return createUpdateSetField("${field.db_name}", ${field.propertyName}); }
         </#list>
         }
