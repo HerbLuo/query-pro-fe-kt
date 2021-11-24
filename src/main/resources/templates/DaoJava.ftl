@@ -10,7 +10,7 @@ import ${m.entityPackage}.${EntityName};
 </#if>import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
 import kotlin.jvm.functions.Function1;
-import org.jetbrains.annotations.Contract
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
