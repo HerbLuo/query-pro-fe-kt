@@ -29,10 +29,15 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             var callByInfo = ""
             for (stack in stacks) {
                 val className = stack.className
-                if (className.startsWith("cn.cloudself.query.") || className.startsWith("java.lang.")) {
+                val methodName = stack.methodName
+                if (className.startsWith("cn.cloudself.query.") ||
+                    className.startsWith("java.lang.") ||
+                    "selectByPrimaryKey" == methodName ||
+                    "deleteByPrimaryKey" == methodName
+                ) {
                     continue
                 } else {
-                    callByInfo = "${stack.className}.${stack.methodName}(${stack.lineNumber})"
+                    callByInfo = "${className}.${methodName}(${stack.lineNumber})"
                     break
                 }
             }
