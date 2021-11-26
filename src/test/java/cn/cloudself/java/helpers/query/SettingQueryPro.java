@@ -4,8 +4,10 @@ import cn.cloudself.java.helpers.query.Setting;
 import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
 import kotlin.jvm.functions.Function1;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -153,21 +155,40 @@ public class SettingQueryPro {
                 return objs.length == 1 ? whereField.equalsTo(objs[0]) : whereField.in(objs);
             }
 
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> id() { return createWhereField("id"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> id(List<Long> idList) { return createWhereField("id", idList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> id(Long... ids) { return createWhereField("id", ids); }
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> userId() { return createWhereField("user_id"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> userId(List<Long> userIdList) { return createWhereField("user_id", userIdList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> userId(Long... userIds) { return createWhereField("user_id", userIds); }
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> kee() { return createWhereField("kee"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> kee(List<String> keeList) { return createWhereField("kee", keeList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> kee(String... kees) { return createWhereField("kee", kees); }
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> value() { return createWhereField("value"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> value(List<String> valueList) { return createWhereField("value", valueList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> value(String... values) { return createWhereField("value", values); }
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> deleted() { return createWhereField("deleted"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> deleted(List<Boolean> deletedList) { return createWhereField("deleted", deletedList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> deleted(Boolean... deleteds) { return createWhereField("deleted", deleteds); }
+
+            public WhereField<T, RUN_RES> take(Function<WhereField<T, RUN_RES>, WhereField<T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class OrderByField<T, RUN_RES> extends CommonField<T, RUN_RES> {
@@ -181,11 +202,20 @@ public class SettingQueryPro {
                 return new QueryOrderByKeywords<>(createField(column), super.getQueryStructure(), super.getCreate_order_by_field());
             }
 
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> id() { return createOrderByField("id"); }
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> userId() { return createOrderByField("user_id"); }
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> kee() { return createOrderByField("kee"); }
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> value() { return createOrderByField("value"); }
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> deleted() { return createOrderByField("deleted"); }
+
+            public OrderByField<T, RUN_RES> take(Function<OrderByField<T, RUN_RES>, OrderByField<T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class ColumnLimiterField<T, RUN_RES> extends CommonField<T, RUN_RES> {
@@ -200,6 +230,10 @@ public class SettingQueryPro {
             public List<String> kee() { return super.getColumn(createField("kee"), String.class); }
             public List<String> value() { return super.getColumn(createField("value"), String.class); }
             public List<Boolean> deleted() { return super.getColumn(createField("deleted"), Boolean.class); }
+
+            public <R> R take(Function<ColumnLimiterField<T, RUN_RES>, R> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class ColumnsLimiterField<T, RUN_RES> extends CommonField<T, RUN_RES> {
@@ -226,11 +260,20 @@ public class SettingQueryPro {
                 return new ColumnsLimiterField<>(newQueryStructure, super.getField_clazz());
             }
 
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> id() { return createColumnsLimiterField("id"); }
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> userId() { return createColumnsLimiterField("user_id"); }
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> kee() { return createColumnsLimiterField("kee"); }
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> value() { return createColumnsLimiterField("value"); }
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> deleted() { return createColumnsLimiterField("deleted"); }
+
+            public ColumnsLimiterField<T, RUN_RES> take(Function<ColumnsLimiterField<T, RUN_RES>, ColumnsLimiterField<T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class UpdateSetField extends UpdateField<WhereField<Boolean, Boolean>> {
@@ -252,11 +295,21 @@ public class SettingQueryPro {
                 return this;
             }
 
+            @Contract(pure = true)
             public UpdateSetField id(Object id) { return createUpdateSetField("id", id); }
+            @Contract(pure = true)
             public UpdateSetField userId(Object userId) { return createUpdateSetField("user_id", userId); }
+            @Contract(pure = true)
             public UpdateSetField kee(Object kee) { return createUpdateSetField("kee", kee); }
+            @Contract(pure = true)
             public UpdateSetField value(Object value) { return createUpdateSetField("value", value); }
+            @Contract(pure = true)
             public UpdateSetField deleted(Object deleted) { return createUpdateSetField("deleted", deleted); }
+
+            public UpdateSetField take(Function<UpdateSetField, UpdateSetField> factor) {
+                return factor.apply(this);
+            }
+
         }
 
         public static class FieldsGenerator extends FieldGenerator {

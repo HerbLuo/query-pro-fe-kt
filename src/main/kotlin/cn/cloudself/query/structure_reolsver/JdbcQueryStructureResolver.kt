@@ -32,6 +32,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 val methodName = stack.methodName
                 if (className.startsWith("cn.cloudself.query.") ||
                     className.startsWith("java.lang.") ||
+                    className.endsWith("ColumnLimiterField") ||
                     "selectByPrimaryKey" == methodName ||
                     "deleteByPrimaryKey" == methodName
                 ) {

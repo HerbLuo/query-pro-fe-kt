@@ -29,6 +29,8 @@ public class SelectTest {
         QueryProSql.createBatchBySqlGroup(sql).update(Boolean.class);
     }
 
+    public Boolean True = true;
+
     @Test
     public void test() {
         initLogger();
@@ -120,6 +122,13 @@ public class SelectTest {
                 .columnsLimiter().id().name()
                 .run();
         assertEqualsForJava(usersRun14, Helpers.listOf(new User().setId(user3.getId()).setName(user3.getName()).setAge(null)));
+
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? AND `user`.`name` = ?", Helpers.listOf(1, "hb"));
+        final List<User> usersRun15 = UserQueryPro
+                .selectBy().id().equalsTo(1)
+                .take(it -> True ? it.name().equalsTo("hb") : it.name().equalsTo("hb2"))
+                .run();
+        assertEqualsForJava(usersRun15, Helpers.listOf(user1));
 
         expectSqlResult(
                 "SELECT `setting`.`kee`, `setting`.`value` FROM `setting` LEFT JOIN `user` ON `setting`.`user_id` = `user`.`id` " +

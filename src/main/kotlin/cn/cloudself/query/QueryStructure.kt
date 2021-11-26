@@ -1,30 +1,30 @@
 package cn.cloudself.query
 
 data class QueryStructure(
-    val action: QueryStructureAction = QueryStructureAction.SELECT,
-    val update: Update? = null,
-    val fields: List<Field> = listOf(),
+    var action: QueryStructureAction = QueryStructureAction.SELECT,
+    var update: Update? = null,
+    var fields: List<Field> = listOf(),
     var from: QueryStructureFrom = QueryStructureFrom(),
-    val where: List<WhereClause> = listOf(),
-    val orderBy: List<OrderByClause> = listOf(),
-    val limit: Pair<Int, Int>? = null,
+    var where: List<WhereClause> = listOf(),
+    var orderBy: List<OrderByClause> = listOf(),
+    var limit: Pair<Int, Int>? = null,
 )
 
 data class Update(
-    val data: Any? = null,
-    val override: Boolean = false,
-    val id: String? = null,
+    var data: Any? = null,
+    var override: Boolean = false,
+    var id: String? = null,
 )
 
 data class OrderByClause(
-    val field: Field,
-    val operator: String,
+    var field: Field,
+    var operator: String,
 )
 
 data class Field(
-    val table: String? = null,
-    val column: String,
-    val commands: FieldCommands? = null,
+    var table: String? = null,
+    var column: String,
+    var commands: FieldCommands? = null,
 )
 
 enum class FieldCommands {
@@ -36,11 +36,11 @@ enum class WhereClauseCommands {
 }
 
 data class WhereClause(
-    val field: Field? = null,
-    val operator: String,
-    val value: Any? = null, // null arrayOr<string boolean integer long date> List<WhereClause>
-    val commands: WhereClauseCommands? = null,
-    val sql: String? = null,
+    var field: Field? = null,
+    var operator: String,
+    var value: Any? = null, // null arrayOr<string boolean integer long date> List<WhereClause>
+    var commands: WhereClauseCommands? = null,
+    var sql: String? = null,
 )
 
 enum class QueryStructureAction {
@@ -51,8 +51,8 @@ enum class QueryStructureAction {
 }
 
 data class FromJoinerOn(
-    val left: Field,
-    val right: Field,
+    var left: Field,
+    var right: Field,
 )
 
 enum class JoinType {
@@ -60,14 +60,14 @@ enum class JoinType {
 }
 
 data class FromJoiner(
-    val type: JoinType,
-    val table: String,
-    val on: List<FromJoinerOn>,
+    var type: JoinType,
+    var table: String,
+    var on: List<FromJoinerOn>,
 )
 
 data class QueryStructureFrom(
-    val main: String = "?",
-    val joins: List<FromJoiner> = listOf(),
+    var main: String = "?",
+    var joins: List<FromJoiner> = listOf(),
 )
 
 /**

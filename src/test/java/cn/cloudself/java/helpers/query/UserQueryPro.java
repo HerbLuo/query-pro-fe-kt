@@ -4,8 +4,10 @@ import cn.cloudself.java.helpers.query.User;
 import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
 import kotlin.jvm.functions.Function1;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -153,15 +155,28 @@ public class UserQueryPro {
                 return objs.length == 1 ? whereField.equalsTo(objs[0]) : whereField.in(objs);
             }
 
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> id() { return createWhereField("id"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> id(List<Long> idList) { return createWhereField("id", idList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> id(Long... ids) { return createWhereField("id", ids); }
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> name() { return createWhereField("name"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> name(List<String> nameList) { return createWhereField("name", nameList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> name(String... names) { return createWhereField("name", names); }
+            @Contract(pure = true)
             public QueryKeywords<WhereField<T, RUN_RES>> age() { return createWhereField("age"); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> age(List<Integer> ageList) { return createWhereField("age", ageList.toArray(new Object[0])); }
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> age(Integer... ages) { return createWhereField("age", ages); }
+
+            public WhereField<T, RUN_RES> take(Function<WhereField<T, RUN_RES>, WhereField<T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class OrderByField<T, RUN_RES> extends CommonField<T, RUN_RES> {
@@ -175,9 +190,16 @@ public class UserQueryPro {
                 return new QueryOrderByKeywords<>(createField(column), super.getQueryStructure(), super.getCreate_order_by_field());
             }
 
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> id() { return createOrderByField("id"); }
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> name() { return createOrderByField("name"); }
+            @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> age() { return createOrderByField("age"); }
+
+            public OrderByField<T, RUN_RES> take(Function<OrderByField<T, RUN_RES>, OrderByField<T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class ColumnLimiterField<T, RUN_RES> extends CommonField<T, RUN_RES> {
@@ -190,6 +212,10 @@ public class UserQueryPro {
             public List<Long> id() { return super.getColumn(createField("id"), Long.class); }
             public List<String> name() { return super.getColumn(createField("name"), String.class); }
             public List<Integer> age() { return super.getColumn(createField("age"), Integer.class); }
+
+            public <R> R take(Function<ColumnLimiterField<T, RUN_RES>, R> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class ColumnsLimiterField<T, RUN_RES> extends CommonField<T, RUN_RES> {
@@ -216,9 +242,16 @@ public class UserQueryPro {
                 return new ColumnsLimiterField<>(newQueryStructure, super.getField_clazz());
             }
 
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> id() { return createColumnsLimiterField("id"); }
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> name() { return createColumnsLimiterField("name"); }
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> age() { return createColumnsLimiterField("age"); }
+
+            public ColumnsLimiterField<T, RUN_RES> take(Function<ColumnsLimiterField<T, RUN_RES>, ColumnsLimiterField<T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class UpdateSetField extends UpdateField<WhereField<Boolean, Boolean>> {
@@ -240,9 +273,17 @@ public class UserQueryPro {
                 return this;
             }
 
+            @Contract(pure = true)
             public UpdateSetField id(Object id) { return createUpdateSetField("id", id); }
+            @Contract(pure = true)
             public UpdateSetField name(Object name) { return createUpdateSetField("name", name); }
+            @Contract(pure = true)
             public UpdateSetField age(Object age) { return createUpdateSetField("age", age); }
+
+            public UpdateSetField take(Function<UpdateSetField, UpdateSetField> factor) {
+                return factor.apply(this);
+            }
+
         }
 
         public static class FieldsGenerator extends FieldGenerator {

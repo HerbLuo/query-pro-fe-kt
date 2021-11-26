@@ -10,6 +10,7 @@ package ${m.packagePath}
 </#if><#if m.hasDate>import java.util.Date
 </#if>import javax.persistence.*
 import cn.cloudself.query.*
+import org.jetbrains.annotations.Contract;
 
 <#--@Entity-->
 <#--@Table(name = "attachment", schema = "rcms")-->
@@ -57,7 +58,9 @@ class Impl${ClassName} {
 
     <#list m.columns as field>
         val ${field.propertyName} = createWhereField("${field.db_name}")
+        @Contract(pure = true)
         fun ${field.propertyName}(${field.propertyName}List: List<${field.ktTypeStr}>) = createWhereField("${field.db_name}", ${field.propertyName}List.toTypedArray())
+        @Contract(pure = true)
         fun ${field.propertyName}(vararg ${field.propertyName}s: ${field.ktTypeStr}) = createWhereField("${field.db_name}", <#if field.primary>${field.propertyName}s.toTypedArray()</#if><#if !field.primary>${field.propertyName}s</#if>)
     </#list>
     }
@@ -69,6 +72,7 @@ class Impl${ClassName} {
             QueryOrderByKeywords(createField(column), queryStructure, create_order_by_field)
 
     <#list m.columns as field>
+        @Contract(pure = true)
         fun ${field.propertyName}() = createOrderByField("${field.db_name}")
     </#list>
     }
@@ -88,6 +92,7 @@ class Impl${ClassName} {
             ColumnsLimiterField${"<"}T, RUN_RES>(queryStructure.copy(fields = queryStructure.fields + createField(column)), field_clazz)
 
     <#list m.columns as field>
+        @Contract(pure = true)
         fun ${field.propertyName}() = createColumnsLimiterField("${field.db_name}")
     </#list>
     }
@@ -100,6 +105,7 @@ class Impl${ClassName} {
 
     <#list m.columns as field>
         <#assign prop = field.propertyName/>
+        @Contract(pure = true)
         fun ${prop}(${prop}: Any) = createUpdateSetField("${field.db_name}", ${prop})
     </#list>
     }

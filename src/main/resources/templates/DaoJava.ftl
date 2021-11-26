@@ -13,6 +13,7 @@ import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +132,11 @@ public class ${ClassName} {
             @Contract(pure = true)
             public WhereField${"<"}T, RUN_RES> ${field.propertyName}(${field.javaTypeStr}... ${field.propertyName}s) { return createWhereField("${field.db_name}", ${field.propertyName}s); }
         </#list>
+
+            @Contract(pure = true)
+            public WhereField${"<"}T, RUN_RES> take(Function${"<"}WhereField${"<"}T, RUN_RES>, WhereField${"<"}T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class OrderByField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {
@@ -148,6 +154,11 @@ public class ${ClassName} {
             @Contract(pure = true)
             public QueryOrderByKeywords${"<"}OrderByField${"<"}T, RUN_RES>> ${field.propertyName}() { return createOrderByField("${field.db_name}"); }
         </#list>
+
+            @Contract(pure = true)
+            public OrderByField${"<"}T, RUN_RES> take(Function${"<"}OrderByField${"<"}T, RUN_RES>, OrderByField${"<"}T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class ColumnLimiterField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {
@@ -160,6 +171,10 @@ public class ${ClassName} {
         <#list m.columns as field>
             public List${"<"}${field.javaTypeStr}> ${field.propertyName}() { return super.getColumn(createField("${field.db_name}"), ${field.javaTypeStr}.class); }
         </#list>
+
+            public ${"<"}R> R take(Function${"<"}ColumnLimiterField${"<"}T, RUN_RES>, R> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class ColumnsLimiterField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {
@@ -190,6 +205,11 @@ public class ${ClassName} {
             @Contract(pure = true)
             public ColumnsLimiterField${"<"}T, RUN_RES> ${field.propertyName}() { return createColumnsLimiterField("${field.db_name}"); }
         </#list>
+
+            @Contract(pure = true)
+            public ColumnsLimiterField${"<"}T, RUN_RES> take(Function${"<"}ColumnsLimiterField${"<"}T, RUN_RES>, ColumnsLimiterField${"<"}T, RUN_RES>> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class UpdateSetField extends UpdateField${"<"}WhereField${"<"}Boolean, Boolean>> {
@@ -215,6 +235,11 @@ public class ${ClassName} {
             @Contract(pure = true)
             public UpdateSetField ${field.propertyName}(Object ${field.propertyName}) { return createUpdateSetField("${field.db_name}", ${field.propertyName}); }
         </#list>
+
+            @Contract(pure = true)
+            public UpdateSetField take(Function${"<"}UpdateSetField, UpdateSetField> factor) {
+                return factor.apply(this);
+            }
         }
 
         public static class FieldsGenerator extends FieldGenerator {
