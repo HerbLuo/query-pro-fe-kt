@@ -21,17 +21,45 @@ class SqlUtilTest {
             SELECT id AS "a'a`a?a;a" FROM user;
             SELECT id AS `'"?;` FROM user;
             SELECT id AS `a"a'a?a;a'` FROM user;
+            
+            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user;
+            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user WHERE id = ?;
+            
+            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; # ?
+            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; # */ ?
+            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; -- */ ?
+            SELECT id AS `a"a'a?a;a'` /*#?*/ FROM user; -- */ ?
+            SELECT id AS `a"a'a?a;a'` /*--?*/ FROM user; -- */ ?
+            SELECT id AS `a"a'a?a;a'` /**?*/ FROM user; -- */ ?
+            SELECT id AS `a"a'a?a;a'` /**?**/ FROM user; -- */ ?
         """.trimIndent()
         )
 
-        assertEquals(sqlAndCount.size, 8)
-        assertEquals(sqlAndCount[0].second, 0)
-        assertEquals(sqlAndCount[1].second, 0)
-        assertEquals(sqlAndCount[2].second, 1)
-        assertEquals(sqlAndCount[3].second, 1)
-        assertEquals(sqlAndCount[4].second, 0)
-        assertEquals(sqlAndCount[5].second, 0)
-        assertEquals(sqlAndCount[6].second, 0)
-        assertEquals(sqlAndCount[7].second, 0)
+        var i = 0
+        assertEquals(sqlAndCount.size, 17)
+
+        assertEquals(sqlAndCount[i++].second, 0)
+
+        assertEquals(sqlAndCount[i++].second, 0)
+
+        assertEquals(sqlAndCount[i++].second, 1)
+        assertEquals(sqlAndCount[i++].second, 1)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 1)
+
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+        assertEquals(sqlAndCount[i++].second, 0)
+
+        println(i)
     }
 }

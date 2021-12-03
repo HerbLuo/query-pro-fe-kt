@@ -36,7 +36,7 @@ object SqlUtils {
                         }
                     }
                 }
-                '/' -> if (!inString && !inComment) {
+                '/' -> if (!inString) {
                     if (!inComment) {
                         if (sqlStatement[i + 1] == '*') {
                             inComment = true
