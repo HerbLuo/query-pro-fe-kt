@@ -1,5 +1,6 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.exception.IllegalParameters
 import org.jetbrains.annotations.Contract
 
 class QueryKeywords<F : QueryField<*, *, *, *, *, *>>(
@@ -33,7 +34,7 @@ class QueryKeywords<F : QueryField<*, *, *, *, *, *>>(
     @Contract(pure = true)
     fun like(str: String) = with(WhereClause(field, "like", str))
     @Contract(pure = true)
-    fun `in`(vararg values: Any) = with(WhereClause(field, "in", values))
+    fun `in`(vararg values: Any) = if (values.isEmpty()) throw IllegalParameters("in查询不能设置空参数") else with(WhereClause(field, "in", values))
     @Contract(pure = true)
     fun nul() = with(WhereClause(field = field, operator = "is null"))
     @Contract(pure = true)

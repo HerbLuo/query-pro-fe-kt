@@ -255,8 +255,10 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 is Boolean        -> preparedStatement.setBoolean(i + 1, param)
                 is Byte           -> preparedStatement.setByte(i + 1, param)
                 is ByteArray      -> preparedStatement.setBytes(i + 1, param)
-                is java.util.Date -> preparedStatement.setDate(i + 1, java.sql.Date(param.time))
+                is Time           -> preparedStatement.setTime(i + 1, param)
+                is Timestamp      -> preparedStatement.setTimestamp(i + 1, param)
                 is java.sql.Date  -> preparedStatement.setDate(i + 1, param)
+                is java.util.Date -> preparedStatement.setDate(i + 1, java.sql.Date(param.time))
                 is Double         -> preparedStatement.setDouble(i + 1, param)
                 is Enum<*>        -> preparedStatement.setString(i + 1, param.name)
                 is Float          -> preparedStatement.setFloat(i + 1, param)
@@ -267,8 +269,6 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 is Long           -> preparedStatement.setLong(i + 1, param)
                 is Short          -> preparedStatement.setShort(i + 1, param)
                 is String         -> preparedStatement.setString(i + 1, param)
-                is Time           -> preparedStatement.setTime(i + 1, param)
-                is Timestamp      -> preparedStatement.setTimestamp(i + 1, param)
                 else -> {
                     if (param == null && !brokenOnNull) {
                         preparedStatement.setNull(i + 1, Types.NULL)

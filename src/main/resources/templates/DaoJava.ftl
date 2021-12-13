@@ -9,6 +9,7 @@ import ${m.entityPackage}.${EntityName};
 </#if><#if m.hasDate>import java.util.Date;
 </#if>import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
+import cn.cloudself.query.util.ListEx;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -169,7 +170,7 @@ public class ${ClassName} {
             protected QueryFieldType getField_type() { return QueryFieldType.OTHER_FIELD; }
 
         <#list m.columns as field>
-            public List${"<"}${field.javaTypeStr}> ${field.propertyName}() { return super.getColumn(createField("${field.db_name}"), ${field.javaTypeStr}.class); }
+            public ListEx${"<"}${field.javaTypeStr}> ${field.propertyName}() { return new ListEx<>(super.getColumn(createField("${field.db_name}"), ${field.javaTypeStr}.class)); }
         </#list>
 
             public ${"<"}R> R take(Function${"<"}ColumnLimiterField${"<"}T, RUN_RES>, R> factor) {

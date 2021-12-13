@@ -3,6 +3,7 @@ package cn.cloudself.java.helpers.query;
 import cn.cloudself.java.helpers.query.Setting;
 import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
+import cn.cloudself.query.util.ListEx;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -225,11 +226,11 @@ public class SettingQueryPro {
             @Override
             protected QueryFieldType getField_type() { return QueryFieldType.OTHER_FIELD; }
 
-            public List<Long> id() { return super.getColumn(createField("id"), Long.class); }
-            public List<Long> userId() { return super.getColumn(createField("user_id"), Long.class); }
-            public List<String> kee() { return super.getColumn(createField("kee"), String.class); }
-            public List<String> value() { return super.getColumn(createField("value"), String.class); }
-            public List<Boolean> deleted() { return super.getColumn(createField("deleted"), Boolean.class); }
+            public ListEx<Long> id() { return new ListEx<>(super.getColumn(createField("id"), Long.class)); }
+            public ListEx<Long> userId() { return new ListEx<>(super.getColumn(createField("user_id"), Long.class)); }
+            public ListEx<String> kee() { return new ListEx<>(super.getColumn(createField("kee"), String.class)); }
+            public ListEx<String> value() { return new ListEx<>(super.getColumn(createField("value"), String.class)); }
+            public ListEx<Boolean> deleted() { return new ListEx<>(super.getColumn(createField("deleted"), Boolean.class)); }
 
             public <R> R take(Function<ColumnLimiterField<T, RUN_RES>, R> factor) {
                 return factor.apply(this);
