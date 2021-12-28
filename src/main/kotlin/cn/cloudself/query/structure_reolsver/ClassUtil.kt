@@ -2,6 +2,7 @@ package cn.cloudself.query.structure_reolsver
 
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.exception.UnSupportException
+import cn.cloudself.query.util.canAccess
 import javax.persistence.Column
 import javax.persistence.Id
 import javax.persistence.Table
@@ -78,7 +79,7 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                     javaName = fieldName,
                     javaType = field.type,
                     setter = { o, v ->
-                        if (try { field.canAccess(o)  } catch (e: Exception) {@Suppress("DEPRECATION") field.isAccessible }) {
+                        if (canAccess(field, o)) {
                             field.set(o, v)
                         } else {
                             if (setter == null) {
@@ -91,7 +92,7 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                         if (o is Map<*, *>) {
                             return@ParsedColumn o[fieldName]
                         }
-                        if (try { field.canAccess(o)  } catch (e: Exception) {@Suppress("DEPRECATION") field.isAccessible }) {
+                        if (canAccess(field, o)) {
                             return@ParsedColumn field.get(o)
                         }
                         if (getter == null) {
