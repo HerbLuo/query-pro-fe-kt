@@ -2,6 +2,7 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
+import java.util.*
 
 enum class QueryFieldType {
     WHERE_FIELD,
@@ -27,6 +28,7 @@ abstract class FinalSelectField<
         return limit(0, limit)
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun limit(start: Int, limit: Int): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
         return create_field(queryStructure.copy(limit = start to limit))
     }
@@ -61,6 +63,7 @@ abstract class FinalSelectField<
         return create_column_limiter_field(queryStructure)
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun count(): Int {
         if (queryStructure.action != QueryStructureAction.SELECT) {
             throw IllegalCall("非SELECT语句不能使用count方法")
@@ -68,6 +71,10 @@ abstract class FinalSelectField<
         val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
 
         return QueryProConfig.final.queryStructureResolver().resolve(queryStructureForCount, Int::class.java)[0]
+    }
+
+    fun runLimit1Opt(): Optional<T> {
+        return Optional.ofNullable(runLimit1())
     }
 
     fun runLimit1(): T? {
@@ -94,6 +101,7 @@ abstract class FinalSelectField<
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun runAsList(): List<T> {
         return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructure), field_clazz)
     }
