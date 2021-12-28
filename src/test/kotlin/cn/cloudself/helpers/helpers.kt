@@ -78,7 +78,11 @@ fun expectSqlResult(@Language("SQL") sql: String, params: List<Any?>) {
 }
 
 fun assertEqualsForJava(obj1: Any?, obj2: Any?) {
-    assertEquals(obj1, obj2)
+    if (obj1 is List<*> && obj2 is List<*>) {
+        assertEquals(ArrayList(obj1), ArrayList(obj2))
+    } else {
+        assertEquals(obj1, obj2)
+    }
 }
 
 private fun isNumber(obj: Any?): Boolean {
