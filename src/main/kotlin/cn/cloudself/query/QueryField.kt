@@ -175,6 +175,21 @@ abstract class QueryField<
         return create_where_field(queryStructure.copy(where = newWhereClause))
     }
 
+    fun par(factor: ((f: WHERE_FIELD) -> WHERE_FIELD)): WHERE_FIELD {
+        val newWhereClause = mutableListOf(WhereClause(operator = "("))
+        newWhereClause.addAll(queryStructure.where)
+        newWhereClause.add(WhereClause(operator = ")"))
+        return create_where_field(queryStructure.copy(where = newWhereClause))
+    }
+
+    fun parLeft(): WHERE_FIELD {
+        return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = "(")))
+    }
+
+    fun parRight(): WHERE_FIELD {
+        return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = ")")))
+    }
+
     fun andForeignField(vararg fields: QueryField<*, *, *, *, *, *>): WHERE_FIELD {
         val newWhereClause = queryStructure.where.toMutableList()
         for (field in fields) {

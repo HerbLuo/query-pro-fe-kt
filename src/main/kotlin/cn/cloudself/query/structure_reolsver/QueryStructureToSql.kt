@@ -204,7 +204,12 @@ class QueryStructureToSql(
         for ((i, whereClause) in wheres.withIndex()) {
             parseWhereClause(whereClause)
 
-            if (lastIndexOfWheres != i && whereClause.operator != "or" && wheres[i + 1].operator != "or") {
+            if (lastIndexOfWheres != i &&
+                whereClause.operator != "(" &&
+                wheres[i + 1].operator != ")" &&
+                whereClause.operator != "or" &&
+                wheres[i + 1].operator != "or"
+            ) {
                 sql.append(if (beautify) "\n  " else ' ')
                 sql.append("AND ")
             }
