@@ -688,7 +688,6 @@ class QueryProFileMaker private constructor(
             if (actualType != null) {
                 return actualType
             }
-            println(genericType)
             if (genericType.endsWith("[]")) {
                 return genericTypeMapActualGenericType[genericType.substring(0, genericType.length - 2)]?.let { "$it[]" }
             }
