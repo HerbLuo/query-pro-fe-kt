@@ -400,7 +400,6 @@ class QueryProFileMaker private constructor(
         "BIGINT" to KtJavaType("Long"),
         "VARCHAR" to KtJavaType("String"),
         "CHAR" to KtJavaType("String"),
-        "MEDIUMTEXT" to KtJavaType("String"),
         "BIT" to KtJavaType("Boolean"),
         "TINYINT" to KtJavaType("Short"),
         "DATE" to KtJavaType("Date"),
@@ -410,6 +409,8 @@ class QueryProFileMaker private constructor(
         "SMALLINT" to KtJavaType("Int", "Integer"),
         "INT" to KtJavaType("Int", "Integer"),
         "TEXT" to KtJavaType("String"),
+        "MEDIUMTEXT" to KtJavaType("String"),
+        "LONGTEXT" to KtJavaType("String"),
         "BLOB" to KtJavaType("ByteArray", "byte[]"),
         "LONGBLOB" to KtJavaType("ByteArray", "byte[]"),
     )
