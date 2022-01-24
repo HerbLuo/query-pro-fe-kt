@@ -65,7 +65,8 @@ class QueryProEx<
         val foreignJoinerOn = foreignFields.mapIndexed { index, field -> FromJoinerOn(currentTableFields[index], field) }
         val newJoins = oldJoins + FromJoiner(JoinType.LEFT_JOIN, foreignTableName, foreignJoinerOn)
 
-        return createQuery(queryStructure.copy(from = oldFrom.copy(joins = newJoins)))
+        // deleted field
+        return createQuery(queryStructure.copy(from = oldFrom.copy(joins = newJoins) ))
     }
 
     fun joiner() = createFieldGenerator()

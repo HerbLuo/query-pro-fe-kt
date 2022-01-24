@@ -2,6 +2,7 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
+import cn.cloudself.query.structure_reolsver.parseClass
 import java.util.*
 
 enum class QueryFieldType {
@@ -121,13 +122,18 @@ abstract class FinalSelectField<
     private fun preRun(qs: QueryStructure): QueryStructure {
         var queryStructure = qs
         if (QueryProConfig.final.logicDelete()) {
+            val logicDeleteField = QueryProConfig.final.logicDeleteField()
             queryStructure = if (queryStructure.action == QueryStructureAction.DELETE) {
-                val update = Update(data = mutableMapOf("deleted" to true), override = false)
+                val update = Update(data = mutableMapOf(logicDeleteField to true), override = false)
                 queryStructure.copy(action = QueryStructureAction.UPDATE, update = update)
             } else {
-                val tables = queryStructure.where.map { it.field?.table }.distinct()
-                val whereClauses = tables.map { WhereClause(Field(it, "deleted"), "=", false) }
-                queryStructure.copy(where = queryStructure.where + whereClauses)
+                val mainTable = queryStructure.from.main
+                val hasDeletedField = parseClass(field_clazz).columns[logicDeleteField] != null
+                if (hasDeletedField) {
+                    queryStructure.copy(where = queryStructure.where + WhereClause(Field(mainTable, logicDeleteField), "=", false))
+                } else {
+                    queryStructure
+                }
             }
         }
         return queryStructure
