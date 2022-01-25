@@ -58,7 +58,13 @@ class QueryStructureToSql(
         if (field.table != null) {
             sql.append('`', field.table, '`', '.')
         }
-        sql.append('`', field.column, '`')
+        val column = field.column
+        val isActualColumn = "count(*)" != column
+        if (isActualColumn) {
+            sql.append('`', column, '`')
+        } else {
+            sql.append(column)
+        }
         if (upper) {
             sql.append(')')
         }

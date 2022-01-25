@@ -45,6 +45,9 @@ class SelectTest {
         expectSqlResult("SELECT * FROM `user` WHERE `id` = ? LIMIT 1", listOf(1))
         UserQueryPro.selectByPrimaryKey(1).also { user: User? -> assertEquals(user, user1) }
 
+        expectSqlResult("SELECT count(*) FROM `user` WHERE `user`.`id` = ?", listOf(1))
+        UserQueryPro.selectBy().id.equalsTo(1).count().also { assertEquals(1, it) }
+
         expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ?", listOf(1))
         UserQueryPro.selectBy().id.equalsTo(1).run()
             .also { users: List<User> -> assertEquals(users, listOf(user1)) }
