@@ -488,8 +488,7 @@ class QueryProFileMaker private constructor(
 
     fun create() {
         val modelsFromDb = getModelsFromDb().debugPrint()
-
-        modelsFromDb.forEachAsync { (db_name, model) ->
+        modelsFromDb.entries.parallelStream().forEach { (db_name, model) ->
             val entityFilePath = templateFileNameAndPaths.find { it.templateName.startsWith("Entity") }
 
             for (javaFilePath in templateFileNameAndPaths) {
@@ -555,7 +554,7 @@ class QueryProFileMaker private constructor(
                     logger.warn("文件已存在: $filePath, e: ${e.message}")
                 }
             }
-        }.run(8)
+        }
     }
 
     private fun getModelsFromDb(): MutableMap<String, TemplateModel> {
