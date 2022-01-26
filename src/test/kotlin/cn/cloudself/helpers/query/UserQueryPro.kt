@@ -4,6 +4,7 @@ package cn.cloudself.helpers.query
 
 import javax.persistence.*
 import cn.cloudself.query.*
+import org.jetbrains.annotations.Contract;
 
 /**
  * 
@@ -50,11 +51,20 @@ class ImplUserQueryPro {
             createWhereField(column).let { if (objs.size == 1) it.equalsTo(objs[0]) else it.`in`(*objs) }
 
         val id = createWhereField("id")
-        fun id(vararg ids: Any) = createWhereField("id", ids)
+        @Contract(pure = true)
+        fun id(idList: List<Long>) = createWhereField("id", idList.toTypedArray())
+        @Contract(pure = true)
+        fun id(vararg ids: Long) = createWhereField("id", ids.toTypedArray())
         val name = createWhereField("name")
-        fun name(vararg names: Any) = createWhereField("name", names)
+        @Contract(pure = true)
+        fun name(nameList: List<String>) = createWhereField("name", nameList.toTypedArray())
+        @Contract(pure = true)
+        fun name(vararg names: String) = createWhereField("name", names)
         val age = createWhereField("age")
-        fun age(vararg ages: Any) = createWhereField("age", ages)
+        @Contract(pure = true)
+        fun age(ageList: List<Int>) = createWhereField("age", ageList.toTypedArray())
+        @Contract(pure = true)
+        fun age(vararg ages: Int) = createWhereField("age", ages.toTypedArray())
     }
 
     class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -63,8 +73,11 @@ class ImplUserQueryPro {
         private fun createOrderByField(column: String) =
             QueryOrderByKeywords(createField(column), queryStructure, create_order_by_field)
 
+        @Contract(pure = true)
         fun id() = createOrderByField("id")
+        @Contract(pure = true)
         fun name() = createOrderByField("name")
+        @Contract(pure = true)
         fun age() = createOrderByField("age")
     }
 
@@ -82,8 +95,11 @@ class ImplUserQueryPro {
         private fun createColumnsLimiterField(column: String) =
             ColumnsLimiterField<T, RUN_RES>(queryStructure.copy(fields = queryStructure.fields + createField(column)), field_clazz)
 
+        @Contract(pure = true)
         fun id() = createColumnsLimiterField("id")
+        @Contract(pure = true)
         fun name() = createColumnsLimiterField("name")
+        @Contract(pure = true)
         fun age() = createColumnsLimiterField("age")
     }
 
@@ -93,8 +109,11 @@ class ImplUserQueryPro {
             map[key] = value
         }
 
+        @Contract(pure = true)
         fun id(id: Any) = createUpdateSetField("id", id)
+        @Contract(pure = true)
         fun name(name: Any) = createUpdateSetField("name", name)
+        @Contract(pure = true)
         fun age(age: Any) = createUpdateSetField("age", age)
     }
 

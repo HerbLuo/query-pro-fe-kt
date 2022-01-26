@@ -187,6 +187,7 @@ public class SettingQueryPro {
             @Contract(pure = true)
             public WhereField<T, RUN_RES> deleted(Boolean... deleteds) { return createWhereField("deleted", deleteds); }
 
+            @Contract(pure = true)
             public WhereField<T, RUN_RES> take(Function<WhereField<T, RUN_RES>, WhereField<T, RUN_RES>> factor) {
                 return factor.apply(this);
             }
@@ -214,6 +215,7 @@ public class SettingQueryPro {
             @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> deleted() { return createOrderByField("deleted"); }
 
+            @Contract(pure = true)
             public OrderByField<T, RUN_RES> take(Function<OrderByField<T, RUN_RES>, OrderByField<T, RUN_RES>> factor) {
                 return factor.apply(this);
             }
@@ -272,6 +274,7 @@ public class SettingQueryPro {
             @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> deleted() { return createColumnsLimiterField("deleted"); }
 
+            @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> take(Function<ColumnsLimiterField<T, RUN_RES>, ColumnsLimiterField<T, RUN_RES>> factor) {
                 return factor.apply(this);
             }
@@ -307,10 +310,10 @@ public class SettingQueryPro {
             @Contract(pure = true)
             public UpdateSetField deleted(Object deleted) { return createUpdateSetField("deleted", deleted); }
 
+            @Contract(pure = true)
             public UpdateSetField take(Function<UpdateSetField, UpdateSetField> factor) {
                 return factor.apply(this);
             }
-
         }
 
         public static class FieldsGenerator extends FieldGenerator {

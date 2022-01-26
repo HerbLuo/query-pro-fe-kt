@@ -4,6 +4,7 @@ package cn.cloudself.helpers.query
 
 import javax.persistence.*
 import cn.cloudself.query.*
+import org.jetbrains.annotations.Contract;
 
 /**
  * 
@@ -56,15 +57,30 @@ class ImplSettingQueryPro {
             createWhereField(column).let { if (objs.size == 1) it.equalsTo(objs[0]) else it.`in`(*objs) }
 
         val id = createWhereField("id")
-        fun id(vararg ids: Any) = createWhereField("id", ids)
+        @Contract(pure = true)
+        fun id(idList: List<Long>) = createWhereField("id", idList.toTypedArray())
+        @Contract(pure = true)
+        fun id(vararg ids: Long) = createWhereField("id", ids.toTypedArray())
         val userId = createWhereField("user_id")
-        fun userId(vararg userIds: Any) = createWhereField("user_id", userIds)
+        @Contract(pure = true)
+        fun userId(userIdList: List<Long>) = createWhereField("user_id", userIdList.toTypedArray())
+        @Contract(pure = true)
+        fun userId(vararg userIds: Long) = createWhereField("user_id", userIds.toTypedArray())
         val kee = createWhereField("kee")
-        fun kee(vararg kees: Any) = createWhereField("kee", kees)
+        @Contract(pure = true)
+        fun kee(keeList: List<String>) = createWhereField("kee", keeList.toTypedArray())
+        @Contract(pure = true)
+        fun kee(vararg kees: String) = createWhereField("kee", kees)
         val value = createWhereField("value")
-        fun value(vararg values: Any) = createWhereField("value", values)
+        @Contract(pure = true)
+        fun value(valueList: List<String>) = createWhereField("value", valueList.toTypedArray())
+        @Contract(pure = true)
+        fun value(vararg values: String) = createWhereField("value", values)
         val deleted = createWhereField("deleted")
-        fun deleted(vararg deleteds: Any) = createWhereField("deleted", deleteds)
+        @Contract(pure = true)
+        fun deleted(deletedList: List<Boolean>) = createWhereField("deleted", deletedList.toTypedArray())
+        @Contract(pure = true)
+        fun deleted(vararg deleteds: Boolean) = createWhereField("deleted", deleteds.toTypedArray())
     }
 
     class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -73,10 +89,15 @@ class ImplSettingQueryPro {
         private fun createOrderByField(column: String) =
             QueryOrderByKeywords(createField(column), queryStructure, create_order_by_field)
 
+        @Contract(pure = true)
         fun id() = createOrderByField("id")
+        @Contract(pure = true)
         fun userId() = createOrderByField("user_id")
+        @Contract(pure = true)
         fun kee() = createOrderByField("kee")
+        @Contract(pure = true)
         fun value() = createOrderByField("value")
+        @Contract(pure = true)
         fun deleted() = createOrderByField("deleted")
     }
 
@@ -96,10 +117,15 @@ class ImplSettingQueryPro {
         private fun createColumnsLimiterField(column: String) =
             ColumnsLimiterField<T, RUN_RES>(queryStructure.copy(fields = queryStructure.fields + createField(column)), field_clazz)
 
+        @Contract(pure = true)
         fun id() = createColumnsLimiterField("id")
+        @Contract(pure = true)
         fun userId() = createColumnsLimiterField("user_id")
+        @Contract(pure = true)
         fun kee() = createColumnsLimiterField("kee")
+        @Contract(pure = true)
         fun value() = createColumnsLimiterField("value")
+        @Contract(pure = true)
         fun deleted() = createColumnsLimiterField("deleted")
     }
 
@@ -109,10 +135,15 @@ class ImplSettingQueryPro {
             map[key] = value
         }
 
+        @Contract(pure = true)
         fun id(id: Any) = createUpdateSetField("id", id)
+        @Contract(pure = true)
         fun userId(userId: Any) = createUpdateSetField("user_id", userId)
+        @Contract(pure = true)
         fun kee(kee: Any) = createUpdateSetField("kee", kee)
+        @Contract(pure = true)
         fun value(value: Any) = createUpdateSetField("value", value)
+        @Contract(pure = true)
         fun deleted(deleted: Any) = createUpdateSetField("deleted", deleted)
     }
 
