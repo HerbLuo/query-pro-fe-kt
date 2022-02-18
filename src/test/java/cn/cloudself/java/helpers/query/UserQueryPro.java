@@ -102,6 +102,10 @@ public class UserQueryPro {
         return queryPro.selectBy();
     }
 
+    public static __Impl.WhereField<User, List<User>> selectByObj(User obj) {
+        return queryPro.selectByObj(obj);
+    }
+
     public static User selectByPrimaryKey(Object value) {
         return queryPro.selectByPrimaryKey(value);
     }

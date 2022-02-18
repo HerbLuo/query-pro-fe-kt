@@ -121,6 +121,13 @@ class SelectTest {
             .run()
             .also { users: List<User> -> assertEquals(users, listOf(user3.copy(age = null))) }
 
+        expectSqlResult("SELECT * FROM `setting` WHERE `user_id` = ? AND `kee` = ? LIMIT 1", listOf(1, "theme"))
+        SettingQueryPro
+            .selectByObj(Setting(userId = 1, kee = "theme"))
+            .runLimit1()
+            ?.id
+            .also { settingId -> assertEquals(settingId, 2) }
+
         expectSqlResult(
             "SELECT `setting`.`kee`, `setting`.`value` FROM `setting` LEFT JOIN `user` ON `setting`.`user_id` = `user`.`id` " +
                     "WHERE `setting`.`kee` = ? AND `setting`.`value` like ? AND UPPER(`user`.`name`) like UPPER(?) LIMIT 10",

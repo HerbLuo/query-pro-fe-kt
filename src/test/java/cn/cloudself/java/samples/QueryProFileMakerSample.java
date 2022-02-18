@@ -31,7 +31,7 @@ public class QueryProFileMakerSample {
                         DbNameToJava
                                 .createDefault()
 //                                .removePrefixBeforeConvertToClassName()
-                                .addPrefixBeforeConvertToClassName("zz_")
+                                .addPrefixToClassNameBeforeConvert("zz_")
                                 .addPreHandle(it -> it.getName().startsWith("view_") ? it.getName().replace("view_", "") : it.getName())
                                 .getConverter()
                 )

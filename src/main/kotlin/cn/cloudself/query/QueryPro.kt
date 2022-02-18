@@ -1,6 +1,7 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
+import cn.cloudself.query.structure_reolsver.BeanObjectProxy
 import cn.cloudself.query.structure_reolsver.parseClass
 
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
@@ -31,6 +32,30 @@ open class QueryPro<
      * 查询操作
      */
     fun selectBy() = createSelectByField(queryStructure.copy(action = QueryStructureAction.SELECT))
+
+    fun selectByObj(obj: T): SELECT_BY_FIELD {
+        val parsedClass = parseClass(clazz)
+        val objectProxy = BeanObjectProxy.fromObject(obj)
+
+        val javaNameMapDbName = mutableMapOf<String, String>()
+        for ((_, column) in parsedClass.columns) {
+            javaNameMapDbName[column.javaName] = column.dbName
+        }
+
+        val whereClauses = objectProxy.toSequence().toList().also { println(it) }
+            .map { column -> column.javaName to column.value }
+            .filter { (_, v) -> v != null }
+            .map { (k, v) ->
+                WhereClause(Field(null, k), "=", v)
+            }
+
+        val newQueryStructure = queryStructure.copy(
+            action = QueryStructureAction.SELECT,
+            where = whereClauses,
+            limit = 0 to 1
+        )
+        return createSelectByField(newQueryStructure)
+    }
 
     /**
      * 使用主键查询

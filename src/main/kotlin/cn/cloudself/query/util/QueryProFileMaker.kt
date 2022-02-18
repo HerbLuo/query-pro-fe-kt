@@ -244,13 +244,13 @@ class DbNameToJava private constructor() {
         tName
     }
 
-    fun addPrefixBeforeConvertToClassName(prefix: String) = this.also {
+    fun addPrefixToClassNameBeforeConvert(prefix: String) = this.also {
         preHandles.add {
             if (it.toType == JavaNameType.ClassName) prefix + it.name else it.name
         }
     }
 
-    fun removePrefixBeforeConvertToClassName() = this.also {
+    fun removePrefixToClassNameBeforeConvert() = this.also {
         preHandles.add {
             if (it.toType == JavaNameType.ClassName) it.name.replaceFirst(matchFirst_, "") else it.name
         }

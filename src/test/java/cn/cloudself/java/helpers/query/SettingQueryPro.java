@@ -102,6 +102,10 @@ public class SettingQueryPro {
         return queryPro.selectBy();
     }
 
+    public static __Impl.WhereField<Setting, List<Setting>> selectByObj(Setting obj) {
+        return queryPro.selectByObj(obj);
+    }
+
     public static Setting selectByPrimaryKey(Object value) {
         return queryPro.selectByPrimaryKey(value);
     }

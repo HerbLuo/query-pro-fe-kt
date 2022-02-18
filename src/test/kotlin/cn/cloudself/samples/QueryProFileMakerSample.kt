@@ -104,9 +104,9 @@ class QueryProFileMakerDbJavaNameConverterSample {
                 DbNameToJava
                     .createDefault()
                     /* 有些时候我们创建数据库表的时候，会在表名前添加一些特定含义的前缀，但我不希望生成的Java类名也包含这个前缀 例如 t_user_info 对应的JavaBean文件为UserInfo.java */
-                    .removePrefixBeforeConvertToClassName()
+                    .removePrefixToClassNameBeforeConvert()
                     /* 往生成的Java类名中添加Zz前缀，例如 表user_info对应的JavaBean文件为ZzUserInfo.java */
-                    .addPrefixBeforeConvertToClassName("zz_")
+                    .addPrefixToClassNameBeforeConvert("zz_")
                     /* 加一些逻辑在转换前执行 */
 //                    .addPreHandle { if (it.startsWith("view_")) it.replace("view_", "") + "_view" else it }
                     .getConverter()
