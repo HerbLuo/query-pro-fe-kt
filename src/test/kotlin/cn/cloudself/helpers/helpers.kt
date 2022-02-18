@@ -25,7 +25,8 @@ private fun initDb() {
         CREATE TABLE IF NOT EXISTS user (
             id   bigint auto_increment primary key,
             name varchar(55) null,
-            age  int         null
+            age  int         null,
+            deleted tinyint(1) null default false
         );
         CREATE TABLE IF NOT EXISTS setting (
             id      bigint auto_increment primary key,
