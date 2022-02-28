@@ -91,26 +91,39 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             return emptyList()
         }
 
+        val paramsArr = preHandledObjs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
+        val uniqueInsert = paramsArr.size == 1
+
         val sqlBuilder = StringBuilder("INSERT INTO `")
         sqlBuilder.append(parsedClass.dbName, "` (")
+        var columnFirstAppend = false
         for ((i, col) in columns.withIndex()) {
-            if (i != 0) {
+            if (uniqueInsert && paramsArr[0][i] == null) {
+                continue
+            }
+            if (columnFirstAppend) {
                 sqlBuilder.append(", ")
+            } else {
+                columnFirstAppend = true
             }
             sqlBuilder.append('`', col.dbName, '`')
         }
         sqlBuilder.append(") VALUES (")
+        var valueFirstAppend = false
         for (j in columns.indices) {
-            if (j == 0) {
-                sqlBuilder.append("?")
-            } else {
+            if (uniqueInsert && paramsArr[0][j] == null) {
+                continue
+            }
+            if (valueFirstAppend) {
                 sqlBuilder.append(", ?")
+            } else {
+                sqlBuilder.append("?")
+                valueFirstAppend = true
             }
         }
         sqlBuilder.append(')')
 
         val sql = sqlBuilder.toString()
-        val paramsArr = preHandledObjs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
         val idColumnType = parseClass(clazz).idColumnType
         if (idColumnType == null) {
             logger.warn("没有找到主键或其对应的Class, 返回了空结果")
@@ -122,7 +135,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         getConnection().autoUse { connection ->
             val preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             for (params in paramsArr) {
-                setParam(preparedStatement, params, ON_NULL.DEFAULT)
+                setParam(preparedStatement, if (uniqueInsert) params.filterNotNull().toTypedArray() else params, ON_NULL.NULL)
                 preparedStatement.addBatch()
             }
             preparedStatement.executeBatch()
@@ -209,7 +222,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
             val preparedStatement = connection.prepareStatement(sql)
 
-            setParam(preparedStatement, params, if (action == QueryStructureAction.INSERT) ON_NULL.DEFAULT else ON_NULL.BREAK )
+            setParam(preparedStatement, params, if (action == QueryStructureAction.INSERT) ON_NULL.NULL else ON_NULL.BREAK )
 
             val resultList = mutableListOf<T>()
 
@@ -250,7 +263,6 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     enum class ON_NULL {
         BREAK,
         NULL,
-        DEFAULT,
     }
 
     private fun setParam(preparedStatement: PreparedStatement, params: Array<Any?>, onNull: ON_NULL) {
@@ -278,8 +290,6 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 else -> {
                     if (param == null && onNull == ON_NULL.NULL) {
                         preparedStatement.setNull(i + 1, Types.NULL)
-                    } else if (param == null && onNull == ON_NULL.DEFAULT) {
-                        preparedStatement.setObject(i + 1, Types.NULL)
                     } else {
                         throw UnSupportException("equalsTo, in, between等操作传入了不支持的类型{0}", param)
                     }

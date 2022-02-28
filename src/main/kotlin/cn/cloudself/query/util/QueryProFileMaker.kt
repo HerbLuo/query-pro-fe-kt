@@ -413,6 +413,7 @@ class QueryProFileMaker private constructor(
         "LONGTEXT" to KtJavaType("String"),
         "BLOB" to KtJavaType("ByteArray", "byte[]"),
         "LONGBLOB" to KtJavaType("ByteArray", "byte[]"),
+        "JSON" to KtJavaType("String"),
     )
     private val ktKeywords = arrayOf(
         "as", "break", "class", "continue", "do", "else", "false", "for", "fun", "if", "in", "interface", "is", "null",
