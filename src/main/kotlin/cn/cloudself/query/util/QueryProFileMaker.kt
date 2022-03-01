@@ -556,6 +556,8 @@ class QueryProFileMaker private constructor(
                 }
             }
         }
+
+        "all done".debugPrint()
     }
 
     private fun getModelsFromDb(): MutableMap<String, TemplateModel> {

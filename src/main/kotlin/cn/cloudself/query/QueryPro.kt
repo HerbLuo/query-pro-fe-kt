@@ -1,8 +1,8 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
-import cn.cloudself.query.structure_reolsver.BeanObjectProxy
-import cn.cloudself.query.structure_reolsver.parseClass
+import cn.cloudself.query.util.BeanObjectProxy
+import cn.cloudself.query.util.parseClass
 
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
@@ -43,7 +43,7 @@ open class QueryPro<
         }
 
         val whereClauses = objectProxy.toSequence().toList().also { println(it) }
-            .map { column -> column.javaName to column.value }
+            .map { column -> column.dbName to column.value }
             .filter { (_, v) -> v != null }
             .map { (k, v) ->
                 WhereClause(Field(null, k), "=", v)

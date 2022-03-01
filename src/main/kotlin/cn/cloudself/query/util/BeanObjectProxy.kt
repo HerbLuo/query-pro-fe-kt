@@ -1,9 +1,10 @@
-package cn.cloudself.query.structure_reolsver
+package cn.cloudself.query.util
 
 import cn.cloudself.query.exception.UnSupportException
 
 
 data class ParsedObjectColumn(
+    val dbName: String,
     val javaName: String,
     val value: Any?,
 )
@@ -13,8 +14,10 @@ class BeanObjectProxy private constructor(
     private val parsedClass: ParsedClass?
 ) {
     companion object {
+        @JvmStatic
         fun fromObject(obj: Any) = BeanObjectProxy(obj, if (obj is Map<*, *>) null else parseClass(obj.javaClass))
 
+        @JvmStatic
         fun fromObject(obj: Any, parsedClass: ParsedClass) = BeanObjectProxy(obj, parsedClass)
     }
 
@@ -27,7 +30,7 @@ class BeanObjectProxy private constructor(
             return sequence {
                 for ((key, value) in obj) {
                     if (key is String) {
-                        yield(ParsedObjectColumn(key, value))
+                        yield(ParsedObjectColumn(key, key, value))
                     } else {
                         throw UnSupportException("不支持非Map<String, *>类型的Map")
                     }
@@ -38,15 +41,13 @@ class BeanObjectProxy private constructor(
         return sequence {
             if (obj is Map<*, *>) {
                 for ((key, column) in columns) {
-                    yield(ParsedObjectColumn(key, obj[column]))
+                    yield(ParsedObjectColumn(key, column.javaName, obj[column]))
                 }
             } else {
                 for ((key, column) in columns) {
-                    yield(ParsedObjectColumn(key, column.getter(obj)))
+                    yield(ParsedObjectColumn(key, column.javaName, column.getter(obj)))
                 }
             }
         }
     }
-
-
 }

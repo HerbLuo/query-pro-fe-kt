@@ -2,7 +2,7 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
-import cn.cloudself.query.structure_reolsver.parseClass
+import cn.cloudself.query.util.parseClass
 import java.util.*
 
 enum class QueryFieldType {

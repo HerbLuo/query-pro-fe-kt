@@ -4,12 +4,9 @@ import cn.cloudself.query.*
 import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.IllegalParameters
 import cn.cloudself.query.exception.UnSupportException
-import cn.cloudself.query.util.LogFactory
-import cn.cloudself.query.util.SpringUtils
+import cn.cloudself.query.util.*
 import org.springframework.jdbc.datasource.DataSourceUtils
 import org.springframework.transaction.support.TransactionSynchronizationManager
-import cn.cloudself.query.util.compatibleWithBool
-import cn.cloudself.query.util.compatibleWithInt
 import java.lang.StringBuilder
 import java.math.BigDecimal
 import java.sql.*

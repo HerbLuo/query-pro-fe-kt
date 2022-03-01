@@ -1,8 +1,7 @@
-package cn.cloudself.query.structure_reolsver
+package cn.cloudself.query.util
 
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.exception.UnSupportException
-import cn.cloudself.query.util.LogFactory
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 

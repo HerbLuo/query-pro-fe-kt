@@ -3,6 +3,7 @@ package cn.cloudself.query.structure_reolsver
 import cn.cloudself.query.*
 import cn.cloudself.query.exception.MissingParameter
 import cn.cloudself.query.exception.UnSupportException
+import cn.cloudself.query.util.BeanObjectProxy
 import java.lang.StringBuilder
 
 class QueryStructureToSql(
@@ -129,7 +130,7 @@ class QueryStructureToSql(
         var idWhereClause: WhereClause? = null
         for (column in columns) {
             val value = column.value
-            val field = column.javaName
+            val field = column.dbName
             if (!override && value == null) {
                 continue
             }

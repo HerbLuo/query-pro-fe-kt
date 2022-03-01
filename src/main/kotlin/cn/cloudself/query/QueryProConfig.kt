@@ -1,7 +1,7 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalImplements
-import cn.cloudself.query.structure_reolsver.BeanProxy
+import cn.cloudself.query.util.BeanProxy
 import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.RequestContextHolder

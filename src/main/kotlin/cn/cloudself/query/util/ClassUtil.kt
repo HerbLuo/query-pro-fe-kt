@@ -1,8 +1,7 @@
-package cn.cloudself.query.structure_reolsver
+package cn.cloudself.query.util
 
 import cn.cloudself.query.QueryProConfig
 import cn.cloudself.query.exception.UnSupportException
-import cn.cloudself.query.util.canAccess
 import javax.persistence.Column
 import javax.persistence.Id
 import javax.persistence.Table
@@ -71,7 +70,11 @@ fun parseClass(clazz: Class<*>): ParsedClass {
                 }
                 val getter = try {
                     clazz.getDeclaredMethod(getterMethodName)
-                }  catch (e: Exception) {
+                } catch (e: Exception) {
+                    null
+                } ?: try {
+                    clazz.getMethod(getterMethodName)
+                } catch (e: Exception) {
                     null
                 }
 
