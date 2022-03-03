@@ -19,7 +19,17 @@ import javax.sql.DataSource
 class JdbcQueryStructureResolver: IQueryStructureResolver {
 
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
-        val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
+        var transformedQueryStructure = queryStructure
+        if (transformedQueryStructure.action == QueryStructureAction.UPDATE) {
+            for (transformer in QueryProConfig.final.lifecycle().beforeUpdateTransformers) {
+                transformedQueryStructure = transformer(transformedQueryStructure).getOrElse {
+                    logger.warn("beforeUpdate钩子阻止了本次操作" as Any, it)
+                    return emptyList()
+                }
+            }
+        }
+
+        val (sql, params) = QueryStructureToSql(transformedQueryStructure).toSqlWithIndexedParams()
 
         val callInfo = if (QueryProConfig.final.printCallByInfo()) {
             val stacks = Thread.currentThread().stackTrace
@@ -55,14 +65,14 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         if (QueryProConfig.final.dryRun()) {
             logger.info("dry run mode, skip querying.")
             @Suppress("UNCHECKED_CAST")
-            return if (queryStructure.action == QueryStructureAction.SELECT) {
+            return if (transformedQueryStructure.action == QueryStructureAction.SELECT) {
                 listOf()
             } else {
                 listOf(true) as List<T>
             }
         }
 
-        val result = resolvePri(sql, params.toTypedArray(), clazz, queryStructure.action)
+        val result = resolvePri(sql, params.toTypedArray(), clazz, transformedQueryStructure.action)
         if (QueryProConfig.final.printResult()) {
             logger.info("result: $result")
         }
@@ -79,13 +89,13 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         val parsedClass = bean.getParsedClass()
         val columns = parsedClass.columns.values
 
-        @Suppress("UNCHECKED_CAST", "UNCHECKED_CAST")
-        val beforeInsert = QueryProConfig.final.lifecycle().beforeInsert(beanProxy as BeanProxy<Any, Any>, objs)
-
-
-        val preHandledObjs = beforeInsert.getOrElse {
-            logger.warn("beforeInsert钩子阻止了本次操作", beforeInsert.err())
-            return emptyList()
+        var preHandledObjs: Collection<Any> = objs
+        for (beforeInsert in QueryProConfig.final.lifecycle().beforeInsertTransformers) {
+            @Suppress("UNCHECKED_CAST", "UNCHECKED_CAST")
+            preHandledObjs = beforeInsert(beanProxy as BeanProxy<Any, Any>, preHandledObjs).getOrElse {
+                logger.warn("beforeInsert钩子阻止了本次操作" as Any, it)
+                return emptyList()
+            }
         }
 
         val paramsArr = preHandledObjs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()

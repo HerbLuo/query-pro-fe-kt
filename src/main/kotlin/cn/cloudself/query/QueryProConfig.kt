@@ -1,8 +1,10 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.IllegalImplements
-import cn.cloudself.query.util.BeanProxy
 import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
+import cn.cloudself.query.util.BeanProxy
+import cn.cloudself.query.util.Result
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.RequestContextHolder
 import java.math.BigDecimal
@@ -15,7 +17,6 @@ import java.time.LocalTime
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KClass
-import cn.cloudself.query.util.Result
 
 @Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING", "HasPlatformType")
 fun <T: Enum<*>> enumValueOfAny(clazz: Class<*>, name: String) = java.lang.Enum.valueOf(clazz as Class<T>, name)
@@ -86,8 +87,85 @@ open class QueryProConfigDb(private val store: Store): NullableQueryProConfigDb,
     override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver) = this.also { this.store.set("queryStructureResolver", queryStructureResolver) }
 }
 
+typealias QueryStructureTransformer = (queryStructure: QueryStructure) -> Result<QueryStructure, Throwable>
+typealias ObjectTransformer = (beanProxy: BeanProxy<Any, Any>, objs: Collection<Any>) -> Result<Collection<Any>, Throwable>
+
 class Lifecycle {
-    var beforeInsert: (beanProxy: BeanProxy<Any, Any>, objs: Collection<*>) -> Result<Collection<*>, Throwable> = { _, objs -> Result.ok (objs) }
+    internal val beforeInsertTransformers = mutableListOf<ObjectTransformer>()
+//    internal val beforeSelectTransformers = mutableListOf<QueryStructureTransformer>()
+    internal val beforeUpdateTransformers = mutableListOf<QueryStructureTransformer>()
+
+    class ObjectTransformersBuilder private constructor() {
+        private val transformers = mutableListOf<ObjectTransformer>()
+        internal companion object {
+            fun create() = ObjectTransformersBuilder()
+        }
+
+        fun addTransformer(transformer: ObjectTransformer) = this.also { transformers.add(transformer) }
+
+        fun <T> addProperty(property: String, clazz: Class<T>, value: () -> T) = this.also {
+            overrideProperty(property, clazz, value, false)
+        }
+
+        fun <T> overrideProperty(property: String, clazz: Class<*>, value: () -> T) = this.also {
+            overrideProperty(property, clazz, value, true)
+        }
+
+        private fun <T> overrideProperty(property: String, clazz: Class<*>, value: () -> T, override: Boolean) {
+            transformers.add { beanProxy, objs ->
+                for (obj in objs) {
+                    val beanInstance = beanProxy.ofInstance(obj)
+                    val column = beanInstance.getParsedClass().columns[property] ?: continue
+                    if (clazz == column.javaType) {
+                        if (column.getter(obj) == null || override) {
+                            column.setter(obj, value())
+                        }
+                    }
+                }
+                Result.ok(objs)
+            }
+        }
+
+        fun build() = transformers
+    }
+
+    class UpdateQueryStructureTransformersBuilder private constructor() {
+        private val transformers = mutableListOf<QueryStructureTransformer>()
+        internal companion object {
+            fun create() = UpdateQueryStructureTransformersBuilder()
+        }
+
+        fun addTransformer(transformer: QueryStructureTransformer) = this.also { transformers.add(transformer) }
+
+        fun <T> addProperty(property: String, value: () -> T) = this.also {
+            overrideProperty(property, value, false)
+        }
+
+        fun <T> overrideProperty(property: String, value: () -> T) = this.also {
+            overrideProperty(property, value, true)
+        }
+
+        private fun <T> overrideProperty(property: String, value: () -> T, override: Boolean) {
+            transformers.add {
+                @Suppress("UNCHECKED_CAST") val data = it.update?.data as MutableMap<String, Any>
+                data[property] = value()
+                    ?: throw ConfigException("beforeUpdate.add(override)Property, 不能传入null值, 如需将值更新为null，使用QueryProConst(Kt).NULL")
+                Result.ok(it)
+            }
+        }
+
+        fun build() = transformers
+    }
+
+    fun beforeInsert(builder: (builder: ObjectTransformersBuilder) -> ObjectTransformersBuilder) = this.also {
+        beforeInsertTransformers.addAll(builder(ObjectTransformersBuilder.create()).build())
+    }
+    fun beforeUpdate(builder: (builder: UpdateQueryStructureTransformersBuilder) -> UpdateQueryStructureTransformersBuilder) = this.also {
+        beforeUpdateTransformers.addAll(builder(UpdateQueryStructureTransformersBuilder.create()).build())
+    }
+//    fun beforeSelect(builder: (builder: QueryStructureTransformersBuilder) -> QueryStructureTransformersBuilder) = this.also {
+//        beforeSelectTransformers.addAll(builder(QueryStructureTransformersBuilder.create()).build())
+//    }
 }
 
 interface OnlyGlobalConfig {
