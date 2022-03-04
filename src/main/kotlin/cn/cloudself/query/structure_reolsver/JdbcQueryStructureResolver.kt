@@ -22,7 +22,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         var transformedQueryStructure = queryStructure
         if (transformedQueryStructure.action == QueryStructureAction.UPDATE) {
             for (transformer in QueryProConfig.final.lifecycle().beforeUpdateTransformers) {
-                transformedQueryStructure = transformer(transformedQueryStructure).getOrElse {
+                transformedQueryStructure = transformer(clazz, transformedQueryStructure).getOrElse {
                     logger.warn("beforeUpdate钩子阻止了本次操作" as Any, it)
                     return emptyList()
                 }

@@ -187,7 +187,7 @@ class QueryStructureToSql(
                             "not in" -> ", "
                             "between" -> " AND "
                             "not between" -> " AND "
-                            "or" -> " AND "
+                            OP_OR -> " AND "
                             else -> throw UnSupportException("未知的运算符{0}", operator)
                         })
                     }
@@ -208,16 +208,31 @@ class QueryStructureToSql(
         sql.append(if (beautify) '\n' else ' ')
         sql.append("WHERE ")
         val lastIndexOfWheres = wheres.size - 1
+        var leftParCount = 0
         for ((i, whereClause) in wheres.withIndex()) {
+            val operator = whereClause.operator
+
+            if (beautify) {
+                if (operator == OP_OR) {
+                    sql.append("\n ")
+                }
+                if (operator == "(") {
+                    leftParCount++
+                }
+                if (operator == ")") {
+                    leftParCount--
+                }
+            }
+
             parseWhereClause(whereClause)
 
             if (lastIndexOfWheres != i &&
-                whereClause.operator != "(" &&
+                operator != "(" &&
                 wheres[i + 1].operator != ")" &&
-                whereClause.operator != "or" &&
-                wheres[i + 1].operator != "or"
+                operator != OP_OR &&
+                wheres[i + 1].operator != OP_OR
             ) {
-                sql.append(if (beautify) "\n  " else ' ')
+                sql.append(if (beautify && leftParCount == 0) "\n  " else ' ')
                 sql.append("AND ")
             }
         }

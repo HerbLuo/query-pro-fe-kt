@@ -5,6 +5,7 @@ import cn.cloudself.query.exception.IllegalImplements
 import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
 import cn.cloudself.query.util.BeanProxy
 import cn.cloudself.query.util.Result
+import cn.cloudself.query.util.parseClass
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.RequestContextHolder
 import java.math.BigDecimal
@@ -87,7 +88,7 @@ open class QueryProConfigDb(private val store: Store): NullableQueryProConfigDb,
     override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver) = this.also { this.store.set("queryStructureResolver", queryStructureResolver) }
 }
 
-typealias QueryStructureTransformer = (queryStructure: QueryStructure) -> Result<QueryStructure, Throwable>
+typealias QueryStructureTransformer = (clazz: Class<*>, queryStructure: QueryStructure) -> Result<QueryStructure, Throwable>
 typealias ObjectTransformer = (beanProxy: BeanProxy<Any, Any>, objs: Collection<Any>) -> Result<Collection<Any>, Throwable>
 
 class Lifecycle {
@@ -111,14 +112,17 @@ class Lifecycle {
             overrideProperty(property, clazz, value, true)
         }
 
-        private fun <T> overrideProperty(property: String, clazz: Class<*>, value: () -> T, override: Boolean) {
+        private fun <T> overrideProperty(property: String, clazz: Class<*>, getValue: () -> T, override: Boolean) {
             transformers.add { beanProxy, objs ->
                 for (obj in objs) {
                     val beanInstance = beanProxy.ofInstance(obj)
                     val column = beanInstance.getParsedClass().columns[property] ?: continue
                     if (clazz == column.javaType) {
                         if (column.getter(obj) == null || override) {
-                            column.setter(obj, value())
+                            val value = getValue()
+                            if (value != SKIP) {
+                                column.setter(obj, value)
+                            }
                         }
                     }
                 }
@@ -145,12 +149,16 @@ class Lifecycle {
             overrideProperty(property, value, true)
         }
 
-        private fun <T> overrideProperty(property: String, value: () -> T, override: Boolean) {
-            transformers.add {
-                @Suppress("UNCHECKED_CAST") val data = it.update?.data as MutableMap<String, Any>
-                data[property] = value()
-                    ?: throw ConfigException("beforeUpdate.add(override)Property, 不能传入null值, 如需将值更新为null，使用QueryProConst(Kt).NULL")
-                Result.ok(it)
+        private fun <T> overrideProperty(property: String, getValue: () -> T, override: Boolean) {
+            transformers.add { clazz, queryStructure ->
+                if (parseClass(clazz).columns[property] != null) {
+                    @Suppress("UNCHECKED_CAST") val data = queryStructure.update?.data as MutableMap<String, Any>
+                    val value = getValue() ?: throw ConfigException("beforeUpdate.add(override)Property, 不能传入null值, 如需将值更新为null，使用QueryProConst(Kt).NULL")
+                    if (value != "skip") {
+                        data[property] = value
+                    }
+                }
+                Result.ok(queryStructure)
             }
         }
 

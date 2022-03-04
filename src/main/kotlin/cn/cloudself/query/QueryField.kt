@@ -172,18 +172,24 @@ abstract class QueryField<
         }
 
         if (factor == null) {
-            return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = "or")))
+            return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = OP_OR)))
         }
 
         val vTempQueryStructure = QueryStructure(from = QueryStructureFrom("v_temp")) // v_temp会消失, 只取where
         val orWhereClauses = factor(create_where_field(vTempQueryStructure)).queryStructure.where
-        val newWhereClause = queryStructure.where + WhereClause(operator = "or", value = orWhereClauses)
+        val newWhereClause = queryStructure.where + WhereClause(operator = OP_OR, value = orWhereClauses)
         return create_where_field(queryStructure.copy(where = newWhereClause))
     }
 
     fun par(factor: ((f: WHERE_FIELD) -> WHERE_FIELD)): WHERE_FIELD {
+        if (field_type != QueryFieldType.WHERE_FIELD) {
+            throw RuntimeException("$field_type can not call and, usage: .orderBy().id.desc().name.asc()")
+        }
+
+        val vTempQueryStructure = QueryStructure(from = QueryStructureFrom("v_temp")) // v_temp会消失, 只取where
+        val parWhereClauses = factor(create_where_field(vTempQueryStructure)).queryStructure.where
         val newWhereClause = mutableListOf(WhereClause(operator = "("))
-        newWhereClause.addAll(queryStructure.where)
+        newWhereClause.addAll(parWhereClauses)
         newWhereClause.add(WhereClause(operator = ")"))
         return create_where_field(queryStructure.copy(where = newWhereClause))
     }

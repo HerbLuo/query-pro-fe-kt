@@ -64,7 +64,7 @@ class SelectTest {
         UserQueryPro.selectBy().name.`in`("hb", "herb").run()
             .also { users: List<User> -> assertEquals(users, listOf(user1, user2, user3)) }
 
-        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? or `user`.`age` = ?", listOf(1, 10))
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? OR `user`.`age` = ?", listOf(1, 10))
         UserQueryPro
             .selectBy().id.`is`.equalsTo(1)
             .or().age.equalsTo(10)
@@ -83,7 +83,7 @@ class SelectTest {
         UserQueryPro.selectBy().age.`is`.nul().run()
             .also { users: List<User> -> assertEquals(users, listOf(user4)) }
 
-        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? or (`user`.`age` = ? AND `user`.`name` like ?)", listOf(1, 18, "%rb%"))
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? OR (`user`.`age` = ? AND `user`.`name` like ?)", listOf(1, 18, "%rb%"))
         UserQueryPro
             .selectBy().id.`is`.equalsTo(1)
             .or { it.age.equalsTo(18).and().name.like("%rb%") }
