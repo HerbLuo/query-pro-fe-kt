@@ -149,7 +149,7 @@ class QueryProSql {
          * 执行sql，
          * 根据 数据库连接配置，决定是否能同时执行多条sql
          */
-        fun exec(): IntArray {
+        fun exec() {
             val sqlAndCountArr = SqlUtils.splitBySemicolonAndCountQuestionMark(sql)
             return QueryProConfig.final.queryStructureResolver().execBatch(sqlAndCountArr.map { it.first }.toTypedArray())
         }

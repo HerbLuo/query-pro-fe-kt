@@ -156,13 +156,13 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         }
     }
 
-    override fun execBatch(sqlArr: Array<String>): IntArray {
+    override fun execBatch(sqlArr: Array<String>) {
         return getConnection().autoUse {
             val statement = it.createStatement()
             for (sql in sqlArr) {
-                statement.addBatch(sql)
+                logger.info("sql executing ", sql)
+                statement.execute(sql)
             }
-            statement.executeBatch()
         }
     }
 
