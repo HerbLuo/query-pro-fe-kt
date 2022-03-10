@@ -188,9 +188,7 @@ abstract class QueryField<
 
         val vTempQueryStructure = QueryStructure(from = QueryStructureFrom("v_temp")) // v_temp会消失, 只取where
         val parWhereClauses = factor(create_where_field(vTempQueryStructure)).queryStructure.where
-        val newWhereClause = mutableListOf(WhereClause(operator = "("))
-        newWhereClause.addAll(parWhereClauses)
-        newWhereClause.add(WhereClause(operator = ")"))
+        val newWhereClause = queryStructure.where + WhereClause(operator = "(") + parWhereClauses + WhereClause(operator = ")")
         return create_where_field(queryStructure.copy(where = newWhereClause))
     }
 

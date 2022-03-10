@@ -387,6 +387,7 @@ class QueryProFileMaker private constructor(
     }
 
     private var debug = false
+    private var useLogger = false
     private var db: DbInfo? = null
     private var tables: Array<out String> = arrayOf("")
     private var excludeTables: Array<out String> = arrayOf()
@@ -430,7 +431,11 @@ class QueryProFileMaker private constructor(
     /**
      * 显示更多输出
      */
-    fun debug() = this.also { this.debug = true }
+    @JvmOverloads
+    fun debug(useLogger: Boolean = false) = this.also {
+        this.debug = true
+        this.useLogger = useLogger
+    }
 
     /**
      * 指定db
@@ -552,12 +557,12 @@ class QueryProFileMaker private constructor(
                     val writer = Files.newOutputStream(filePath, *openOptions.toTypedArray()).writer()
                     template.process(data, writer)
                 } catch (e: FileAlreadyExistsException) {
-                    logger.warn("文件已存在: $filePath, e: ${e.message}")
+                    warn("文件已存在: $filePath, e: ${e.message}")
                 }
             }
         }
 
-        "all done".debugPrint()
+        info("all done");
     }
 
     private fun getModelsFromDb(): MutableMap<String, TemplateModel> {
@@ -604,7 +609,7 @@ class QueryProFileMaker private constructor(
             while (primaryKeys.next()) {
                 if (idDefined) {
                     id = null
-                    logger.warn("[WARN] 目前仍不支持复合主键")
+                    warn("[WARN] 目前仍不支持复合主键")
                 } else {
                     val columnName = primaryKeys.getString("COLUMN_NAME")
                     id = ModelId(columnName)
@@ -648,7 +653,7 @@ class QueryProFileMaker private constructor(
             }
 
             val idColumnStr = id?.column
-            if (id != null && idColumnStr != null) {
+            if (id != null) {
                 val idColumn = modelColumns.find { it.db_name == idColumnStr }
                 id.ktTypeStr = idColumn?.ktTypeStr
                 id.javaTypeStr = idColumn?.javaTypeStr
@@ -751,25 +756,41 @@ class QueryProFileMaker private constructor(
             }
     }
 
+    private fun info(obj: Any?) {
+        if (this.useLogger) {
+            logger.info(obj)
+        } else {
+            println(obj)
+        }
+    }
+
+    private fun warn(obj: Any?) {
+        if (this.useLogger) {
+            logger.info(obj)
+        } else {
+            println("[warn]" + obj.toString())
+        }
+    }
+
     private fun <T> T.debugPrint(): T {
         if (debug) {
             if (this is Iterable<*>) {
-                this.forEach { logger.info(it) }
+                this.forEach { info(it) }
             } else {
-                logger.info(this)
+                info(this)
             }
         }
         return this
     }
-}
 
-@Suppress("unused")
-private fun ResultSet.print() {
-    val metaData = this.metaData
-    for (i in 1..metaData.columnCount) {
-        val columnName = metaData.getColumnName(i)
-        val data = this.getString(columnName)
-        logger.info("$columnName:\t $data")
+    @Suppress("unused")
+    private fun ResultSet.print() {
+        val metaData = this.metaData
+        for (i in 1..metaData.columnCount) {
+            val columnName = metaData.getColumnName(i)
+            val data = this.getString(columnName)
+            info("$columnName:\t $data")
+        }
+        info("\n")
     }
-    logger.info("\n")
 }

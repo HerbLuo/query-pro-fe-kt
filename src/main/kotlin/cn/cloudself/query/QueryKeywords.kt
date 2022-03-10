@@ -35,6 +35,8 @@ class QueryKeywords<F : QueryField<*, *, *, *, *, *>>(
     fun like(str: String) = with(WhereClause(field, "like", str))
     @Contract(pure = true)
     fun `in`(vararg values: Any) = if (values.isEmpty()) throw IllegalParameters("in查询不能设置空参数") else with(WhereClause(field, "in", values))
+//    @Contract(pure = true)
+//    fun `in`(values: List<Any>) = if (values.isEmpty()) throw IllegalParameters("in查询不能设置空参数") else with(WhereClause(field, "in", values))
     @Contract(pure = true)
     fun nul() = with(WhereClause(field = field, operator = "is null"))
     @Contract(pure = true)

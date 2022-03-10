@@ -31,6 +31,12 @@ interface IQueryStructureResolver {
     fun <T> insert(objs: Collection<Any>, clazz: Class<T>): List<Any>
 
     /**
+     * 执行sql，
+     * 根据 数据库连接配置，决定是否能同时执行多条sql
+     */
+    fun execBatch(sqlArr: Array<String>): IntArray
+
+    /**
      * 使用多条语句和参数执行更新，创建，删除等非select语句
      *
      * @param sqlArr 多条或单条SQL语句

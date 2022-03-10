@@ -120,5 +120,16 @@ class QueryProSqlTest {
         println("user表总共有9条数据")
         QueryProSql.create("SELECT count(*) FROM user").queryOne(Int::class.java)
             .also { assertEquals(it, 9) }
+
+        QueryProSql.create(
+            """
+                SET @user_count = (SELECT count(*) FROM user);
+                INSERT setting (user_id, kee, value, deleted) VALUES (0, 'sys-user-count', @user_count, false);
+            """.trimIndent()
+        ).exec()
+
+        QueryProSql.create("SELECT * FROM setting WHERE user_id = 0 AND kee = 'sys-user-count'").queryOne(Setting::class.java)
+            .also { assertEquals(it?.value, "9") }
+
     }
 }

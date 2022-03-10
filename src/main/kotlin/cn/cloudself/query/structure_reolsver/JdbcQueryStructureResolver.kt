@@ -156,6 +156,16 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         }
     }
 
+    override fun execBatch(sqlArr: Array<String>): IntArray {
+        return getConnection().autoUse {
+            val statement = it.createStatement()
+            for (sql in sqlArr) {
+                statement.addBatch(sql)
+            }
+            statement.executeBatch()
+        }
+    }
+
     override fun <T> updateBatch(sqlArr: Array<String>, paramsArr: Array<Array<Any?>>, clazz: Class<T>): T {
         val sqlArraySize = sqlArr.size
         val paramsSize = paramsArr.size

@@ -66,7 +66,8 @@ class QueryProSql {
          * @param params 参数数组数组 e.g. [[1, 'hb'], [2, 'l']]
          */
         @JvmStatic
-        fun createBatch(@Language("SQL") sql: String, params: Array<Array<Any?>>): BatchAction {
+        @JvmOverloads
+        fun createBatch(@Language("SQL") sql: String, params: Array<Array<Any?>> = arrayOf()): BatchAction {
             return BatchAction(arrayOf(sql), params)
         }
 
@@ -142,6 +143,15 @@ class QueryProSql {
          */
         fun update(): Int {
             return QueryProConfig.final.queryStructureResolver().resolve(sql, params, Int::class.java, QueryStructureAction.UPDATE)[0]
+        }
+
+        /**
+         * 执行sql，
+         * 根据 数据库连接配置，决定是否能同时执行多条sql
+         */
+        fun exec(): IntArray {
+            val sqlAndCountArr = SqlUtils.splitBySemicolonAndCountQuestionMark(sql)
+            return QueryProConfig.final.queryStructureResolver().execBatch(sqlAndCountArr.map { it.first }.toTypedArray())
         }
     }
 }
