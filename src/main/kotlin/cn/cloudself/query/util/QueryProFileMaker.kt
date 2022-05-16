@@ -13,7 +13,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.util.*
-import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.*
 import kotlin.reflect.jvm.javaMethod
 
 private val logger = LogFactory.getLog(QueryProFileMaker::class.java)
@@ -334,6 +334,7 @@ data class DelegateInfo(
     var returnType: String,
     var method: String,
     var args: List<DelegateInfoArg>,
+    var annotations: List<String> = listOf(),
 )
 
 class KtJavaType constructor(
@@ -734,6 +735,9 @@ class QueryProFileMaker private constructor(
                 val parameters = it.parameters
                 val method = it.javaMethod ?: throw UnSupportException("QueryPro Kotlin方法必须有对应的Java方法")
 
+                val contract = it.findAnnotation<PureContract>()
+                val pure = contract != null
+
                 DelegateInfo(
                     "public static",
                     noPackage(toActualType(method.genericReturnType.typeName) ?: method.returnType.typeName),
@@ -751,7 +755,8 @@ class QueryProFileMaker private constructor(
                             noPackage(paramType)
                         }
                         DelegateInfoArg(finalParamType, isVararg, kParam.name ?: "obj$i")
-                    }
+                    },
+                    if (pure) listOf("@Contract(pure = true)") else emptyList()
                 )
             }
     }

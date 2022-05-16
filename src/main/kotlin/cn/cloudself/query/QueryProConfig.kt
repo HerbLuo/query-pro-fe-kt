@@ -355,7 +355,7 @@ object QueryProConfig {
             putToResultSetParser(BigDecimal::class) { rs -> { i -> rs.getBigDecimal(i) } }
             putToResultSetParser(Byte::class) { rs -> { i -> rs.getByte(i) } }
             putToResultSetParser(ByteArray::class) { rs -> { i -> rs.getBytes(i) } }
-            putToResultSetParser(Date::class) { rs -> { i -> rs.getDate(i) } }
+            putToResultSetParser(Date::class) { rs -> { i -> rs.getTimestamp(i) } }
             putToResultSetParser(LocalDate::class) { rs -> { i -> rs.getDate(i).toLocalDate() } }
             putToResultSetParser(LocalTime::class) { rs -> { i -> rs.getTime(i).toLocalTime() } }
             putToResultSetParser(LocalDateTime::class) { rs -> { i -> rs.getTimestamp(i).toLocalDateTime() } }

@@ -71,7 +71,7 @@ abstract class FinalSelectField<
         }
         val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
 
-        return QueryProConfig.final.queryStructureResolver().resolve(queryStructureForCount, Int::class.java)[0]
+        return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructureForCount), Int::class.java)[0]
     }
 
     fun runLimit1Opt(): Optional<T> {

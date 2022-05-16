@@ -2,7 +2,9 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.util.BeanObjectProxy
+import cn.cloudself.query.util.PureContract
 import cn.cloudself.query.util.parseClass
+import org.jetbrains.annotations.Contract
 
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
@@ -84,6 +86,8 @@ open class QueryPro<
      * kotlin: updateSet().kee(NULL).where.id.equalsTo(1).run()
      * java: updateSet().kee(QueryProConstKt.NULL).where.id().equalsTo(1).run()
      */
+    @PureContract
+    @Contract(pure = true)
     fun updateSet() = createUpdateSetField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = Update(
         data = mutableMapOf<String, Any>(), override = false, id = parseClass(clazz).idColumn
     )))
@@ -97,6 +101,8 @@ open class QueryPro<
      * updateSet(Apple(id = 2021, name = "iPhone13", type = null), true).run()
      * 如果需要更新的值更新的值为null, 会将其更新为null
      */
+    @PureContract
+    @Contract(pure = true)
     @JvmOverloads
     fun updateSet(obj: T, override: @ParameterName("override") Boolean = false): UpdateField<UPDATE_BY_FIELD> {
         val update = Update(data = obj, override = override, id = parseClass(clazz).idColumn)

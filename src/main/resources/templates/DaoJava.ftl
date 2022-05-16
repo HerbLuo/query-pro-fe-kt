@@ -77,6 +77,9 @@ public class ${ClassName} {
     );
 
 <#list m.queryProDelegate as di>
+<#list di.annotations as annotation>
+    ${annotation}
+</#list>
     <#--noinspection FtlReferencesInspection-->
     ${di.modifiers} <@di.returnType?interpret /> ${di.method}(<#list di.args as arg><@arg.variableType?interpret /> <#if arg.vararg>...</#if>${arg.variableName}<#sep>, </#list>) {
         return queryPro.${di.method}(<#list di.args as arg>${arg.variableName}<#sep>, </#list>);
