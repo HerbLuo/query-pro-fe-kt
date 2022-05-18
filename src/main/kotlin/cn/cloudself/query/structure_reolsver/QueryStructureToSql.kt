@@ -145,6 +145,9 @@ class QueryStructureToSql(
             indexedParams.add(value ?: NULL)
             first = false
         }
+        if (first) {
+            throw MissingParameter(".updateSet()没有设置内容或设置的内容全为空")
+        }
         return idWhereClause
     }
 

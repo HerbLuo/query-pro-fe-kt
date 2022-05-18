@@ -130,12 +130,27 @@ class QueryProSql {
         fun <T> queryOne(clazz: Class<T>) = query(clazz).getOrNull(0)
 
         /**
+         * 查询单个对象
+         */
+        fun queryOne() = query().getOrNull(0)
+
+        /**
          * 查询多个对象
          *
          * @param clazz 支持JavaBean, 支持Map, 支持基本类型(Long, String, Date, Enum等, 具体参考[QueryProConfig.addResultSetParser])
          */
         fun <T> query(clazz: Class<T>): List<T> {
             return QueryProConfig.final.queryStructureResolver().resolve(sql, params, clazz, QueryStructureAction.SELECT)
+        }
+
+        /**
+         * 查询多个对象
+         */
+        fun query(): List<Map<String, Any?>> {
+            return query(Map::class.java).map { map ->
+                @Suppress("UNCHECKED_CAST")
+                map as Map<String, Any?>
+            }
         }
 
         /**

@@ -142,7 +142,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         getConnection().autoUse { connection ->
             val preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
             for (params in paramsArr) {
-                setParam(preparedStatement, if (uniqueInsert) params.filterNotNull().toTypedArray() else params, ON_NULL.NULL)
+                setParam(preparedStatement, if (uniqueInsert) params.filterNotNull().toTypedArray() else params, OnNull.NULL)
                 preparedStatement.addBatch()
             }
             preparedStatement.executeBatch()
@@ -181,7 +181,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 logger.debug("sql长度为1")
                 val preparedStatement = connection.prepareStatement(sqlArr[0])
                 for (params in paramsArr) {
-                    setParam(preparedStatement, params, ON_NULL.NULL)
+                    setParam(preparedStatement, params, OnNull.NULL)
                     preparedStatement.addBatch()
                 }
                 preparedStatement.executeBatch()
@@ -194,7 +194,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                         val sql = sqlArr[i]
                         val params = paramsArr[i]
                         val affectRowNum = connection.prepareStatement(sql)
-                            .also { setParam(it, params, ON_NULL.NULL) }
+                            .also { setParam(it, params, OnNull.NULL) }
                             .executeUpdate()
                         affectRows[i] = affectRowNum
                     }
@@ -239,7 +239,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
             val preparedStatement = connection.prepareStatement(sql)
 
-            setParam(preparedStatement, params, if (action == QueryStructureAction.INSERT) ON_NULL.NULL else ON_NULL.BREAK )
+            setParam(preparedStatement, params, if (action == QueryStructureAction.INSERT) OnNull.NULL else OnNull.BREAK)
 
             val resultList = mutableListOf<T>()
 
@@ -277,12 +277,12 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         }
     }
 
-    enum class ON_NULL {
+    enum class OnNull {
         BREAK,
         NULL,
     }
 
-    private fun setParam(preparedStatement: PreparedStatement, params: Array<Any?>, onNull: ON_NULL) {
+    private fun setParam(preparedStatement: PreparedStatement, params: Array<Any?>, onNull: OnNull) {
         for ((i, param) in params.withIndex()) {
             when (param) {
                 NULL              -> preparedStatement.setNull(i + 1, Types.NULL)
@@ -305,7 +305,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
                 is Short          -> preparedStatement.setShort(i + 1, param)
                 is String         -> preparedStatement.setString(i + 1, param)
                 else -> {
-                    if (param == null && onNull == ON_NULL.NULL) {
+                    if (param == null && onNull == OnNull.NULL) {
                         preparedStatement.setNull(i + 1, Types.NULL)
                     } else {
                         throw UnSupportException("equalsTo, in, between等操作传入了不支持的类型{0}", param)
