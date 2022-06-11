@@ -31,28 +31,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
         val (sql, params) = QueryStructureToSql(transformedQueryStructure).toSqlWithIndexedParams()
 
-        val callInfo = if (QueryProConfig.final.printCallByInfo()) {
-            val stacks = Thread.currentThread().stackTrace
-            var callByInfo = ""
-            for (stack in stacks) {
-                val className = stack.className
-                val methodName = stack.methodName
-                if (className.startsWith("cn.cloudself.query.") ||
-                    className.startsWith("java.lang.") ||
-                    className.endsWith("ColumnLimiterField") ||
-                    "selectByPrimaryKey" == methodName ||
-                    "deleteByPrimaryKey" == methodName
-                ) {
-                    continue
-                } else {
-                    callByInfo = "${className}.${methodName}(${stack.lineNumber})"
-                    break
-                }
-            }
-            callByInfo
-        } else {
-            ""
-        }
+        val callInfo = getCallInfo()
 
         if (QueryProConfig.final.printSql()) {
             logger.info(callInfo + "\n" + sql)

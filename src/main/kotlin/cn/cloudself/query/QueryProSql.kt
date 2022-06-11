@@ -1,12 +1,16 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalParameters
+import cn.cloudself.query.util.LogFactory
 import cn.cloudself.query.util.SqlUtils
+import cn.cloudself.query.util.getCallInfo
 import org.intellij.lang.annotations.Language
 import java.io.InputStream
 
 class QueryProSql {
     companion object {
+        private val logger = LogFactory.getLog(QueryProSql::class.java)
+
         /**
          * @param sql language=SQL
          */
@@ -140,6 +144,13 @@ class QueryProSql {
          * @param clazz 支持JavaBean, 支持Map, 支持基本类型(Long, String, Date, Enum等, 具体参考[QueryProConfig.addResultSetParser])
          */
         fun <T> query(clazz: Class<T>): List<T> {
+            if (QueryProConfig.final.printSql()) {
+                logger.info(getCallInfo() + "\n" + sql)
+                logger.info("params: $params")
+            } else {
+                logger.debug("{0}\n{1}", getCallInfo(), sql)
+                logger.debug(params)
+            }
             return QueryProConfig.final.queryStructureResolver().resolve(sql, params, clazz, QueryStructureAction.SELECT)
         }
 
