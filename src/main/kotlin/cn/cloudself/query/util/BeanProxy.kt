@@ -14,6 +14,7 @@ private val logger = LogFactory.getLog(BeanProxy::class.java)
 /**
  * Bean代理，
  * 支持生成三种类型的数据: Map, 基本对象, JavaBean
+ * 主要目的是虚拟出一个对象
  *
  * 使用[BeanProxy.fromClass]构造该对象
  * 使用[BeanProxy.newInstance]创建临时对象[BeanInstance]
@@ -53,6 +54,7 @@ class BeanProxy<T, R>(
     private fun setToResult(toResult: (o: T) -> R) = this.also { this.toResult = toResult }
 
     companion object {
+        @JvmStatic
         @Suppress("UNCHECKED_CAST")
         fun <R> fromClass(clazz: Class<R>): BeanProxy<*, R> {
             val cachedBeanProxy = beanProxyCaches[clazz]
