@@ -1,7 +1,7 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
-import cn.cloudself.query.util.BeanObjectProxy
+import cn.cloudself.query.util.ObjectUtil
 import cn.cloudself.query.util.PureContract
 import cn.cloudself.query.util.parseClass
 import org.jetbrains.annotations.Contract
@@ -37,14 +37,13 @@ open class QueryPro<
 
     fun selectByObj(obj: T): SELECT_BY_FIELD {
         val parsedClass = parseClass(clazz)
-        val objectProxy = BeanObjectProxy.fromObject(obj)
 
         val javaNameMapDbName = mutableMapOf<String, String>()
         for ((_, column) in parsedClass.columns) {
             javaNameMapDbName[column.javaName] = column.dbName
         }
 
-        val whereClauses = objectProxy.toSequence().toList().also { println(it) }
+        val whereClauses = ObjectUtil.toSequence(obj).toList().also { println(it) }
             .map { column -> column.dbName to column.value }
             .filter { (_, v) -> v != null }
             .map { (k, v) ->

@@ -2,26 +2,19 @@ package cn.cloudself.query.util
 
 import cn.cloudself.query.exception.UnSupportException
 
-
 data class ParsedObjectColumn(
     val dbName: String,
     val javaName: String,
     val value: Any?,
 )
 
-class BeanObjectProxy private constructor(
-    private val obj: Any,
-    private val parsedClass: ParsedClass?
-) {
-    companion object {
-        @JvmStatic
-        fun fromObject(obj: Any) = BeanObjectProxy(obj, if (obj is Map<*, *>) null else parseClass(obj.javaClass))
-
-        @JvmStatic
-        fun fromObject(obj: Any, parsedClass: ParsedClass) = BeanObjectProxy(obj, parsedClass)
-    }
-
-    fun toSequence(): Sequence<ParsedObjectColumn> {
+object ObjectUtil {
+    @JvmStatic
+    @JvmOverloads
+    fun toSequence(
+        obj: Any,
+        parsedClass: ParsedClass? = if (obj is Map<*, *>) null else parseClass(obj.javaClass)
+    ): Sequence<ParsedObjectColumn> {
         val columns = parsedClass?.columns
         if (columns == null) {
             if (obj !is Map<*, *>) {
@@ -49,5 +42,28 @@ class BeanObjectProxy private constructor(
                 }
             }
         }
+    }
+
+    /**
+     * 使用Java属性名获取值, 亦支持Map
+     */
+    @JvmStatic
+    fun getValueByPropertyName(obj: Any, propertyName: String): Any? {
+        if (obj is Map<*, *>) {
+            return obj[propertyName]
+        }
+        return parseClass(obj.javaClass).getColumnByJavaPropertyName(propertyName)?.getter?.invoke(obj)
+    }
+
+    /**
+     * 对于@Table对象使用数据库字段名(由@Column注解)获取值
+     * 对于其他JavaBean对象使用Java属性名转为snack_case获取值
+     * 不支持Map
+     *
+     * @param fieldName 数据库字段名或snack_case的Java属性名
+     */
+    @JvmStatic
+    fun getValueByFieldName(obj: Any, fieldName: String): Any? {
+        return parseClass(obj.javaClass).getColumnDbFieldName(fieldName)?.getter?.invoke(obj)
     }
 }

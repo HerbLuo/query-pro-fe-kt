@@ -3,7 +3,7 @@ package cn.cloudself.query.structure_reolsver
 import cn.cloudself.query.*
 import cn.cloudself.query.exception.MissingParameter
 import cn.cloudself.query.exception.UnSupportException
-import cn.cloudself.query.util.BeanObjectProxy
+import cn.cloudself.query.util.ObjectUtil
 import java.lang.StringBuilder
 
 class QueryStructureToSql(
@@ -125,7 +125,7 @@ class QueryStructureToSql(
         val override = update.override
 
         var first = true
-        val columns = BeanObjectProxy.fromObject(data).toSequence()
+        val columns = ObjectUtil.toSequence(data)
         val idColumn = update.id
         var idWhereClause: WhereClause? = null
         for (column in columns) {
@@ -162,7 +162,6 @@ class QueryStructureToSql(
             buildField(field, upper)
             sql.append(' ', operator, ' ')
 
-            arrayOf("").toList()
             if (value is List<*> || value is Array<*>) {
                 sql.append('(')
                 val lastIndexOfValues: Int

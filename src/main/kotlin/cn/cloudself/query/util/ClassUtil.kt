@@ -21,7 +21,10 @@ data class ParsedClass(
     val columns: Map<String, ParsedColumn>,
     val idColumn: String?,
     val idColumnType: Class<*>?,
-)
+) {
+    fun getColumnDbFieldName(fieldName: String) = columns[fieldName]
+    fun getColumnByJavaPropertyName(propertyName: String) = columns.values.find { it.javaName == propertyName }
+}
 
 @Suppress("FunctionName")
 private fun to_snake_case(javaName: String) =
