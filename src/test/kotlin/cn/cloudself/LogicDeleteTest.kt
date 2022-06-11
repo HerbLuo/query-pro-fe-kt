@@ -35,5 +35,8 @@ class LogicDeleteTest {
         expectSqlResult("UPDATE `setting` SET `deleted` = ? WHERE `setting`.`id` = ?", listOf(true, 1))
         SettingQueryPro.deleteBy().id.equalsTo(1).run().also { assert(it) }
         SettingQueryPro.selectBy().id.equalsTo(1).runLimit1().also { assertEquals(it, null) }
+
+        expectSqlResult("SELECT * FROM `setting` WHERE  ( `setting`.`id` = ? OR `setting`.`kee` = ? )  AND `setting`.`deleted` = ? LIMIT 1", listOf(1, "lang", false))
+        SettingQueryPro.selectBy().id.equalsTo(1).or().kee.equalsTo("lang").runLimit1()
     }
 }

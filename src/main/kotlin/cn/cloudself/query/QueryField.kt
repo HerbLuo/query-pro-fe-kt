@@ -102,6 +102,12 @@ abstract class FinalSelectField<
         }
     }
 
+    fun selectAll() = run()
+
+    fun selectOne() = runLimit1()
+
+    fun selectOneOpt() = runLimit1Opt()
+
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsList(): List<T> {
         return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructure), field_clazz)
@@ -130,7 +136,13 @@ abstract class FinalSelectField<
                 val mainTable = queryStructure.from.main
                 val hasDeletedField = parseClass(field_clazz).columns[logicDeleteField] != null
                 if (hasDeletedField) {
-                    queryStructure.copy(where = queryStructure.where + WhereClause(Field(mainTable, logicDeleteField), "=", false))
+                    val hasOrClause = queryStructure.where.find { it.operator == OP_OR } != null
+                    val noDeletedWhereClause = WhereClause(Field(mainTable, logicDeleteField), "=", false)
+                    if (hasOrClause) {
+                        queryStructure.copy(where = listOf(WhereClause(operator = "("))  + queryStructure.where + WhereClause(operator = ")") + noDeletedWhereClause)
+                    } else {
+                        queryStructure.copy(where = queryStructure.where + noDeletedWhereClause)
+                    }
                 } else {
                     queryStructure
                 }
@@ -198,6 +210,10 @@ abstract class QueryField<
 
     fun parRight(): WHERE_FIELD {
         return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = ")")))
+    }
+
+    fun sql(sql: String): WHERE_FIELD {
+        return create_where_field(queryStructure.copy(where = queryStructure.where + WhereClause(operator = "", sql = sql)))
     }
 
     fun andForeignField(vararg fields: QueryField<*, *, *, *, *, *>): WHERE_FIELD {
