@@ -1,6 +1,7 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalParameters
+import cn.cloudself.query.util.onlyAZaz_
 import org.jetbrains.annotations.Contract
 
 class QueryKeywords<F : QueryField<*, *, *, *, *, *>>(
@@ -33,8 +34,15 @@ class QueryKeywords<F : QueryField<*, *, *, *, *, *>>(
     fun graterThanOrEqual(value: Any) = with(WhereClause(field, ">=", value))
     @Contract(pure = true)
     fun like(str: String) = with(WhereClause(field, "like", str))
+//    @Contract(pure = true)
+//    fun `in`(vararg values: Any) = if (values.isEmpty()) throw IllegalParameters("in查询不能设置空参数") else with(WhereClause(field, "in", values))
     @Contract(pure = true)
-    fun `in`(vararg values: Any) = if (values.isEmpty()) throw IllegalParameters("in查询不能设置空参数") else with(WhereClause(field, "in", values))
+    fun `in`(vararg values: Any) =
+        if (values.isEmpty()) {
+            val table = field.table
+            with(WhereClause(null, operator = "", sql = "false/* WARN: ${if (table == null) "" else onlyAZaz_(table)}${if (table == null) "" else "."}${onlyAZaz_(field.column)} in empty*/"))
+        }
+        else with(WhereClause(field, "in", values))
 //    @Contract(pure = true)
 //    fun `in`(values: List<Any>) = if (values.isEmpty()) throw IllegalParameters("in查询不能设置空参数") else with(WhereClause(field, "in", values))
     @Contract(pure = true)
@@ -61,7 +69,7 @@ class QueryWithNotKeywords<F : QueryField<*, *, *, *, *, *>>(
     @Contract(pure = true)
     fun like(str: String) = with(WhereClause(field, "not like", str))
     @Contract(pure = true)
-    fun `in`(vararg values: Any) = with(WhereClause(field, "not in", values))
+    fun `in`(vararg values: Any) = if (values.isEmpty()) throw IllegalParameters("not in查询不能设置空参数") else with(WhereClause(field, "not in", values))
     @Contract(pure = true)
     fun nul() = with(WhereClause(field = field, operator = "is not null"))
 
@@ -78,7 +86,9 @@ class QueryIgnoreCaseKeywords<F : QueryField<*, *, *, *, *, *>>(
     @Contract(pure = true)
     fun like(str: String) = with(WhereClause(upperField(field), "like", str, WhereClauseCommands.UPPER_CASE))
     @Contract(pure = true)
-    fun `in`(vararg values: Any) = with(WhereClause(upperField(field), "in", values, WhereClauseCommands.UPPER_CASE))
+    fun `in`(vararg values: Any) =
+        if (values.isEmpty()) throw IllegalParameters("in查询+ignore case不能设置空参数")
+        else with(WhereClause(upperField(field), "in", values, WhereClauseCommands.UPPER_CASE))
 
     private fun upperField(field: Field) = Field(table = field.table, column = field.column)
     private fun with(whereClause: WhereClause) = createQueryField(queryStructure.copy(where = queryStructure.where + whereClause))
