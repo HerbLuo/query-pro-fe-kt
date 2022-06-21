@@ -3,7 +3,6 @@ package cn.cloudself.query.util
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import org.springframework.stereotype.Component
-import java.lang.Exception
 
 @Component
 class SpringUtils: ApplicationContextAware {
@@ -11,6 +10,16 @@ class SpringUtils: ApplicationContextAware {
     companion object {
         private var applicationContext: ApplicationContext? = null
         private val logger = LogFactory.getLog(SpringUtils::class.java)
+
+        @JvmStatic
+        fun getBean(name: String): Any? {
+            return try {
+                applicationContext?.getBean(name)
+            } catch (e: Exception) {
+                logger.warn("获取bean失败" + e.message)
+                null
+            }
+        }
 
         @JvmStatic
         fun <T>getBean(beanType: Class<T>): T? {
