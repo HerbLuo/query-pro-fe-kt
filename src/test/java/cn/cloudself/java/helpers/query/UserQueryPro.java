@@ -110,10 +110,12 @@ public class UserQueryPro {
         return queryPro.selectByPrimaryKey(value);
     }
 
+    @Contract(pure = true)
     public static __Impl.UpdateSetField updateSet() {
         return queryPro.updateSet();
     }
 
+    @Contract(pure = true)
     public static UpdateField<__Impl.WhereField<Boolean, Boolean>> updateSet(User obj, boolean override) {
         return queryPro.updateSet(obj, override);
     }
@@ -178,6 +180,12 @@ public class UserQueryPro {
             public WhereField<T, RUN_RES> age(List<Integer> ageList) { return createWhereField("age", ageList.toArray(new Object[0])); }
             @Contract(pure = true)
             public WhereField<T, RUN_RES> age(Integer... ages) { return createWhereField("age", ages); }
+            @Contract(pure = true)
+            public QueryKeywords<WhereField<T, RUN_RES>> deleted() { return createWhereField("deleted"); }
+            @Contract(pure = true)
+            public WhereField<T, RUN_RES> deleted(List<Boolean> deletedList) { return createWhereField("deleted", deletedList.toArray(new Object[0])); }
+            @Contract(pure = true)
+            public WhereField<T, RUN_RES> deleted(Boolean... deleteds) { return createWhereField("deleted", deleteds); }
 
             @Contract(pure = true)
             public WhereField<T, RUN_RES> take(Function<WhereField<T, RUN_RES>, WhereField<T, RUN_RES>> factor) {
@@ -202,6 +210,8 @@ public class UserQueryPro {
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> name() { return createOrderByField("name"); }
             @Contract(pure = true)
             public QueryOrderByKeywords<OrderByField<T, RUN_RES>> age() { return createOrderByField("age"); }
+            @Contract(pure = true)
+            public QueryOrderByKeywords<OrderByField<T, RUN_RES>> deleted() { return createOrderByField("deleted"); }
 
             @Contract(pure = true)
             public OrderByField<T, RUN_RES> take(Function<OrderByField<T, RUN_RES>, OrderByField<T, RUN_RES>> factor) {
@@ -219,6 +229,7 @@ public class UserQueryPro {
             public ListEx<Long> id() { return new ListEx<>(super.getColumn(createField("id"), Long.class)); }
             public ListEx<String> name() { return new ListEx<>(super.getColumn(createField("name"), String.class)); }
             public ListEx<Integer> age() { return new ListEx<>(super.getColumn(createField("age"), Integer.class)); }
+            public ListEx<Boolean> deleted() { return new ListEx<>(super.getColumn(createField("deleted"), Boolean.class)); }
 
             public <R> R take(Function<ColumnLimiterField<T, RUN_RES>, R> factor) {
                 return factor.apply(this);
@@ -255,6 +266,8 @@ public class UserQueryPro {
             public ColumnsLimiterField<T, RUN_RES> name() { return createColumnsLimiterField("name"); }
             @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> age() { return createColumnsLimiterField("age"); }
+            @Contract(pure = true)
+            public ColumnsLimiterField<T, RUN_RES> deleted() { return createColumnsLimiterField("deleted"); }
 
             @Contract(pure = true)
             public ColumnsLimiterField<T, RUN_RES> take(Function<ColumnsLimiterField<T, RUN_RES>, ColumnsLimiterField<T, RUN_RES>> factor) {
@@ -287,6 +300,8 @@ public class UserQueryPro {
             public UpdateSetField name(Object name) { return createUpdateSetField("name", name); }
             @Contract(pure = true)
             public UpdateSetField age(Object age) { return createUpdateSetField("age", age); }
+            @Contract(pure = true)
+            public UpdateSetField deleted(Object deleted) { return createUpdateSetField("deleted", deleted); }
 
             @Contract(pure = true)
             public UpdateSetField take(Function<UpdateSetField, UpdateSetField> factor) {
@@ -302,6 +317,7 @@ public class UserQueryPro {
             public FieldsGenerator id() { this.getFields().add(createField("id")); return this; }
             public FieldsGenerator name() { this.getFields().add(createField("name")); return this; }
             public FieldsGenerator age() { this.getFields().add(createField("age")); return this; }
+            public FieldsGenerator deleted() { this.getFields().add(createField("deleted")); return this; }
         }
     }
 }

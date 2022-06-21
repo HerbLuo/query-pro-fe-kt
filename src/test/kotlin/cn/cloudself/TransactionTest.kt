@@ -32,21 +32,21 @@ class TransactionTest {
 
         prepareData()
 
-        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 18)), users) }
+        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 18, false)), users) }
 
         try {
             QueryProTransaction.use {
                 expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(19, 1))
                 UserQueryPro.updateSet(User(age = 19)).where.id.equalsTo(1).run().also { assert(it) }
-                UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 19)), users) }
+                UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 19, false)), users) }
 
                 expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 2))
                 UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(2).run().also { assert(it) }
-                UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20)), users) }
+                UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20, false)), users) }
 
                 expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 1))
                 UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(1).run().also { assert(it) }
-                UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20)), users) }
+                UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20, false)), users) }
 
                 throw RuntimeException("test")
             }
@@ -54,25 +54,25 @@ class TransactionTest {
             e.printStackTrace()
         }
 
-        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 18)), users) }
-        UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 19)), users) }
+        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 18, false)), users) }
+        UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 19, false)), users) }
 
         QueryProTransaction.use {
             expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(19, 1))
             UserQueryPro.updateSet(User(age = 19)).where.id.equalsTo(1).run().also { assert(it) }
-            UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 19)), users) }
+            UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 19, false)), users) }
 
             expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 2))
             UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(2).run().also { assert(it) }
-            UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20)), users) }
+            UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20, false)), users) }
 
             expectSqlResult("UPDATE `user` SET `age` = ? WHERE `user`.`id` = ?", listOf(20, 1))
             UserQueryPro.updateSet(User(age = 20)).where.id.equalsTo(1).run().also { assert(it) }
-            UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20)), users) }
+            UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20, false)), users) }
         }
 
 
-        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20)), users) }
-        UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20)), users) }
+        UserQueryPro.selectBy().id.equalsTo(1).run().also { users: List<User> -> assertEquals(listOf(User(1, "hb", 20, false)), users) }
+        UserQueryPro.selectBy().id.equalsTo(2).run().also { users: List<User> -> assertEquals(listOf(User(2, "herb", 20, false)), users) }
     }
 }

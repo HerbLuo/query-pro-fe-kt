@@ -37,10 +37,10 @@ class SelectTest {
 
         prepareData()
 
-        val user1 = User(1, "hb", 18)
-        val user2 = User(2, "hb", 10)
-        val user3 = User(3, "herb", 18)
-        val user4 = User(4, "l", null)
+        val user1 = User(1, "hb", 18, false)
+        val user2 = User(2, "hb", 10, false)
+        val user3 = User(3, "herb", 18, false)
+        val user4 = User(4, "l", null, false)
 
         expectSqlResult("SELECT * FROM `user` WHERE `id` = ? LIMIT 1", listOf(1))
         UserQueryPro.selectByPrimaryKey(1).also { user: User? -> assertEquals(user, user1) }
@@ -112,14 +112,14 @@ class SelectTest {
 
         expectSqlResult("SELECT `user`.`id`, `user`.`age` FROM `user` WHERE `user`.`id` = ?", listOf(1))
         UserQueryPro.selectBy().id.equalsTo(1).columnsLimiter().id().age().run()
-            .also { users: List<User> -> assertEquals(users, listOf(user1.copy(name = null))) }
+            .also { users: List<User> -> assertEquals(users, listOf(user1.copy(name = null, deleted = null))) }
 
         expectSqlResult("SELECT `user`.`id`, `user`.`name` FROM `user` ORDER BY `user`.`age` DESC, `user`.`id` DESC LIMIT 1", listOf())
         UserQueryPro
             .orderBy().age().desc().id().desc().limit(1)
             .columnsLimiter().id().name()
             .run()
-            .also { users: List<User> -> assertEquals(users, listOf(user3.copy(age = null))) }
+            .also { users: List<User> -> assertEquals(users, listOf(user3.copy(age = null, deleted = null))) }
 
         expectSqlResult("SELECT * FROM `setting` WHERE `user_id` = ? AND `kee` = ? LIMIT 1", listOf(1, "theme"))
         SettingQueryPro

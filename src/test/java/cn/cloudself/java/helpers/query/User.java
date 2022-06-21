@@ -26,6 +26,10 @@ public class User implements Serializable {
     @Column(name = "age")
     private Integer age;
 
+    /**  */
+    @Column(name = "deleted")
+    private Boolean deleted;
+
     public Long getId() {
         return id;
     }
@@ -53,17 +57,26 @@ public class User implements Serializable {
         return this;
     }
 
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public User setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(age, user.age);
+        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(age, user.age) && Objects.equals(deleted, user.deleted);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, age);
+        return Objects.hash(id, name, age, deleted);
     }
 
     @Override
@@ -72,6 +85,7 @@ public class User implements Serializable {
                 ", id=" + id +
                 ", name='" + name + '\'' +
                 ", age=" + age +
+                ", deleted=" + deleted +
                 '}';
     }
 

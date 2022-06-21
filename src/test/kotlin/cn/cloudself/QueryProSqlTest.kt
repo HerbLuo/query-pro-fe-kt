@@ -41,8 +41,8 @@ class QueryProSqlTest {
 
         prepareData()
 
-        val user1 = User(1, "hb", 18)
-        val user2 = User(2, "hb", 10)
+        val user1 = User(1, "hb", 18, false)
+        val user2 = User(2, "hb", 10, false)
 
         val setting1 = Setting(1, 1, "language", "English", false)
 
@@ -68,9 +68,9 @@ class QueryProSqlTest {
 
         println("单条查询语句 查出单条数据")
         QueryProSql.create("SELECT * FROM user WHERE id = 3").queryOne(User::class.java)
-            .also { user: User? -> assertEquals(user, User(3, "herb", 18)) }
+            .also { user: User? -> assertEquals(user, User(3, "herb", 18, false)) }
         QueryProSql.create("SELECT * FROM user WHERE id = 4").queryOne(User::class.java)
-            .also { user: User? -> assertEquals(user, User(4, "herb", 20)) }
+            .also { user: User? -> assertEquals(user, User(4, "herb", 20, false)) }
 
         println("批量更新接口 单条语句多参数")
         val usersForBatchInsertByASqlAndMulParams = listOf(User(5, "mul-hb", 18), User(6, "mul-hb", 19), User(null, "mul-hb", 20))
@@ -115,7 +115,7 @@ class QueryProSqlTest {
 
         println("批量更新语句更新成功")
         QueryProSql.create("SELECT * FROM user WHERE id = 5").queryOne(User::class.java)
-            .also { user: User? -> assertEquals(user, User(5, "mul-hb", 17)) }
+            .also { user: User? -> assertEquals(user, User(5, "mul-hb", 17, false)) }
 
         println("user表总共有9条数据")
         QueryProSql.create("SELECT count(*) FROM user").queryOne(Int::class.java)

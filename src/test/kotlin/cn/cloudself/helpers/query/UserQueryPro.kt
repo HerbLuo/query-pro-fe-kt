@@ -23,6 +23,9 @@ data class User(
     /**  */
     @Column(name = "age")
     var age: Int? = null,
+    /**  */
+    @Column(name = "deleted")
+    var deleted: Boolean? = null,
 )
 
 class ImplUserQueryPro {
@@ -65,6 +68,11 @@ class ImplUserQueryPro {
         fun age(ageList: List<Int>) = createWhereField("age", ageList.toTypedArray())
         @Contract(pure = true)
         fun age(vararg ages: Int) = createWhereField("age", ages.toTypedArray())
+        val deleted = createWhereField("deleted")
+        @Contract(pure = true)
+        fun deleted(deletedList: List<Boolean>) = createWhereField("deleted", deletedList.toTypedArray())
+        @Contract(pure = true)
+        fun deleted(vararg deleteds: Boolean) = createWhereField("deleted", deleteds.toTypedArray())
     }
 
     class OrderByField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -79,6 +87,8 @@ class ImplUserQueryPro {
         fun name() = createOrderByField("name")
         @Contract(pure = true)
         fun age() = createOrderByField("age")
+        @Contract(pure = true)
+        fun deleted() = createOrderByField("deleted")
     }
 
     class ColumnLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -87,6 +97,7 @@ class ImplUserQueryPro {
         fun id() = getColumn(createField("id"), Long::class.java)
         fun name() = getColumn(createField("name"), String::class.java)
         fun age() = getColumn(createField("age"), Int::class.java)
+        fun deleted() = getColumn(createField("deleted"), Boolean::class.java)
     }
 
     class ColumnsLimiterField<T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class<T>): CommonField<T, RUN_RES>(queryStructure, field_clazz) {
@@ -101,6 +112,8 @@ class ImplUserQueryPro {
         fun name() = createColumnsLimiterField("name")
         @Contract(pure = true)
         fun age() = createColumnsLimiterField("age")
+        @Contract(pure = true)
+        fun deleted() = createColumnsLimiterField("deleted")
     }
 
     class UpdateSetField(private val queryStructure: QueryStructure): UpdateField<WhereField<Boolean, Boolean>>(queryStructure, { qs: QueryStructure -> WhereField(qs, Boolean::class.java) }) {
@@ -115,6 +128,8 @@ class ImplUserQueryPro {
         fun name(name: Any) = createUpdateSetField("name", name)
         @Contract(pure = true)
         fun age(age: Any) = createUpdateSetField("age", age)
+        @Contract(pure = true)
+        fun deleted(deleted: Any) = createUpdateSetField("deleted", deleted)
     }
 
 
@@ -124,6 +139,7 @@ class ImplUserQueryPro {
         fun id() = this.also { fields.add(createField("id")) }
         fun name() = this.also { fields.add(createField("name")) }
         fun age() = this.also { fields.add(createField("age")) }
+        fun deleted() = this.also { fields.add(createField("deleted")) }
     }
 }
 

@@ -40,10 +40,10 @@ public class SelectTest {
 
         prepareData();
 
-        User user1 = new User().setId(1L).setName("hb").setAge(18);
-        User user2 = new User().setId(2L).setName("hb").setAge(10);
-        User user3 = new User().setId(3L).setName("herb").setAge(18);
-        User user4 = new User().setId(4L).setName("l").setAge(null);
+        User user1 = new User().setId(1L).setName("hb").setAge(18).setDeleted(false);
+        User user2 = new User().setId(2L).setName("hb").setAge(10).setDeleted(false);
+        User user3 = new User().setId(3L).setName("herb").setAge(18).setDeleted(false);
+        User user4 = new User().setId(4L).setName("l").setAge(null).setDeleted(false);
 
 
         expectSqlResult("SELECT * FROM `user` WHERE `id` = ? LIMIT 1", Helpers.listOf(1));
@@ -66,7 +66,7 @@ public class SelectTest {
         final List<User> usersRun3 = UserQueryPro.selectBy().name().in("hb", "herb").run();
         assertEqualsForJava(usersRun3, Helpers.listOf(user1, user2, user3));
 
-        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? or `user`.`age` = ?", Helpers.listOf(1, 10));
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? OR `user`.`age` = ?", Helpers.listOf(1, 10));
         final List<User> usersRun4 = UserQueryPro
                 .selectBy().id().is().equalsTo(1)
                 .or().age().equalsTo(10)
@@ -85,7 +85,7 @@ public class SelectTest {
         final List<User> usersRun7 = UserQueryPro.selectBy().age().is().nul().run();
         assertEqualsForJava(usersRun7, Helpers.listOf(user4));
 
-        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? or (`user`.`age` = ? AND `user`.`name` like ?)", Helpers.listOf(1, 18, "%rb%"));
+        expectSqlResult("SELECT * FROM `user` WHERE `user`.`id` = ? OR (`user`.`age` = ? AND `user`.`name` like ?)", Helpers.listOf(1, 18, "%rb%"));
         final List<User> usersRun8 = UserQueryPro
                 .selectBy().id().is().equalsTo(1)
                 .or((it) -> it.age().equalsTo(18).and().name().like("%rb%"))
