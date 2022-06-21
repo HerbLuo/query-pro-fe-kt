@@ -141,7 +141,9 @@ open class QueryPro<
      * 批量插入
      */
     @Suppress("UNCHECKED_CAST")
-    fun insert(collection: Collection<T>) = QueryProConfig.final.queryStructureResolver().insert(collection, clazz) as List<ID?>
+    fun insert(collection: Collection<T>) = switchToCurrentDataSource(payload.dataSource) {
+        insert(collection, clazz) as List<ID?>
+    }
 
     /**
      * 指定数据源

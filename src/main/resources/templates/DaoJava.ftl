@@ -21,9 +21,6 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class ${ClassName} {
-
-    private static DataSource defaultDataSource() { return null; }
-
     private static QueryStructure defQueryStructure() {
         final QueryStructure queryStructure = new QueryStructure();
         queryStructure.setFrom(new QueryStructureFrom(__Impl.TABLE_NAME, new ArrayList<>()));

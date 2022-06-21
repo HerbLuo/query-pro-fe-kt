@@ -4,13 +4,10 @@ import cn.cloudself.java.helpers.query.Setting;
 import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
 import cn.cloudself.query.util.ListEx;
-import cn.cloudself.query.util.SpringUtils;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.DataSource;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.List;
@@ -152,10 +149,9 @@ public class SettingQueryPro {
             @Override
             protected Function1<QueryStructure, ColumnsLimiterField<T, RUN_RES>> getCreate_columns_limiter_field() { return qs -> new ColumnsLimiterField<>(qs, super.getField_clazz()); }
 
+            @NotNull
             @Override
-            protected QueryPayload get_payload() {
-                return queryPro.getPayload();
-            }
+            protected QueryPayload get_payload() { return queryPro.getPayload(); }
         }
 
         public static class WhereField<T, RUN_RES> extends CommonField<T, RUN_RES> {
