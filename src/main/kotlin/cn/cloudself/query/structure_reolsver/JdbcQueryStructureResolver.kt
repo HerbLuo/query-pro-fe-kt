@@ -17,6 +17,16 @@ import java.util.*
 import javax.sql.DataSource
 
 class JdbcQueryStructureResolver: IQueryStructureResolver {
+    private var dataSourceThreadLocal = ThreadLocal<DataSource?>()
+
+    override fun <R> switchDataSource(dataSource: DataSource, resolve: (resolver: IQueryStructureResolver) -> R): R {
+        return try {
+            dataSourceThreadLocal.set(dataSource)
+            resolve(this)
+        } finally {
+            dataSourceThreadLocal.remove()
+        }
+    }
 
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
         var transformedQueryStructure = queryStructure
@@ -352,7 +362,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     }
 
     private fun getConnection(): Connection {
-        var dataSource = QueryProConfig.final.dataSourceNullable()
+        var dataSource = dataSourceThreadLocal.get() ?: QueryProConfig.final.dataSourceNullable()
         if (dataSource == null) {
             dataSource = try {
                 SpringUtils.getBean(DataSource::class.java)

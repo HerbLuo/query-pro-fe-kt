@@ -70,6 +70,10 @@ public class UserQueryPro {
             UserQueryPro::createQuery
     );
 
+    public static void assignDataSource(javax.sql.DataSource dataSource) {
+        queryPro.assignDataSource(dataSource);
+    }
+
     public static __Impl.WhereField<Boolean, Boolean> deleteBy() {
         return queryPro.deleteBy();
     }
@@ -144,6 +148,10 @@ public class UserQueryPro {
             @NotNull
             @Override
             protected Function1<QueryStructure, ColumnsLimiterField<T, RUN_RES>> getCreate_columns_limiter_field() { return qs -> new ColumnsLimiterField<>(qs, super.getField_clazz()); }
+
+            @NotNull
+            @Override
+            protected QueryPayload get_payload() { return queryPro.getPayload(); }
         }
 
         public static class WhereField<T, RUN_RES> extends CommonField<T, RUN_RES> {

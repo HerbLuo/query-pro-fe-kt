@@ -12,6 +12,7 @@ import ${m.entityPackage}.${EntityName}
 </#if>import cn.cloudself.query.*
 import org.jetbrains.annotations.Contract;
 
+
 class Impl${ClassName} {
     companion object {
         const val TABLE_NAME = "${m.db_name}"
@@ -26,6 +27,7 @@ class Impl${ClassName} {
             { queryStructure -> ColumnLimiterField(queryStructure, field_clazz) }
         override val create_columns_limiter_field: CreateQueryField${"<"}ColumnsLimiterField${"<"}T, RUN_RES>> =
             { queryStructure -> ColumnsLimiterField(queryStructure, field_clazz) }
+        override fun get_payload() = ${ClassName}.payload
     }
 
     class WhereField${"<"}T, RUN_RES> constructor(queryStructure: QueryStructure, field_clazz: Class${"<"}T>): CommonField${"<"}T, RUN_RES>(queryStructure, field_clazz) {

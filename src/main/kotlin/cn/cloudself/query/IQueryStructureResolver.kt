@@ -1,8 +1,14 @@
 package cn.cloudself.query
 
 import org.intellij.lang.annotations.Language
+import javax.sql.DataSource
 
 interface IQueryStructureResolver {
+    /**
+     * 临时切换数据源
+     */
+    fun <R> switchDataSource(dataSource: DataSource, resolve: (resolver: IQueryStructureResolver) -> R): R
+
     /**
      * 将QueryStructure解析至SQL并执行
      *

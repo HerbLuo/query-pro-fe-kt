@@ -21,6 +21,9 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class ${ClassName} {
+
+    private static DataSource defaultDataSource() { return null; }
+
     private static QueryStructure defQueryStructure() {
         final QueryStructure queryStructure = new QueryStructure();
         queryStructure.setFrom(new QueryStructureFrom(__Impl.TABLE_NAME, new ArrayList<>()));
@@ -82,7 +85,7 @@ public class ${ClassName} {
 </#list>
     <#--noinspection FtlReferencesInspection-->
     ${di.modifiers} <@di.returnType?interpret /> ${di.method}(<#list di.args as arg><@arg.variableType?interpret /> <#if arg.vararg>...</#if>${arg.variableName}<#sep>, </#list>) {
-        return queryPro.${di.method}(<#list di.args as arg>${arg.variableName}<#sep>, </#list>);
+        <#if di.returnType != 'void'>return </#if>queryPro.${di.method}(<#list di.args as arg>${arg.variableName}<#sep>, </#list>);
     }
 
 </#list>
@@ -110,6 +113,10 @@ public class ${ClassName} {
             @NotNull
             @Override
             protected Function1${"<"}QueryStructure, ColumnsLimiterField${"<"}T, RUN_RES>> getCreate_columns_limiter_field() { return qs -> new ColumnsLimiterField<>(qs, super.getField_clazz()); }
+
+            @NotNull
+            @Override
+            protected QueryPayload get_payload() { return queryPro.getPayload(); }
         }
 
         public static class WhereField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {

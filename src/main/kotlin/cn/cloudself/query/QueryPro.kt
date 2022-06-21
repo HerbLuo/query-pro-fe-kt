@@ -5,6 +5,7 @@ import cn.cloudself.query.util.ObjectUtil
 import cn.cloudself.query.util.PureContract
 import cn.cloudself.query.util.parseClass
 import org.jetbrains.annotations.Contract
+import javax.sql.DataSource
 
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 
@@ -25,6 +26,8 @@ open class QueryPro<
     private val createUpdateByField: CreateQueryField<UPDATE_BY_FIELD>,
     private val createDeleteByField: CreateQueryField<DELETE_BY_FIELD>,
 ) {
+    val payload: QueryPayload = QueryPayload()
+
     /**
      * 查询操作
      */
@@ -33,7 +36,7 @@ open class QueryPro<
     /**
      * 查询操作
      */
-    fun selectBy() = createSelectByField(queryStructure.copy(action = QueryStructureAction.SELECT))
+    fun selectBy() = createSelectByField(queryStructure.apply { action = QueryStructureAction.SELECT })
 
     fun selectByObj(obj: T): SELECT_BY_FIELD {
         val parsedClass = parseClass(clazz)
@@ -139,4 +142,11 @@ open class QueryPro<
      */
     @Suppress("UNCHECKED_CAST")
     fun insert(collection: Collection<T>) = QueryProConfig.final.queryStructureResolver().insert(collection, clazz) as List<ID?>
+
+    /**
+     * 指定数据源
+     */
+    fun assignDataSource(dataSource: DataSource?) {
+        payload.dataSource = dataSource
+    }
 }

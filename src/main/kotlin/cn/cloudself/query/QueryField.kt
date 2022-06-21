@@ -24,6 +24,8 @@ abstract class FinalSelectField<
     protected abstract val create_columns_limiter_field: CreateQueryField<COLUMNS_LIMITER_FILED>
     @Suppress("FunctionName")
     protected abstract fun create_field(qs: QueryStructure): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>
+    @Suppress("FunctionName")
+    protected abstract fun get_payload(): QueryPayload
 
     fun limit(limit: Int): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
         return limit(0, limit)
@@ -71,7 +73,9 @@ abstract class FinalSelectField<
         }
         val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
 
-        return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructureForCount), Int::class.java)[0]
+        return switchToCurrentDataSource {
+            resolve(preRun(queryStructureForCount), Int::class.java)[0]
+        }
     }
 
     fun runLimit1Opt(): Optional<T> {
@@ -97,7 +101,7 @@ abstract class FinalSelectField<
                     results[0] as RUN_RES
             }
             QueryStructureAction.INSERT -> {
-                throw IllegalCall("run方法暂不支持INSERT")
+                throw IllegalCall("run方法不支持INSERT")
             }
         }
     }
@@ -110,18 +114,22 @@ abstract class FinalSelectField<
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsList(): List<T> {
-        return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructure), field_clazz)
+        return switchToCurrentDataSource {
+            resolve(preRun(queryStructure), field_clazz)
+        }
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsMap(): List<Map<String, Any?>> {
-        return QueryProConfig.final.queryStructureResolver().resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
+        return switchToCurrentDataSource {
+            resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
+        }
     }
 
     fun pageable(): Pageable<T> {
         return Pageable.create(
             { count() },
-            { start, limit -> QueryProConfig.final.queryStructureResolver().resolve(queryStructure.copy(limit = start to limit), field_clazz) }
+            { start, limit -> switchToCurrentDataSource { resolve(queryStructure.copy(limit = start to limit), field_clazz) } }
         )
     }
 
@@ -149,6 +157,18 @@ abstract class FinalSelectField<
             }
         }
         return queryStructure
+    }
+
+    private fun <R> switchToCurrentDataSource(resolve: IQueryStructureResolver.() -> R): R {
+        val dataSource = get_payload().dataSource
+        val resolver = QueryProConfig.final.queryStructureResolver()
+        return if (dataSource == null) {
+            resolve(resolver)
+        } else {
+            resolver.switchDataSource(dataSource) {
+                resolve(it)
+            }
+        }
     }
 }
 

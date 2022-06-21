@@ -4,10 +4,13 @@ import cn.cloudself.java.helpers.query.Setting;
 import cn.cloudself.query.*;
 import cn.cloudself.query.exception.IllegalCall;
 import cn.cloudself.query.util.ListEx;
+import cn.cloudself.query.util.SpringUtils;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javax.sql.DataSource;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +73,10 @@ public class SettingQueryPro {
             SettingQueryPro::createQuery
     );
 
+    public static void assignDataSource(javax.sql.DataSource dataSource) {
+        queryPro.assignDataSource(dataSource);
+    }
+
     public static __Impl.WhereField<Boolean, Boolean> deleteBy() {
         return queryPro.deleteBy();
     }
@@ -110,10 +117,12 @@ public class SettingQueryPro {
         return queryPro.selectByPrimaryKey(value);
     }
 
+    @Contract(pure = true)
     public static __Impl.UpdateSetField updateSet() {
         return queryPro.updateSet();
     }
 
+    @Contract(pure = true)
     public static UpdateField<__Impl.WhereField<Boolean, Boolean>> updateSet(Setting obj, boolean override) {
         return queryPro.updateSet(obj, override);
     }
@@ -142,6 +151,11 @@ public class SettingQueryPro {
             @NotNull
             @Override
             protected Function1<QueryStructure, ColumnsLimiterField<T, RUN_RES>> getCreate_columns_limiter_field() { return qs -> new ColumnsLimiterField<>(qs, super.getField_clazz()); }
+
+            @Override
+            protected QueryPayload get_payload() {
+                return queryPro.getPayload();
+            }
         }
 
         public static class WhereField<T, RUN_RES> extends CommonField<T, RUN_RES> {
