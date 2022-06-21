@@ -83,6 +83,6 @@ typealias SupportedQueryClazz = Class<*>
 /**
  * 支持的值有：Int::class.java 总共影响的条数
  *           IntArray::class.java, List::class.java, listOf<Int>().javaClass等 代表每条语句更新的条数
- *           Boolean::class.java 不建议使用，除非你知道自己在做什么，仅简单的判断了总更新条数是否大于1
+ *           Boolean::class.java 不建议使用，仅简单的判断了总更新条数是否大于1
  */
 typealias SupportedUpdatedBatchClazz = Class<*>
