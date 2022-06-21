@@ -158,7 +158,7 @@ class QueryProSql {
          * 查询多个对象
          */
         fun query(): List<Map<String, Any?>> {
-            return query(Map::class.java).map { map ->
+            return query(HashMap::class.java).map { map ->
                 @Suppress("UNCHECKED_CAST")
                 map as Map<String, Any?>
             }
