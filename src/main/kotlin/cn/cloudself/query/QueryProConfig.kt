@@ -1,6 +1,7 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.ConfigException
+import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
 import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
 import cn.cloudself.query.util.BeanProxy
@@ -218,6 +219,46 @@ class RequestContextStore: Store {
     }
 }
 
+class ThreadContextStore: Store {
+    private val store = ThreadLocal<MutableMap<String, Any?>?>()
+    private var initCalled = false
+
+    fun init() {
+        store.remove()
+        initCalled = true
+    }
+
+    fun clean() {
+        init()
+    }
+
+    override fun get(key: String): Any? {
+        return store.get()?.get(key)
+    }
+
+    override fun set(key: String, value: Any?) {
+        if (!initCalled) {
+            throw IllegalCall("使用thread进行配置时，因为线程池的问题，" +
+                    "必须在线程初始化后调用initThreadContextStore，线程结束时调用cleanThreadContextStore，" +
+                    "所以spring环境更推荐使用request进行配置。")
+        }
+        var map = store.get()
+        if (map == null) {
+            map = mutableMapOf()
+            store.set(map)
+        }
+        map[key] = value
+    }
+
+    fun getStore(): Map<String, Any?>? {
+        return store.get()
+    }
+
+    fun setStore(map: MutableMap<String, Any?>) {
+        store.set(map)
+    }
+}
+
 class GlobalQueryProConfigDb: QueryProConfigDb(HashMapStore()), OnlyGlobalConfig {
     private val lifecycle = Lifecycle()
     private val supportedColumnType = mutableSetOf<Class<*>>()
@@ -325,6 +366,27 @@ class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>
     override fun <T> resultSetParser(clazz: Class<T>) = QueryProConfig.global.resultSetParser(clazz)
 }
 
+open class ThreadQueryProConfigDb(
+    private val store: ThreadContextStore,
+    private val configDb: QueryProConfigDb,
+): NullableQueryProConfigDb by configDb, IQueryProConfigDbWriteable by configDb {
+    fun init() {
+        store.init()
+    }
+
+    fun clean() {
+        store.clean()
+    }
+}
+
+class OpenStoreThreadQueryProConfigDb(
+    private val store: ThreadContextStore = ThreadContextStore(),
+    configDb: QueryProConfigDb = QueryProConfigDb(store)
+): ThreadQueryProConfigDb(store, configDb) {
+    fun getStore() = store.getStore()
+    fun setStore(map: MutableMap<String, Any?>) = store.setStore(map)
+}
+
 object QueryProConfig {
     @JvmField
     val global = GlobalQueryProConfigDb()
@@ -373,6 +435,67 @@ object QueryProConfig {
     @JvmField
     val request = QueryProConfigDb(RequestContextStore())
 
+    /**
+     * 内部方法
+     * 不推荐使用，优先使用request或者contextHolder。
+     *
+     * 因为存在线程池复用线程, threadLocal不释放问题
+     * 所以必须在线程初始化后调用QueryProConfig.thread.init()
+     * 必须在线程结束后调用QueryProConfig.thread.clean()
+     * 之后，才能针对对thread进行配置
+     *
+     * 另外：同时存在thread配置与request配置的时候，会使用request中的配置
+     */
+    @Deprecated("")
     @JvmField
-    val final = FinalQueryProConfigDb(arrayOf(request, global))
+    val thread: ThreadQueryProConfigDb = OpenStoreThreadQueryProConfigDb()
+
+    private val contextStore = ThreadContextStore()
+    private val context = QueryProConfigDb(contextStore)
+
+    /**
+     * 在回调函数中，维持一个query pro配置的上下文
+     * 注意该配置对函数中新开的线程无效
+     *
+     * context不能嵌套
+     *
+     * QueryProConfig.contextHolder(context -> {
+     *   context.beautifySql();
+     *   UserQueryPro.selectBy().id().equalsTo(1);
+     * });
+     */
+    @JvmStatic
+    fun <T> context(func: WithContextReturnResult<T>): T {
+        contextStore.init()
+        val result = try {
+            func.call(context)
+        } finally {
+            contextStore.clean()
+        }
+        return result
+    }
+
+    @JvmStatic
+    fun context(func: WithContext) {
+        context(object : WithContextReturnResult<Boolean> {
+            override fun call(context: QueryProConfigDb): Boolean {
+                func.call(context)
+                return true
+            }
+        })
+    }
+
+    @Suppress("DEPRECATION")
+    @JvmField
+    val final = FinalQueryProConfigDb(arrayOf(context, request, thread, global))
+}
+
+interface WithContextReturnResult<T> {
+    @Throws(Exception::class)
+    fun call(context: QueryProConfigDb): T
+}
+
+interface WithContext {
+    @Throws(Exception::class)
+    fun call(context: QueryProConfigDb)
 }
