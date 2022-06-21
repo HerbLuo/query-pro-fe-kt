@@ -63,5 +63,5 @@ public class ${ClassName} implements Serializable {
     }
 
     <#--noinspection FtlReferencesInspection-->
-    <@m.entityExMethods?interpret />
+    <@m.entityExCodes?interpret />
 }

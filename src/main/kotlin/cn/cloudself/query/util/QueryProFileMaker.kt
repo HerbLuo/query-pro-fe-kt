@@ -318,7 +318,8 @@ data class TemplateModel(
     var _ClassName: String? = null,
     var packagePath: String? = null,
     var noArgMode: Boolean? = null,
-    var entityExMethods: String? = null,
+    var daoExCodes: String? = null,
+    var entityExCodes: String? = null,
     var columns: List<TemplateModelColumn> = listOf(),
     var queryProDelegate: List<DelegateInfo> = listOf(),
 )
@@ -392,9 +393,12 @@ class QueryProFileMaker private constructor(
     private var db: DbInfo? = null
     private var tables: Array<out String> = arrayOf("")
     private var excludeTables: Array<out String> = arrayOf()
-    private var entityExMethods = ""
+    private var excludeTableFilters: MutableList<(table: String) -> Boolean> = mutableListOf()
+    private var daoExCodes = ""
+    private var entityExCodes = ""
+    private var defaultDataSource: String? = null
     private var replaceMode = false
-    private var skipRepalceEntity = false
+    private var skipReplaceEntity = false
     private var ktNoArgMode = true
     private var chainForModel = false
     private var entityFileTemplatePath: String? = null
@@ -453,15 +457,31 @@ class QueryProFileMaker private constructor(
     fun tables(vararg tables: String) = this.also { this.tables = tables }
 
     /**
-     * 指定需要生成QueryPro文件的表名，默认为"*"，代表所有
+     * 指定需要排除生成QueryPro文件的表名
      * @sample cn.cloudself.samples.QueryProFileMakerSample.entityAndDaoMode
      */
     fun excludeTables(vararg tables: String) = this.also { this.excludeTables = tables }
 
     /**
+     * 指定需要排除生成QueryPro文件的表名
+     * @sample cn.cloudself.samples.QueryProFileMakerSample.entityAndDaoMode
+     */
+    fun excludeTables(filter: (table: String) -> Boolean) = this.also { this.excludeTableFilters.add(filter) }
+
+    /**
+     * 加入dao中的额外方法
+     */
+    fun daoExCodes(codes: String) = this.also { this.daoExCodes = codes }
+
+    /**
      * 加入实体类的额外方法
      */
-    fun entityExMethods(methods: String) = this.also { this.entityExMethods = methods }
+    fun entityExMethods(codes: String) = this.also { this.entityExCodes = codes }
+
+    /**
+     * 默认的DataSource获取方法
+     */
+    fun defaultDataSource(code: String) = this.also { this.defaultDataSource = code }
 
     /**
      * 是否替换掉已有的文件 默认false
@@ -471,7 +491,7 @@ class QueryProFileMaker private constructor(
     fun replaceMode(replaceMode: Boolean = true) = this.also { this.replaceMode = replaceMode }
 
     @JvmOverloads
-    fun skipReplaceEntity(skipRepalceEntity: Boolean = true) = this.also { this.skipRepalceEntity = skipRepalceEntity }
+    fun skipReplaceEntity(skipRepalceEntity: Boolean = true) = this.also { this.skipReplaceEntity = skipRepalceEntity }
 
     /**
      * 关闭Kotlin的no-arg模式
@@ -549,7 +569,7 @@ class QueryProFileMaker private constructor(
                 if (replaceMode) {
                     openOptions.add(StandardOpenOption.TRUNCATE_EXISTING)
                 }
-                if (areEntity && skipRepalceEntity) {
+                if (areEntity && skipReplaceEntity) {
                     openOptions.clear()
                     openOptions.add(StandardOpenOption.CREATE_NEW)
                 }
@@ -581,6 +601,10 @@ class QueryProFileMaker private constructor(
 
             for (excludeTable in excludeTables) {
                 tableNameMapTemplateModel.remove(excludeTable)
+            }
+
+            for (excludeTableFilter in excludeTableFilters) {
+                tableNameMapTemplateModel.entries.removeIf { excludeTableFilter(it.key) }
             }
 
             return@let tableNameMapTemplateModel
@@ -666,7 +690,7 @@ class QueryProFileMaker private constructor(
                 id = id,
                 hasBigDecimal = modelColumns.find { it.ktTypeStr == "BigDecimal" } != null,
                 hasDate = modelColumns.find { it.ktTypeStr == "Date" } != null,
-                entityExMethods = entityExMethods
+                entityExCodes = entityExCodes
             )
             tableNameMapTemplateModel[tableName] = templateModel
         }
