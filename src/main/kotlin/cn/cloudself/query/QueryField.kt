@@ -85,7 +85,7 @@ abstract class FinalSelectField<
         }
         val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
 
-        return switchToCurrentDataSource(get_payload().dataSource) {
+        return switchToCurrentDataSource(get_payload().dataSource()) {
             resolve(preRun(queryStructureForCount), Int::class.java)[0]
         }
     }
@@ -126,14 +126,14 @@ abstract class FinalSelectField<
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsList(): List<T> {
-        return switchToCurrentDataSource(get_payload().dataSource) {
+        return switchToCurrentDataSource(get_payload().dataSource()) {
             resolve(preRun(queryStructure), field_clazz)
         }
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsMap(): List<Map<String, Any?>> {
-        return switchToCurrentDataSource(get_payload().dataSource) {
+        return switchToCurrentDataSource(get_payload().dataSource()) {
             resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
         }
     }
@@ -141,7 +141,7 @@ abstract class FinalSelectField<
     fun pageable(): Pageable<T> {
         return Pageable.create(
             { count() },
-            { start, limit -> switchToCurrentDataSource(get_payload().dataSource) {
+            { start, limit -> switchToCurrentDataSource(get_payload().dataSource()) {
                 resolve(queryStructure.copy(limit = start to limit), field_clazz) }
             }
         )

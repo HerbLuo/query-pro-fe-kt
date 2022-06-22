@@ -27,6 +27,9 @@ open class QueryPro<
     private val createDeleteByField: CreateQueryField<DELETE_BY_FIELD>,
 ) {
     val payload: QueryPayload = QueryPayload()
+    init {
+        payload.dataSource = { QueryProConfig.final.defaultDataSource().get(clazz) }
+    }
 
     /**
      * 查询操作
@@ -141,7 +144,7 @@ open class QueryPro<
      * 批量插入
      */
     @Suppress("UNCHECKED_CAST")
-    fun insert(collection: Collection<T>) = switchToCurrentDataSource(payload.dataSource) {
+    fun insert(collection: Collection<T>) = switchToCurrentDataSource(payload.dataSource()) {
         insert(collection, clazz) as List<ID?>
     }
 
@@ -149,6 +152,6 @@ open class QueryPro<
      * 指定数据源
      */
     fun assignDataSource(dataSource: DataSource?) {
-        payload.dataSource = dataSource
+        payload.dataSource = { dataSource }
     }
 }

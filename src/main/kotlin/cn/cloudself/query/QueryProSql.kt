@@ -109,7 +109,7 @@ class QueryProSql {
     ) {
         private var dataSource: DataSource? = null
 
-        fun assignDataSource(dataSource: DataSource) {
+        fun assignDataSource(dataSource: DataSource) = this.also {
             this.dataSource = dataSource
         }
 
@@ -137,7 +137,7 @@ class QueryProSql {
     ) {
         private var dataSource: DataSource? = null
 
-        fun assignDataSource(dataSource: DataSource) {
+        fun assignDataSource(dataSource: DataSource) = this.also {
             this.dataSource = dataSource
         }
 

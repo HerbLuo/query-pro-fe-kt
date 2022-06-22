@@ -177,15 +177,6 @@ class Lifecycle {
 //    }
 }
 
-interface OnlyGlobalConfig {
-    fun lifecycle(): Lifecycle
-    fun shouldIgnoreFields(): Set<String>
-    fun supportedColumnType(): Set<Class<*>>
-    fun resultSetParserEx(): List<ResultSetParserEx>
-    fun dbColumnInfoToJavaType(): Map<(column: DbColumnInfo) -> Boolean, Class<*>>
-    fun <T> resultSetParser(clazz: Class<T>): ResultSetGetter<T>?
-}
-
 class HashMapStore: Store {
     private val store = mutableMapOf<String, Any?>()
     override fun get(key: String): Any? = store[key]
@@ -259,19 +250,39 @@ class ThreadContextStore: Store {
     }
 }
 
+fun interface DataSourceGetter {
+    fun get(clazz: Class<*>): DataSource?
+}
+
+interface OnlyGlobalConfig {
+    fun lifecycle(): Lifecycle
+    fun defaultDataSource(): DataSourceGetter
+    fun setDefaultDataSource(getter: DataSourceGetter): GlobalQueryProConfigDb
+    fun shouldIgnoreFields(): Set<String>
+    fun supportedColumnType(): Set<Class<*>>
+    fun resultSetParserEx(): List<ResultSetParserEx>
+    fun dbColumnInfoToJavaType(): Map<(column: DbColumnInfo) -> Boolean, Class<*>>
+    fun <T> resultSetParser(clazz: Class<T>): ResultSetGetter<T>?
+}
+
 class GlobalQueryProConfigDb: QueryProConfigDb(HashMapStore()), OnlyGlobalConfig {
     private val lifecycle = Lifecycle()
     private val supportedColumnType = mutableSetOf<Class<*>>()
     private val resultSetParser = mutableMapOf<Class<*>, ResultSetGetter<*>>()
+    private var defaultDataSource = DataSourceGetter { null }
     internal val resultSetParserEx = mutableListOf<ResultSetParserEx>()
     internal val dbColumnInfoToJavaType = mutableMapOf<(column: DbColumnInfo) -> Boolean, Class<*>>()
     internal val shouldIgnoreFields = mutableSetOf<String>()
 
     override fun lifecycle(): Lifecycle = lifecycle
+
     override fun shouldIgnoreFields(): Set<String> = shouldIgnoreFields
     override fun supportedColumnType(): Set<Class<*>> = supportedColumnType
     override fun resultSetParserEx(): List<ResultSetParserEx> = resultSetParserEx
     override fun dbColumnInfoToJavaType(): Map<(column: DbColumnInfo) -> Boolean, Class<*>> = dbColumnInfoToJavaType
+
+    override fun defaultDataSource() = defaultDataSource
+    override fun setDefaultDataSource(getter: DataSourceGetter) = this.also { defaultDataSource = getter }
 
     /**
      * ResultSet解析器
@@ -359,6 +370,8 @@ class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>
     override fun queryStructureResolver() = getBy { it.queryStructureResolver() }
 
     override fun lifecycle(): Lifecycle = QueryProConfig.global.lifecycle()
+    override fun defaultDataSource() = QueryProConfig.global.defaultDataSource()
+    override fun setDefaultDataSource(getter: DataSourceGetter) = QueryProConfig.global.setDefaultDataSource(getter)
     override fun shouldIgnoreFields(): Set<String> = QueryProConfig.global.shouldIgnoreFields()
     override fun supportedColumnType() = QueryProConfig.global.supportedColumnType()
     override fun resultSetParserEx() = QueryProConfig.global.resultSetParserEx()
