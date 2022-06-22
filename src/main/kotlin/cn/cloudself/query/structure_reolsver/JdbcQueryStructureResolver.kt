@@ -15,6 +15,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
 import javax.sql.DataSource
+import kotlin.collections.LinkedHashMap
 
 class JdbcQueryStructureResolver: IQueryStructureResolver {
     private var dataSourceThreadLocal = ThreadLocal<DataSource?>()
@@ -73,6 +74,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     }
 
     override fun <T> insert(objs: Collection<Any>, clazz: Class<T>): List<Any> {
+        val useBigMode = objs.size > 20
         val beanProxy = BeanProxy.fromClass(clazz)
         val bean = beanProxy.newInstance()
         val parsedClass = bean.getParsedClass()
@@ -87,8 +89,11 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             }
         }
 
-        val paramsArr = preHandledObjs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }.toTypedArray()
-        val uniqueInsert = paramsArr.size == 1
+        val paramsArr = preHandledObjs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }
+        val paramsSize = paramsArr.size
+        val uniqueInsert = paramsSize == 1
+
+        val sqlMapParams = LinkedHashMap<String, Array<Any?>>()
 
         val sqlBuilder = StringBuilder("INSERT INTO `")
         sqlBuilder.append(parsedClass.dbName, "` (")
@@ -104,42 +109,82 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
             }
             sqlBuilder.append('`', col.dbName, '`')
         }
-        sqlBuilder.append(") VALUES (")
-        var valueFirstAppend = false
-        for (j in columns.indices) {
-            if (uniqueInsert && paramsArr[0][j] == null) {
-                continue
+        sqlBuilder.append(") VALUES ")
+        val sqlPrefix = sqlBuilder.toString()
+
+        var curParams = mutableListOf<Any?>()
+        var firstRow = true
+        var firstRowIndex = 0
+        for ((i, params) in paramsArr.withIndex()) {
+            if ((sqlBuilder.length > 1000 * 500) || (i != 0 && i % 1000 == 0)) { // ~0.5M if all ascii char
+                val sql = "/*${i - 999} to ${i}*/ $sqlBuilder"
+                sqlMapParams[sql] = curParams.toTypedArray()
+                sqlBuilder.clear()
+                sqlBuilder.append(sqlPrefix)
+                curParams = mutableListOf()
+                firstRow = true
+                firstRowIndex = i
             }
-            if (valueFirstAppend) {
-                sqlBuilder.append(", ?")
-            } else {
-                sqlBuilder.append("?")
-                valueFirstAppend = true
+            curParams.addAll(params)
+            sqlBuilder.append(if (firstRow) { firstRow = false; "(" } else " ,(")
+            var firstCol = true
+            for (j in columns.indices) {
+                if (uniqueInsert && params[j] == null) {
+                    continue
+                }
+                sqlBuilder.append(if (firstCol) { firstCol = false; "?" } else ", ?")
+            }
+            sqlBuilder.append(')')
+            if (!useBigMode) {
+                break
             }
         }
-        sqlBuilder.append(')')
 
-        val sql = sqlBuilder.toString()
+        val lastSql =
+            if (sqlMapParams.isEmpty()) sqlBuilder.toString()
+            else "/*${firstRowIndex + 1} to ${paramsArr.size}*/ $sqlBuilder"
+        sqlMapParams[lastSql] = curParams.toTypedArray()
+
         val idColumnType = parseClass(clazz).idColumnType
         if (idColumnType == null) {
-            logger.warn("没有找到主键或其对应的Class, 返回了空结果")
-            return listOf()
+            logger.warn("没有找到主键或其对应的Class, 不会有返回结果")
         }
 
-        val idColumnProxy = BeanProxy.fromClass(idColumnType)
+        val idColumnProxy = if (idColumnType == null) null else BeanProxy.fromClass(idColumnType)
 
         getConnection().autoUse { connection ->
-            val preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
-            for (params in paramsArr) {
-                setParam(preparedStatement, if (uniqueInsert) params.filterNotNull().toTypedArray() else params, OnNull.NULL)
-                preparedStatement.addBatch()
+            if (sqlMapParams.size == 1 && !useBigMode) {
+                val sql = sqlMapParams.entries.first().key
+                logger.info(sql)
+
+                val preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+                for (params in paramsArr) {
+                    setParam(preparedStatement, if (uniqueInsert) params.filterNotNull().toTypedArray() else params, OnNull.NULL)
+                    preparedStatement.addBatch()
+                }
+                preparedStatement.executeBatch()
+                val resultSet = preparedStatement.generatedKeys
+                val results = mutableListOf<Any>()
+                if (idColumnProxy != null) {
+                    while (resultSet.next()) {
+                        results.add(mapRow(idColumnProxy, resultSet))
+                    }
+                }
+                return results
             }
-            preparedStatement.executeBatch()
-            val resultSet = preparedStatement.generatedKeys
 
             val results = mutableListOf<Any>()
-            while (resultSet.next()) {
-                results.add(mapRow(idColumnProxy, resultSet))
+            for ((sql, params) in sqlMapParams) {
+                logger.info(sql)
+                val preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+                setParam(preparedStatement, params, OnNull.NULL)
+                preparedStatement.execute()
+                val resultSet = preparedStatement.generatedKeys
+                if (idColumnProxy != null) {
+                    while (resultSet.next()) {
+                        results.add(mapRow(idColumnProxy, resultSet))
+                    }
+                }
             }
             return results
         }
@@ -311,7 +356,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
         val columnCount = metaData.columnCount
 
         for (i in 1..columnCount) {
-            val columnName = metaData.getColumnName(i)
+            val columnName = metaData.getColumnLabel(i)
             val columnType = metaData.getColumnTypeName(i)
             var beanNeedType = resultProxy.getJavaType(columnName)
 

@@ -720,13 +720,11 @@ class QueryProFileMaker private constructor(
             if (actualType != null) {
                 return actualType
             }
-            if (genericType.endsWith("[]")) {
-                return genericTypeMapActualGenericType[genericType.substring(0, genericType.length - 2)]?.let { "$it[]" }
-            }
-            if (genericType.endsWith('>')) {
+            if (genericType.endsWith('>') || genericType.endsWith(">[]")) {
+                val areArr = genericType.endsWith(']')
                 var allFind = true
                 val indexOfLt = genericType.indexOf('<')
-                val paramsStr = genericType.substring(indexOfLt + 1, genericType.length - 1)
+                val paramsStr = genericType.substring(indexOfLt + 1, if (areArr) genericType.length - 3 else genericType.length - 1)
                 val resTypeBuilder = StringBuilder(genericType.substring(0, indexOfLt + 1))
 
                 val sj = StringJoiner(",")
@@ -742,10 +740,13 @@ class QueryProFileMaker private constructor(
 
                 resTypeBuilder.append('>')
                 return if (allFind) {
-                    "${genericType.substring(0, indexOfLt + 1)}${sj}>"
+                    "${genericType.substring(0, indexOfLt + 1)}${sj}>${if (areArr) "[]" else "" }"
                 } else {
                     genericType
                 }
+            }
+            if (genericType.endsWith("[]")) {
+                return genericTypeMapActualGenericType[genericType.substring(0, genericType.length - 2)]?.let { "$it[]" }
             }
             return null
         }
@@ -759,8 +760,13 @@ class QueryProFileMaker private constructor(
                 val parameters = it.parameters
                 val method = it.javaMethod ?: throw UnSupportException("QueryPro Kotlin方法必须有对应的Java方法")
 
+                val safeVarargs = it.findAnnotation<SafeVarargs>()
                 val contract = it.findAnnotation<PureContract>()
                 val pure = contract != null
+
+                val annotations = mutableListOf<String>()
+                if (pure) annotations.add("@Contract(pure = true)")
+                if (safeVarargs != null) annotations.add("@SafeVarargs")
 
                 DelegateInfo(
                     "public static",
@@ -780,7 +786,7 @@ class QueryProFileMaker private constructor(
                         }
                         DelegateInfoArg(finalParamType, isVararg, kParam.name ?: "obj$i")
                     },
-                    if (pure) listOf("@Contract(pure = true)") else emptyList()
+                    annotations
                 )
             }
     }

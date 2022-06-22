@@ -148,6 +148,12 @@ open class QueryPro<
         insert(collection, clazz) as List<ID?>
     }
 
+    @SafeVarargs
+    @Suppress("UNCHECKED_CAST")
+    fun insert(vararg objs: Map<String, Any?>) = switchToCurrentDataSource(payload.dataSource()) {
+        insert(listOf(*objs), clazz) as List<ID?>
+    }
+
     /**
      * 指定数据源
      */
