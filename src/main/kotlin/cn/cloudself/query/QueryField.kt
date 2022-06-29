@@ -4,7 +4,6 @@ import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
 import cn.cloudself.query.util.parseClass
 import java.util.*
-import javax.sql.DataSource
 
 enum class QueryFieldType {
     WHERE_FIELD,
@@ -14,14 +13,10 @@ enum class QueryFieldType {
 
 typealias CreateQueryField<F> = (queryStructure: QueryStructure) -> F
 
-internal fun <R> switchToCurrentDataSource(dataSource: DataSource?, resolve: IQueryStructureResolver.() -> R): R {
+internal fun <R> withConfig(store: HashMapStore, resolve: IQueryStructureResolver.() -> R): R {
     val resolver = QueryProConfig.final.queryStructureResolver()
-    return if (dataSource == null) {
-        resolve(resolver)
-    } else {
-        resolver.switchDataSource(dataSource) {
-            resolve(it)
-        }
+    return resolver.withConfig(store.toMap()) {
+        resolve(it)
     }
 }
 
@@ -36,8 +31,7 @@ abstract class FinalSelectField<
     protected abstract val create_columns_limiter_field: CreateQueryField<COLUMNS_LIMITER_FILED>
     @Suppress("FunctionName")
     protected abstract fun create_field(qs: QueryStructure): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>
-    @Suppress("FunctionName")
-    protected abstract fun get_payload(): QueryPayload
+    protected abstract fun getPayload(): QueryPayload
 
     fun limit(limit: Int): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
         return limit(0, limit)
@@ -85,7 +79,7 @@ abstract class FinalSelectField<
         }
         val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
 
-        return switchToCurrentDataSource(get_payload().dataSource()) {
+        return withConfig(getPayload().config) {
             resolve(preRun(queryStructureForCount), Int::class.java)[0]
         }
     }
@@ -126,14 +120,14 @@ abstract class FinalSelectField<
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsList(): List<T> {
-        return switchToCurrentDataSource(get_payload().dataSource()) {
+        return withConfig(getPayload().config) {
             resolve(preRun(queryStructure), field_clazz)
         }
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun runAsMap(): List<Map<String, Any?>> {
-        return switchToCurrentDataSource(get_payload().dataSource()) {
+        return withConfig(getPayload().config) {
             resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
         }
     }
@@ -141,7 +135,7 @@ abstract class FinalSelectField<
     fun pageable(): Pageable<T> {
         return Pageable.create(
             { count() },
-            { start, limit -> switchToCurrentDataSource(get_payload().dataSource()) {
+            { start, limit -> withConfig(getPayload().config) {
                 resolve(queryStructure.copy(limit = start to limit), field_clazz) }
             }
         )

@@ -177,10 +177,19 @@ class Lifecycle {
 //    }
 }
 
-class HashMapStore: Store {
+typealias ConfigStore = Map<String, Any?>
+
+open class HashMapStore: Store {
     private val store = mutableMapOf<String, Any?>()
     override fun get(key: String): Any? = store[key]
     override fun set(key: String, value: Any?) { store[key] = value }
+    fun toMap(): Map<String, Any?> {
+        val map = mutableMapOf<String, Any?>()
+        for (key in store.keys) {
+            map[key] = this.get(key)
+        }
+        return map
+    }
 }
 
 private const val KEY_PREFIX = "QUERY_PRO_CONFIG:REQUEST_CONTEXT:"
@@ -210,8 +219,8 @@ class RequestContextStore: Store {
     }
 }
 
-class ThreadContextStore: Store {
-    private val store = ThreadLocal<MutableMap<String, Any?>?>()
+class ThreadContextStore constructor(private val init: MutableMap<String, Any?>? = null): Store {
+    private val store: ThreadLocal<MutableMap<String, Any?>?> = ThreadLocal.withInitial { init }
     private var initCalled = false
 
     fun init() {
@@ -348,15 +357,6 @@ class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>
         return null
     }
 
-//    fun dataSourceNullable() = getByNullable(NullableQueryProConfigDb::dataSource)
-//    override fun dataSource() = getBy(NullableQueryProConfigDb::dataSource)
-//    override fun beautifySql() = getBy(NullableQueryProConfigDb::beautifySql)
-//    override fun printSql() = getBy(NullableQueryProConfigDb::printSql)
-//    override fun dryRun() = getBy(NullableQueryProConfigDb::dryRun)
-//    override fun queryProFieldComment() = getBy(NullableQueryProConfigDb::queryProFieldComment)
-//    override fun logicDelete() = getBy(NullableQueryProConfigDb::logicDelete)
-//    override fun logicDeleteField() = getBy(NullableQueryProConfigDb::logicDeleteField)
-//    override fun queryStructureResolver() = getBy(NullableQueryProConfigDb::queryStructureResolver)
     fun dataSourceNullable() = getByNullable { it.dataSource() }
     override fun dataSource() = getBy { it.dataSource() }
     override fun beautifySql() = getBy { it.beautifySql() }
@@ -380,8 +380,8 @@ class FinalQueryProConfigDb(private val configs: Array<NullableQueryProConfigDb>
 }
 
 open class ThreadQueryProConfigDb(
-    private val store: ThreadContextStore,
-    private val configDb: QueryProConfigDb,
+    internal val store: ThreadContextStore = ThreadContextStore(),
+    internal val configDb: QueryProConfigDb = QueryProConfigDb(store),
 ): NullableQueryProConfigDb by configDb, IQueryProConfigDbWriteable by configDb {
     fun init() {
         store.init()
@@ -390,14 +390,48 @@ open class ThreadQueryProConfigDb(
     fun clean() {
         store.clean()
     }
+
+    fun use(func: Use) {
+        use {
+            func.call(it)
+        }
+    }
+
+    fun <T> use(func: UseResult<T>): T {
+        return use {
+            func.call(it)
+        }
+    }
+
+    @JvmName("useKt")
+    fun <T> use(func: (context: QueryProConfigDb) -> T): T {
+        store.init()
+        val result = try {
+            func(configDb)
+        } finally {
+            store.clean()
+        }
+        return result!!
+    }
+
+    interface Use {
+        @Throws(Exception::class)
+        fun call(context: QueryProConfigDb)
+    }
+
+    interface UseResult<T> {
+        @Throws(Exception::class)
+        fun call(context: QueryProConfigDb): T
+    }
 }
 
-class OpenStoreThreadQueryProConfigDb(
-    private val store: ThreadContextStore = ThreadContextStore(),
-    configDb: QueryProConfigDb = QueryProConfigDb(store)
-): ThreadQueryProConfigDb(store, configDb) {
-    fun getStore() = store.getStore()
-    fun setStore(map: MutableMap<String, Any?>) = store.setStore(map)
+class CodeQueryProConfigDb: ThreadQueryProConfigDb() {
+    fun <T> use(store: Map<String, Any?>, func: (context: QueryProConfigDb) -> T): T {
+        return use {
+            this.store.setStore(store.toMutableMap())
+            func(it)
+        }
+    }
 }
 
 object QueryProConfig {
@@ -449,8 +483,7 @@ object QueryProConfig {
     val request = QueryProConfigDb(RequestContextStore())
 
     /**
-     * 内部方法
-     * 不推荐使用，优先使用request或者contextHolder。
+     * 不推荐使用，优先使用global或request或者context
      *
      * 因为存在线程池复用线程, threadLocal不释放问题
      * 所以必须在线程初始化后调用QueryProConfig.thread.init()
@@ -461,10 +494,7 @@ object QueryProConfig {
      */
     @Deprecated("")
     @JvmField
-    val thread: ThreadQueryProConfigDb = OpenStoreThreadQueryProConfigDb()
-
-    private val contextStore = ThreadContextStore()
-    private val context = QueryProConfigDb(contextStore)
+    val thread: ThreadQueryProConfigDb = ThreadQueryProConfigDb()
 
     /**
      * 在回调函数中，维持一个query pro配置的上下文
@@ -472,43 +502,20 @@ object QueryProConfig {
      *
      * context不能嵌套
      *
-     * QueryProConfig.contextHolder(context -> {
+     * QueryProConfig.context.use(context -> {
      *   context.beautifySql();
      *   UserQueryPro.selectBy().id().equalsTo(1);
      * });
      */
-    @JvmStatic
-    fun <T> context(func: WithContextReturnResult<T>): T {
-        contextStore.init()
-        val result = try {
-            func.call(context)
-        } finally {
-            contextStore.clean()
-        }
-        return result
-    }
+    @JvmField
+    val context = ThreadQueryProConfigDb()
 
-    @JvmStatic
-    fun context(func: WithContext) {
-        context(object : WithContextReturnResult<Boolean> {
-            override fun call(context: QueryProConfigDb): Boolean {
-                func.call(context)
-                return true
-            }
-        })
-    }
+    /**
+     * 内部使用
+     */
+    internal val code = CodeQueryProConfigDb()
 
     @Suppress("DEPRECATION")
     @JvmField
-    val final = FinalQueryProConfigDb(arrayOf(context, request, thread, global))
-}
-
-interface WithContextReturnResult<T> {
-    @Throws(Exception::class)
-    fun call(context: QueryProConfigDb): T
-}
-
-interface WithContext {
-    @Throws(Exception::class)
-    fun call(context: QueryProConfigDb)
+    val final = FinalQueryProConfigDb(arrayOf(code, context, request, thread, global))
 }

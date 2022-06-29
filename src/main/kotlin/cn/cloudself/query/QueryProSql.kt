@@ -107,10 +107,11 @@ class QueryProSql {
         private val sqlArr: Array<String>,
         private val params: Array<Array<Any?>>
     ) {
-        private var dataSource: DataSource? = null
+        private val store = HashMapStore()
+        private val config = QueryProConfigDb(store)
 
         fun assignDataSource(dataSource: DataSource) = this.also {
-            this.dataSource = dataSource
+            this.config.setDataSource(dataSource)
         }
 
         /**
@@ -118,7 +119,7 @@ class QueryProSql {
          * @param clazz [SupportedUpdatedBatchClazz]
          */
         fun <T> update(clazz: Class<T>): T {
-            return switchToCurrentDataSource(dataSource) {
+            return withConfig(store) {
                 updateBatch(sqlArr, params, clazz)
             }
         }
@@ -135,10 +136,11 @@ class QueryProSql {
         private val sql: String,
         private val params: Array<Any?>,
     ) {
-        private var dataSource: DataSource? = null
+        private val store = HashMapStore()
+        private val config = QueryProConfigDb(store)
 
         fun assignDataSource(dataSource: DataSource) = this.also {
-            this.dataSource = dataSource
+            this.config.setDataSource(dataSource)
         }
 
         /**
@@ -166,7 +168,7 @@ class QueryProSql {
                 logger.debug("{0}\n{1}", getCallInfo(), sql)
                 logger.debug(params)
             }
-            return switchToCurrentDataSource(dataSource) {
+            return withConfig(store) {
                 resolve(sql, params, clazz, QueryStructureAction.SELECT)
             }
         }
@@ -185,7 +187,7 @@ class QueryProSql {
          * 使用单条语句执行更新，创建，删除等非select语句
          */
         fun update(): Int {
-            return switchToCurrentDataSource(dataSource) {
+            return withConfig(store) {
                 resolve(sql, params, Int::class.java, QueryStructureAction.UPDATE)[0]
             }
         }
@@ -196,7 +198,7 @@ class QueryProSql {
          */
         fun exec() {
             val sqlAndCountArr = SqlUtils.splitBySemicolonAndCountQuestionMark(sql)
-            return switchToCurrentDataSource(dataSource) {
+            return withConfig(store) {
                 execBatch(sqlAndCountArr.map { it.first }.toTypedArray())
             }
         }

@@ -20,12 +20,9 @@ import kotlin.collections.LinkedHashMap
 class JdbcQueryStructureResolver: IQueryStructureResolver {
     private var dataSourceThreadLocal = ThreadLocal<DataSource?>()
 
-    override fun <R> switchDataSource(dataSource: DataSource, resolve: (resolver: IQueryStructureResolver) -> R): R {
-        return try {
-            dataSourceThreadLocal.set(dataSource)
+    override fun <R> withConfig(config: ConfigStore, resolve: (resolver: IQueryStructureResolver) -> R): R {
+        return QueryProConfig.code.use(config) {
             resolve(this)
-        } finally {
-            dataSourceThreadLocal.remove()
         }
     }
 

@@ -7,7 +7,7 @@ interface IQueryStructureResolver {
     /**
      * 临时切换数据源
      */
-    fun <R> switchDataSource(dataSource: DataSource, resolve: (resolver: IQueryStructureResolver) -> R): R
+    fun <R> withConfig(config: ConfigStore, resolve: (resolver: IQueryStructureResolver) -> R): R
 
     /**
      * 将QueryStructure解析至SQL并执行

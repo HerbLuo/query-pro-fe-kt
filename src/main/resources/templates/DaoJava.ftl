@@ -113,7 +113,7 @@ public class ${ClassName} {
 
             @NotNull
             @Override
-            protected QueryPayload get_payload() { return queryPro.getPayload(); }
+            protected QueryPayload getPayload() { return queryPro.getPayload(); }
         }
 
         public static class WhereField${"<"}T, RUN_RES> extends CommonField${"<"}T, RUN_RES> {

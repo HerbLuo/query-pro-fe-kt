@@ -16,7 +16,7 @@ fun canAccess(field: Field, o: Any?): Boolean {
 }
 
 class Reflect private constructor(
-    private var obj: Any?,
+    private val obj: Any?,
     private val clazz: Class<*>? = null
 ) {
     companion object {
@@ -33,12 +33,12 @@ class Reflect private constructor(
 
     @Throws(Exception::class)
     fun invoke(methodName: String, vararg args: Any?): Reflect {
-        obj = if (clazz != null) {
+        val result = if (clazz != null) {
             getMethod(clazz, methodName, *args).invokePro(null, *args)
         } else {
             getMethod((obj ?: throw NullPointerException()).javaClass, methodName, *args).invokePro(obj, *args)
         }
-        return this
+        return Reflect(result)
     }
 
     fun getResult() = obj
@@ -81,7 +81,7 @@ class Reflect private constructor(
     private fun getMethodUseMethodsMode(clazz: Class<*>, methodName: String, vararg args: Class<Any>?): Method {
         val methods = clazz.methods.filter { it.name == methodName }
         if (methods.isEmpty()) {
-            throw NoSuchMethodException()
+            throw NoSuchMethodException("${clazz.name}.$methodName")
         }
         if (methods.size == 1) {
             return methods[0]

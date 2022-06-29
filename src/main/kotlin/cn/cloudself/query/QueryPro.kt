@@ -25,11 +25,19 @@ open class QueryPro<
     private val createUpdateSetField: CreateQueryField<UPDATE_SET_FIELD>,
     private val createUpdateByField: CreateQueryField<UPDATE_BY_FIELD>,
     private val createDeleteByField: CreateQueryField<DELETE_BY_FIELD>,
-) {
-    val payload: QueryPayload = QueryPayload()
-    init {
-        payload.dataSource = { QueryProConfig.final.defaultDataSource().get(clazz) }
+): IQueryProConfigDbWriteable {
+    private val store = object : HashMapStore() {
+        override fun get(key: String): Any? {
+            val value = super.get(key)
+            if (key == "dataSource") {
+                if (value == null) {
+                    return QueryProConfig.global.defaultDataSource().get(clazz)
+                }
+            }
+            return value
+        }
     }
+    val payload = QueryPayload(store)
 
     /**
      * 查询操作
@@ -144,20 +152,63 @@ open class QueryPro<
      * 批量插入
      */
     @Suppress("UNCHECKED_CAST")
-    fun insert(collection: Collection<T>) = switchToCurrentDataSource(payload.dataSource()) {
+    fun insert(collection: Collection<T>) = withConfig(store) {
         insert(collection, clazz) as List<ID?>
     }
 
     @SafeVarargs
     @Suppress("UNCHECKED_CAST")
-    fun insert(vararg objs: Map<String, Any?>) = switchToCurrentDataSource(payload.dataSource()) {
+    fun insert(vararg objs: Map<String, Any?>) = withConfig(store) {
         insert(listOf(*objs), clazz) as List<ID?>
     }
 
-    /**
-     * 指定数据源
-     */
-    fun assignDataSource(dataSource: DataSource?) {
-        payload.dataSource = { dataSource }
+    override fun setDataSource(dataSource: DataSource): IQueryProConfigDbWriteable {
+        store.set("dataSource", dataSource)
+        return this
+    }
+
+    override fun setBeautifySql(beautifySql: Boolean): IQueryProConfigDbWriteable {
+        store.set("beautifySql", beautifySql)
+        return this
+    }
+
+    override fun setPrintSql(printSql: Boolean): IQueryProConfigDbWriteable {
+        store.set("printSql", printSql)
+        return this
+    }
+
+    override fun setPrintCallByInfo(printCallByInfo: Boolean): IQueryProConfigDbWriteable {
+        store.set("printCallByInfo", printCallByInfo)
+        return this
+    }
+
+    override fun setPrintResult(printResult: Boolean): IQueryProConfigDbWriteable {
+        store.set("printResult", printResult)
+        return this
+    }
+
+    override fun setDryRun(dryRun: Boolean): IQueryProConfigDbWriteable {
+        store.set("dryRun", dryRun)
+        return this
+    }
+
+    override fun setQueryProFieldComment(queryProFieldComment: Boolean): IQueryProConfigDbWriteable {
+        store.set("queryProFieldComment", queryProFieldComment)
+        return this
+    }
+
+    override fun setLogicDelete(logicDelete: Boolean): IQueryProConfigDbWriteable {
+        store.set("logicDelete", logicDelete)
+        return this
+    }
+
+    override fun setLogicDeleteField(logicDeleteField: String): IQueryProConfigDbWriteable {
+        store.set("logicDeleteField", logicDeleteField)
+        return this
+    }
+
+    override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver): IQueryProConfigDbWriteable {
+        store.set("queryStructureResolver", queryStructureResolver)
+        return this
     }
 }

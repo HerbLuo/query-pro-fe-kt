@@ -70,10 +70,6 @@ public class UserQueryPro {
             UserQueryPro::createQuery
     );
 
-    public static void assignDataSource(javax.sql.DataSource dataSource) {
-        queryPro.assignDataSource(dataSource);
-    }
-
     public static __Impl.WhereField<Boolean, Boolean> deleteBy() {
         return queryPro.deleteBy();
     }
@@ -87,6 +83,11 @@ public class UserQueryPro {
     }
 
     public static java.util.List<Long> insert(User ...objs) {
+        return queryPro.insert(objs);
+    }
+
+    @SafeVarargs
+    public static java.util.List<Long> insert(java.util.Map<String, ?> ...objs) {
         return queryPro.insert(objs);
     }
 
@@ -112,6 +113,46 @@ public class UserQueryPro {
 
     public static User selectByPrimaryKey(Object value) {
         return queryPro.selectByPrimaryKey(value);
+    }
+
+    public static IQueryProConfigDbWriteable setBeautifySql(boolean beautifySql) {
+        return queryPro.setBeautifySql(beautifySql);
+    }
+
+    public static IQueryProConfigDbWriteable setDataSource(javax.sql.DataSource dataSource) {
+        return queryPro.setDataSource(dataSource);
+    }
+
+    public static IQueryProConfigDbWriteable setDryRun(boolean dryRun) {
+        return queryPro.setDryRun(dryRun);
+    }
+
+    public static IQueryProConfigDbWriteable setLogicDelete(boolean logicDelete) {
+        return queryPro.setLogicDelete(logicDelete);
+    }
+
+    public static IQueryProConfigDbWriteable setLogicDeleteField(String logicDeleteField) {
+        return queryPro.setLogicDeleteField(logicDeleteField);
+    }
+
+    public static IQueryProConfigDbWriteable setPrintCallByInfo(boolean printCallByInfo) {
+        return queryPro.setPrintCallByInfo(printCallByInfo);
+    }
+
+    public static IQueryProConfigDbWriteable setPrintResult(boolean printResult) {
+        return queryPro.setPrintResult(printResult);
+    }
+
+    public static IQueryProConfigDbWriteable setPrintSql(boolean printSql) {
+        return queryPro.setPrintSql(printSql);
+    }
+
+    public static IQueryProConfigDbWriteable setQueryProFieldComment(boolean queryProFieldComment) {
+        return queryPro.setQueryProFieldComment(queryProFieldComment);
+    }
+
+    public static IQueryProConfigDbWriteable setQueryStructureResolver(IQueryStructureResolver queryStructureResolver) {
+        return queryPro.setQueryStructureResolver(queryStructureResolver);
     }
 
     @Contract(pure = true)
@@ -151,7 +192,7 @@ public class UserQueryPro {
 
             @NotNull
             @Override
-            protected QueryPayload get_payload() { return queryPro.getPayload(); }
+            protected QueryPayload getPayload() { return queryPro.getPayload(); }
         }
 
         public static class WhereField<T, RUN_RES> extends CommonField<T, RUN_RES> {
