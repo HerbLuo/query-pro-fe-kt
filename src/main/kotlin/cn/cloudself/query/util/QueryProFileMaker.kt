@@ -13,6 +13,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.util.*
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.javaMethod
 
@@ -727,7 +728,7 @@ class QueryProFileMaker private constructor(
                 val paramsStr = genericType.substring(indexOfLt + 1, if (areArr) genericType.length - 3 else genericType.length - 1)
                 val resTypeBuilder = StringBuilder(genericType.substring(0, indexOfLt + 1))
 
-                val sj = StringJoiner(",")
+                val sj = StringJoiner(", ")
                 for (param in paramsStr.split(',')) {
                     val actual = genericTypeMapActualGenericType[param.replace("? extends ", "").trim()]
                     if (actual != null) {
@@ -756,6 +757,7 @@ class QueryProFileMaker private constructor(
             .replace("java.lang.", "")
 
         return QueryPro::class.declaredFunctions
+            .filter { it.visibility == KVisibility.PUBLIC }
             .map {
                 val parameters = it.parameters
                 val method = it.javaMethod ?: throw UnSupportException("QueryPro Kotlin方法必须有对应的Java方法")
@@ -768,9 +770,12 @@ class QueryProFileMaker private constructor(
                 if (pure) annotations.add("@Contract(pure = true)")
                 if (safeVarargs != null) annotations.add("@SafeVarargs")
 
+                val returnType =
+                    noPackage(toActualType(method.genericReturnType.typeName) ?: method.returnType.typeName)
+
                 DelegateInfo(
                     "public static",
-                    noPackage(toActualType(method.genericReturnType.typeName) ?: method.returnType.typeName),
+                    returnType,
                     method.name,
                     method.parameters.withIndex().map { (i, param) ->
                         val kParam = parameters[i + 1]

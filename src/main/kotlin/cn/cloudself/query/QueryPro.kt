@@ -162,53 +162,16 @@ open class QueryPro<
         insert(listOf(*objs), clazz) as List<ID?>
     }
 
-    override fun setDataSource(dataSource: DataSource): IQueryProConfigDbWriteable {
-        store.set("dataSource", dataSource)
-        return this
-    }
+    override fun setDataSource(dataSource: DataSource) = setConfig("dataSource", dataSource)
+    override fun setBeautifySql(beautifySql: Boolean) = setConfig("beautifySql", beautifySql)
+    override fun setPrintSql(printSql: Boolean) = setConfig("printSql", printSql)
+    override fun setPrintCallByInfo(printCallByInfo: Boolean) = setConfig("printCallByInfo", printCallByInfo)
+    override fun setPrintResult(printResult: Boolean) = setConfig("printResult", printResult)
+    override fun setDryRun(dryRun: Boolean) = setConfig("dryRun", dryRun)
+    override fun setQueryProFieldComment(queryProFieldComment: Boolean) = setConfig("queryProFieldComment", queryProFieldComment)
+    override fun setLogicDelete(logicDelete: Boolean) = setConfig("logicDelete", logicDelete)
+    override fun setLogicDeleteField(logicDeleteField: String) = setConfig("logicDeleteField", logicDeleteField)
+    override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver) = setConfig("queryStructureResolver", queryStructureResolver)
 
-    override fun setBeautifySql(beautifySql: Boolean): IQueryProConfigDbWriteable {
-        store.set("beautifySql", beautifySql)
-        return this
-    }
-
-    override fun setPrintSql(printSql: Boolean): IQueryProConfigDbWriteable {
-        store.set("printSql", printSql)
-        return this
-    }
-
-    override fun setPrintCallByInfo(printCallByInfo: Boolean): IQueryProConfigDbWriteable {
-        store.set("printCallByInfo", printCallByInfo)
-        return this
-    }
-
-    override fun setPrintResult(printResult: Boolean): IQueryProConfigDbWriteable {
-        store.set("printResult", printResult)
-        return this
-    }
-
-    override fun setDryRun(dryRun: Boolean): IQueryProConfigDbWriteable {
-        store.set("dryRun", dryRun)
-        return this
-    }
-
-    override fun setQueryProFieldComment(queryProFieldComment: Boolean): IQueryProConfigDbWriteable {
-        store.set("queryProFieldComment", queryProFieldComment)
-        return this
-    }
-
-    override fun setLogicDelete(logicDelete: Boolean): IQueryProConfigDbWriteable {
-        store.set("logicDelete", logicDelete)
-        return this
-    }
-
-    override fun setLogicDeleteField(logicDeleteField: String): IQueryProConfigDbWriteable {
-        store.set("logicDeleteField", logicDeleteField)
-        return this
-    }
-
-    override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver): IQueryProConfigDbWriteable {
-        store.set("queryStructureResolver", queryStructureResolver)
-        return this
-    }
+    private fun setConfig(key: String, value: Any?) = this.also { store.set(key, value) }
 }

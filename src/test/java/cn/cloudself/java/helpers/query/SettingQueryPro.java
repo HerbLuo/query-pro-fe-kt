@@ -115,43 +115,43 @@ public class SettingQueryPro {
         return queryPro.selectByPrimaryKey(value);
     }
 
-    public static IQueryProConfigDbWriteable setBeautifySql(boolean beautifySql) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setBeautifySql(boolean beautifySql) {
         return queryPro.setBeautifySql(beautifySql);
     }
 
-    public static IQueryProConfigDbWriteable setDataSource(javax.sql.DataSource dataSource) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setDataSource(javax.sql.DataSource dataSource) {
         return queryPro.setDataSource(dataSource);
     }
 
-    public static IQueryProConfigDbWriteable setDryRun(boolean dryRun) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setDryRun(boolean dryRun) {
         return queryPro.setDryRun(dryRun);
     }
 
-    public static IQueryProConfigDbWriteable setLogicDelete(boolean logicDelete) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setLogicDelete(boolean logicDelete) {
         return queryPro.setLogicDelete(logicDelete);
     }
 
-    public static IQueryProConfigDbWriteable setLogicDeleteField(String logicDeleteField) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setLogicDeleteField(String logicDeleteField) {
         return queryPro.setLogicDeleteField(logicDeleteField);
     }
 
-    public static IQueryProConfigDbWriteable setPrintCallByInfo(boolean printCallByInfo) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setPrintCallByInfo(boolean printCallByInfo) {
         return queryPro.setPrintCallByInfo(printCallByInfo);
     }
 
-    public static IQueryProConfigDbWriteable setPrintResult(boolean printResult) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setPrintResult(boolean printResult) {
         return queryPro.setPrintResult(printResult);
     }
 
-    public static IQueryProConfigDbWriteable setPrintSql(boolean printSql) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setPrintSql(boolean printSql) {
         return queryPro.setPrintSql(printSql);
     }
 
-    public static IQueryProConfigDbWriteable setQueryProFieldComment(boolean queryProFieldComment) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setQueryProFieldComment(boolean queryProFieldComment) {
         return queryPro.setQueryProFieldComment(queryProFieldComment);
     }
 
-    public static IQueryProConfigDbWriteable setQueryStructureResolver(IQueryStructureResolver queryStructureResolver) {
+    public static QueryPro<Setting, Long, __Impl.WhereField<Setting, List<Setting>>, __Impl.OrderByField<Setting, List<Setting>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setQueryStructureResolver(IQueryStructureResolver queryStructureResolver) {
         return queryPro.setQueryStructureResolver(queryStructureResolver);
     }
 
