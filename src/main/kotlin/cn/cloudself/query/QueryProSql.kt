@@ -107,7 +107,7 @@ class QueryProSql {
         private val sqlArr: Array<String>,
         private val params: Array<Array<Any?>>
     ) {
-        private val store = HashMapStore()
+        private val store = CodeStore()
         private val config = QueryProConfigDb(store)
 
         fun assignDataSource(dataSource: DataSource) = this.also {
@@ -136,7 +136,7 @@ class QueryProSql {
         private val sql: String,
         private val params: Array<Any?>,
     ) {
-        private val store = HashMapStore()
+        private val store = CodeStore()
         private val config = QueryProConfigDb(store)
 
         fun assignDataSource(dataSource: DataSource) = this.also {

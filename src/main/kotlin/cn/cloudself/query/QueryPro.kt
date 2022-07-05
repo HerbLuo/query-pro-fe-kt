@@ -26,17 +26,7 @@ open class QueryPro<
     private val createUpdateByField: CreateQueryField<UPDATE_BY_FIELD>,
     private val createDeleteByField: CreateQueryField<DELETE_BY_FIELD>,
 ): IQueryProConfigDbWriteable {
-    private val store = object : HashMapStore() {
-        override fun get(key: String): Any? {
-            val value = super.get(key)
-            if (key == "dataSource") {
-                if (value == null) {
-                    return QueryProConfig.global.defaultDataSource().get(clazz)
-                }
-            }
-            return value
-        }
-    }
+    private val store = CodeStore(clazz)
     val payload = QueryPayload(store)
 
     /**

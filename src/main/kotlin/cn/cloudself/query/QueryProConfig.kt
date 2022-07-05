@@ -192,6 +192,22 @@ open class HashMapStore: Store {
     }
 }
 
+class CodeStore(private val clazz: Class<*>? = null): HashMapStore() {
+    init {
+        super.set("dataSource", null)
+    }
+
+    override fun get(key: String): Any? {
+        val value = super.get(key)
+        if (key == "dataSource") {
+            if (value == null) {
+                return QueryProConfig.global.defaultDataSource().get(clazz)
+            }
+        }
+        return value
+    }
+}
+
 private const val KEY_PREFIX = "QUERY_PRO_CONFIG:REQUEST_CONTEXT:"
 class RequestContextStore: Store {
     private val isRequestContextHolderPresent = try {
@@ -260,7 +276,7 @@ class ThreadContextStore constructor(private val init: MutableMap<String, Any?>?
 }
 
 fun interface DataSourceGetter {
-    fun get(clazz: Class<*>): DataSource?
+    fun get(clazz: Class<*>?): DataSource?
 }
 
 interface OnlyGlobalConfig {
