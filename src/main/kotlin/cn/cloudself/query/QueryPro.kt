@@ -112,6 +112,15 @@ open class QueryPro<
         return UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = update), createUpdateByField)
     }
 
+    @PureContract
+    @Contract(pure = true)
+    fun updateSet(obj: Map<String, Any?>): UpdateField<UPDATE_BY_FIELD> {
+        val update = Update(data = obj, override = true)
+        queryStructure.action = QueryStructureAction.UPDATE
+        queryStructure.update = update
+        return UpdateField(queryStructure, createUpdateByField)
+    }
+
     /**
      * 删除操作
      */
