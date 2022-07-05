@@ -16,12 +16,13 @@ object QueryProTransaction {
             return block()
         } catch (e: Exception) {
             logger.warn("遇到错误，准备回滚中")
-            val connection = connectionThreadLocal.get() ?: throw IllegalImplements("此时connectionThreadLocal不会获取不到")
+            val connection = connectionThreadLocal.get() ?: throw IllegalImplements(e, "此时connectionThreadLocal不会获取不到，除非未配置dataSource")
             connection.rollback()
+            logger.info("回滚完毕")
             throw e
         } finally {
             connectionThreadLocal.get().also {
-                val connection = it!!
+                val connection = it ?: return@also
                 connection.commit()
                 connection.autoCommit = true
             }
