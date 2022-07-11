@@ -3,7 +3,7 @@ package cn.cloudself.query
 import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
-import cn.cloudself.query.structure_reolsver.JdbcQueryStructureResolver
+import cn.cloudself.query.structure_reolsver.JdbcQSR
 import cn.cloudself.query.util.BeanProxy
 import cn.cloudself.query.util.Result
 import cn.cloudself.query.util.parseClass
@@ -462,7 +462,7 @@ object QueryProConfig {
             setQueryProFieldComment(true)
             setLogicDelete(true)
             setLogicDeleteField("deleted")
-            setQueryStructureResolver(JdbcQueryStructureResolver())
+            setQueryStructureResolver(JdbcQSR())
 
             shouldIgnoreFields.add("serialVersionUID")
 
