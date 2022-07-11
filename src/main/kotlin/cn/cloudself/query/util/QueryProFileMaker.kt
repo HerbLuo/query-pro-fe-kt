@@ -319,6 +319,7 @@ data class TemplateModel(
     var _ClassName: String? = null,
     var packagePath: String? = null,
     var noArgMode: Boolean? = null,
+    var swaggerSupport: Boolean? = false,
     var daoExCodes: String? = null,
     var entityExCodes: String? = null,
     var columns: List<TemplateModelColumn> = listOf(),
@@ -402,6 +403,7 @@ class QueryProFileMaker private constructor(
     private var skipReplaceEntity = false
     private var ktNoArgMode = true
     private var chainForModel = false
+    private var swaggerSupport: Boolean = false
     private var entityFileTemplatePath: String? = null
     private val dbMetaTypeMapKtJavaType = mutableMapOf(
         "BIGINT" to KtJavaType("Long"),
@@ -511,6 +513,11 @@ class QueryProFileMaker private constructor(
     fun dbJavaNameConverter(nameConverter: NameConverter) = this.also { this.nameConverter = nameConverter }
 
     /**
+     * 添加swagger的支持(包括但不限于在Entity上面添加ApiModelProperty注解)
+     */
+    fun swaggerSupport(swaggerSupport: Boolean) = this.also { this.swaggerSupport = swaggerSupport }
+
+    /**
      * 自定义entity的模板
      */
     fun entityFileTemplatePath(path: String) = this.also { this.entityFileTemplatePath = path }
@@ -543,6 +550,7 @@ class QueryProFileMaker private constructor(
                 model._ClassName = ClassName
                 model.packagePath = javaFilePath.packagePath
                 model.noArgMode = ktNoArgMode
+                model.swaggerSupport = swaggerSupport
                 val templateDir = "templates"
                 model.queryProDelegate = delegateQueryPro(
                     templateName

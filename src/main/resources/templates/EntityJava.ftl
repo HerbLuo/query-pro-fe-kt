@@ -3,16 +3,29 @@
 <#assign className = m._ClassName?uncap_first/>
 package ${m.packagePath};
 
-<#if m.hasBigDecimal>import java.math.BigDecimal;
-</#if><#if m.hasDate>import java.util.Date;
-</#if>import javax.persistence.*;
+<#if m.hasBigDecimal>
+import java.math.BigDecimal;
+</#if>
+<#if m.hasDate>
+import java.util.Date;
+</#if>
+<#if m.swaggerSupport>
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+</#if>
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * ${m.remark}
  */
-<#if m.id??>@Entity</#if>
+<#if m.id??>
+@Entity
+</#if>
+<#if m.swaggerSupport>
+@ApiModel(description = "${m.remark}")
+</#if>
 @Table(name = "${m.db_name}")
 public class ${ClassName} implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -22,6 +35,9 @@ public class ${ClassName} implements Serializable {
 <#if m.id?? && m.id.column == field.db_name>
     @Id<#if m.id.autoIncrement>
     @GeneratedValue(strategy = GenerationType.IDENTITY)</#if>
+</#if>
+<#if m.swaggerSupport>
+    @ApiModelProperty("${field.remark}")
 </#if>
     @Column(name = "${field.db_name}")
     private ${field.javaTypeStr} ${field.propertyName};

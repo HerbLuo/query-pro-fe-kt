@@ -6,9 +6,17 @@
 
 package ${m.packagePath}
 
-<#if m.hasBigDecimal>import java.math.BigDecimal
-</#if><#if m.hasDate>import java.util.Date
-</#if>import javax.persistence.*
+<#if m.hasBigDecimal>
+import java.math.BigDecimal
+</#if>
+<#if m.hasDate>
+import java.util.Date
+</#if>
+<#if m.swaggerSupport>
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+</#if>
+import javax.persistence.*
 import cn.cloudself.query.*
 import org.jetbrains.annotations.Contract;
 
@@ -17,7 +25,12 @@ import org.jetbrains.annotations.Contract;
 /**
  * ${m.remark}
  */
-<#if m.id??>@Entity</#if>
+<#if m.id??>
+@Entity
+</#if>
+<#if m.swaggerSupport>
+@ApiModel(description = "${m.remark}")
+</#if>
 @Table(name = "${m.db_name}")
 data class ${EntityName}(
 <#list m.columns as field>
@@ -25,6 +38,9 @@ data class ${EntityName}(
 <#if m.id?? && m.id.column == field.db_name>
     @Id<#if m.id.autoIncrement>
     @GeneratedValue(strategy = GenerationType.IDENTITY)</#if>
+</#if>
+<#if m.swaggerSupport>
+    @ApiModelProperty(${field.remark})
 </#if>
     @Column(name = "${field.db_name}")
     var ${field.propertyName}: ${field.ktTypeStr}?<#if !m.noArgMode> = null</#if>,
