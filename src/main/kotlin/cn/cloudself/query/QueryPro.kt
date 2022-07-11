@@ -1,6 +1,7 @@
 package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
+import cn.cloudself.query.util.LogFactory
 import cn.cloudself.query.util.ObjectUtil
 import cn.cloudself.query.util.PureContract
 import cn.cloudself.query.util.parseClass
@@ -8,6 +9,8 @@ import org.jetbrains.annotations.Contract
 import javax.sql.DataSource
 
 typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
+
+private val logger = LogFactory.getLog(QueryProSql::class.java)
 
 open class QueryPro<
         T: Any,
@@ -115,7 +118,21 @@ open class QueryPro<
     @PureContract
     @Contract(pure = true)
     fun updateSet(obj: Map<String, Any?>): UpdateField<UPDATE_BY_FIELD> {
-        val update = Update(data = obj, override = true)
+        val parsedClass = parseClass(clazz)
+        val data = mutableMapOf<String, Any?>()
+        for ((key, value) in obj) {
+            if (parsedClass.getColumnDbFieldName(key) != null) {
+                data[key] = value
+            } else {
+                val column = parsedClass.getColumnByJavaPropertyName(key)
+                if (column == null) {
+                    logger.warn("字段{0}已被跳过", key)
+                    continue
+                }
+                data[column.dbName] = value
+            }
+        }
+        val update = Update(data, override = true)
         queryStructure.action = QueryStructureAction.UPDATE
         queryStructure.update = update
         return UpdateField(queryStructure, createUpdateByField)
