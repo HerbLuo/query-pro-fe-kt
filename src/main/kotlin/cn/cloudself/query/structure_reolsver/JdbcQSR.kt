@@ -17,7 +17,7 @@ import java.util.*
 import javax.sql.DataSource
 import kotlin.collections.LinkedHashMap
 
-class JdbcQueryStructureResolver: IQueryStructureResolver {
+class JdbcQSR: IQueryStructureResolver {
     private var dataSourceThreadLocal = ThreadLocal<DataSource?>()
 
     override fun <R> withConfig(config: ConfigStore, resolve: (resolver: IQueryStructureResolver) -> R): R {
@@ -266,7 +266,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
 
     private fun <T> resolvePri(sql: String, params: Array<Any?>, clazz: Class<T>, action: QueryStructureAction): List<T> {
         getConnection().autoUse { connection ->
-            logger.info("成功获取到连接")
+            logger.debug("成功获取到连接")
 
             val preparedStatement = connection.prepareStatement(sql)
 
@@ -446,7 +446,7 @@ class JdbcQueryStructureResolver: IQueryStructureResolver {
     } else (!QueryProTransaction.isActualTransactionActive).also { if (it) logger.info("Will auto close connection.") }
 
     companion object {
-        private val logger = LogFactory.getLog(JdbcQueryStructureResolver::class.java)
+        private val logger = LogFactory.getLog(JdbcQSR::class.java)
 
         private val isDataSourceUtilsPresent = try {
             Class.forName("org.springframework.jdbc.datasource.DataSourceUtils")
