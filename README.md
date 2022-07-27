@@ -42,7 +42,7 @@ QueryStructure的设计哲学: 易于序列化, 以便多端生成，并传输
 User user0 = UserQueryPro.selectByPrimaryKey(1);
 
 // 使用某个字段查询
-// 所有的 is 是可以省略的，但有时候加着更好看
+// !!! 所有的 is 是可以省略的，但有时候加着更好看
 // SELECT * FROM `user` WHERE `user`.`id` = ?
 List<User> users1_1 = UserQueryPro.selectBy().id().is().equalsTo(1).run();
 List<User> users1_2 = UserQueryPro.selectBy().id().equalsTo(1).run();
@@ -58,7 +58,7 @@ List<User> users2_3 = UserQueryPro.selectBy().age().between(18, 20).run();
 List<User> users2_5 = UserQueryPro.selectBy().age().lessThan(18).run();
 
 // 使用and查询
-// and是可以省略的，但有时候加着更好看
+// !!! and是可以省略的，但有时候加着更好看
 // SELECT * FROM `user` WHERE `user`.`name` = ? AND `user`.`age` = ?
 List<User> usersRun3 = UserQueryPro
         .selectBy().name().is().equalsTo("hb")
@@ -85,9 +85,9 @@ List<User> usersRun6_1 = UserQueryPro.selectBy().id().is().not().equalsTo(2).run
 // SELECT * FROM `user` WHERE `user`.`id` not in (?, ?)
 List<User> usersRun6_2 = UserQueryPro.selectBy().id().is().not().in(1, 2).run();
 // SELECT * FROM `user` WHERE `user`.`id` not between (?, ?)
-List<User> usersRun6_2 = UserQueryPro.selectBy().id().is().not().between(1, 2).run();
+List<User> usersRun6_2 = UserQueryPro.selectBy().id().not().between(1, 2).run();
 // SELECT * FROM `user` WHERE `user`.`name` not like ?
-List<User> usersRun6_2 = UserQueryPro.selectBy().name().is().not().like("%H%").run();
+List<User> usersRun6_2 = UserQueryPro.selectBy().name().not().like("%H%").run();
 
 // 忽略大小写
 // SELECT * FROM `user` WHERE UPPER(`user`.`name`) like UPPER(?)
