@@ -28,7 +28,7 @@ List<User> users2 = UserQueryPro
 QueryStructure的设计哲学: 易于序列化, 以便多端生成，并传输
 ```
 
-### 使用文档
+### 快速入门 & 文档
 
 ##### 1. 生成代码
 ```java
@@ -146,7 +146,8 @@ UserQueryPro.insert(...); // 参数支持 User, Map, Collection<User>, vararg Us
 
 ##### 4. 更新操作
 ```java
-
+UserQueryPro.updateSet(new User(19)).where.id.equalsTo(1).run()
+UserQueryPro.updateSet().id(5).age(NULL).run()
 ```
 
 ##### 5. 删除操作
@@ -167,8 +168,13 @@ QueryProSql.create().exec()
 ```
 
 ##### 7. 事务
+`spring`环境下, 直接使用`@Transactional`即可。
+非`spring`环境下，使用
 ```java
-
+QueryProTransaction.use(() -> {
+    // 业务代码
+    return null;
+})
 ```
 
 ##### 8. 多表关联支持
