@@ -1,5 +1,5 @@
 
-#### 例子
+### 例子
 ```java
 // SELECT * FROM `user` WHERE `id` = ? LIMIT 1
 User user = UserQueryPro.selectByPrimaryKey(1);
@@ -14,7 +14,7 @@ List<User> users2 = UserQueryPro
         .run();
 ```
 
-#### 简述
+### 简述
 
 总的来说，`QueryPro`的运作流程分为两部分。
 
@@ -28,7 +28,7 @@ List<User> users2 = UserQueryPro
 QueryStructure的设计哲学: 易于序列化, 以便多端生成，并传输
 ```
 
-#### 使用文档
+### 使用文档
 
 ##### 1. 生成代码
 ```java
@@ -109,7 +109,7 @@ User userRun1 = UserQueryPro.selectBy().runLimit1();
 
 // 只需要返回某个字段
 // SELECT `setting`.`id` FROM `setting` WHERE `setting`.`id` = ?
-        List<Long> ids1 = SettingQueryPro.selectBy().id().equalsTo(1).columnLimiter().id();
+List<Long> ids1 = SettingQueryPro.selectBy().id().equalsTo(1).columnLimiter().id();
 
 // SELECT `user`.`id`, `user`.`age` FROM `user` WHERE `user`.`id` = ?
 List<User> usersRun13 = UserQueryPro.selectBy().id().equalsTo(1).columnsLimiter().id().age().run();
@@ -163,7 +163,7 @@ SettingQueryPro.selectBy().id().equalsTo(1).or().kee().equalsTo("lang").runLimit
 
 ```
 
-#### 配置
+### 配置
 `QueryPro`的配置通过`QueryProConfig`进行。  
 `QueryProConfig`的配置有如下五个作用域:  
 `global`(全局), `request`(请求), `thread`(不推荐), `context`(代码块), `code`(private，针对某次查询)
@@ -323,7 +323,7 @@ QueryProConfig.global
 
 ##### lifecycle
 
-#### 后续规划
+### 后续规划
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
 对sum, concat, group_concat, discount等 的支持
 QueryStructure 不复制
