@@ -5,12 +5,12 @@
 User user = UserQueryPro.selectByPrimaryKey(1);
 
 // SELECT * FROM `user` WHERE `user`.`id` = ?
-List<User> users = UserQueryPro.selectBy().username().equalsTo("hello").run();
+List<User> users = UserQueryPro.selectBy().username().is().equalsTo("hello").run();
 
 // SELECT * FROM `user` WHERE `user`.`id` = ? OR `user`.`age` = ?
 List<User> users2 = UserQueryPro
-        .selectBy().id().is().equalsTo(1) // is 是可选的
-        .or().age().in(10, 11)
+        .selectBy().id().equalsTo(1) // is 是可选的
+        .or().age().not().in(10, 11)
         .run();
 ```
 
@@ -44,8 +44,8 @@ User user0 = UserQueryPro.selectByPrimaryKey(1);
 // 使用某个字段查询
 // 所有的 is 是可以省略的，但有时候加着更好看
 // SELECT * FROM `user` WHERE `user`.`id` = ?
-List<User> users1_1 = UserQueryPro.selectBy().id().equalsTo(1).run();
-List<User> users1_2 = UserQueryPro.selectBy().id().is().equalsTo(1).run();
+List<User> users1_1 = UserQueryPro.selectBy().id().is().equalsTo(1).run();
+List<User> users1_2 = UserQueryPro.selectBy().id().equalsTo(1).run();
 List<User> users1_3 = UserQueryPro.selectBy().id(1).run();
 
 // 使用in查询
