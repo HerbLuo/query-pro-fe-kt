@@ -371,11 +371,11 @@ class JdbcQSR: IQueryStructureResolver {
             } else {
                 val parser = QueryProConfig.final.resultSetParser(beanNeedType)
                 if (parser != null) {
-                    parser(resultSet)(i) /* value */
+                    parser.get(resultSet, i) /* value */
                 } else {
                     var valueOpt: Optional<Any>? = null
                     for (resultSetParserEx in QueryProConfig.final.resultSetParserEx()) {
-                        val valueOptMay = resultSetParserEx(resultSet, beanNeedType, i)
+                        val valueOptMay = resultSetParserEx.parse(resultSet, beanNeedType, i)
                         if (valueOptMay.isPresent) {
                             valueOpt = valueOptMay
                             break

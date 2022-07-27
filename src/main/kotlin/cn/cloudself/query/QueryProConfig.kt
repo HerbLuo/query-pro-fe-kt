@@ -11,6 +11,7 @@ import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.RequestContextHolder
 import java.math.BigDecimal
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Time
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -23,9 +24,15 @@ import kotlin.reflect.KClass
 @Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING", "HasPlatformType")
 fun <T: Enum<*>> enumValueOfAny(clazz: Class<*>, name: String) = java.lang.Enum.valueOf(clazz as Class<T>, name)
 
-typealias ResultSetGetter<T> = (rs: ResultSet) -> (i: Int) -> T?
+fun interface ResultSetGetter<T> {
+    @Throws(SQLException::class)
+    fun get(rs: ResultSet, i: Int): T?
+}
 
-typealias ResultSetParserEx = (rs: ResultSet, clazz: Class<*>, i: Int) -> Optional<Any>
+fun interface ResultSetParserEx {
+    @Throws(SQLException::class)
+    fun parse(rs: ResultSet, clazz: Class<*>, i: Int): Optional<Any>
+}
 
 data class DbColumnInfo(
     val type: String,
@@ -342,6 +349,13 @@ class GlobalQueryProConfigDb: QueryProConfigDb(HashMapStore()), OnlyGlobalConfig
         supportedColumnType.add(clazz)
     }
 
+    /**
+     * 添加一个ResultSet解析器，与addResultSetParser功能相似，但更推荐使用addResultSetParser，因为性能略好
+     */
+    fun addResultSetParserEx(parser: ResultSetParserEx) = this.also {
+        resultSetParserEx.add(parser)
+    }
+
     @Suppress("UNCHECKED_CAST")
     internal fun <T: Any> putToResultSetParser(clazz: KClass<T>, value: ResultSetGetter<T>) {
         val primitiveType = (clazz).javaPrimitiveType
@@ -473,26 +487,25 @@ object QueryProConfig {
             ] = Long::class.java
 
             /* jdbc查询的结果: resultSet转enum */
-            @Suppress("UNCHECKED_CAST")
             resultSetParserEx.add { rs, clazz, i -> if (!clazz.isEnum) { Optional.empty() } else { Optional.ofNullable(enumValueOfAny(clazz, rs.getString(i))) } }
 
             // 这里是为了兼容性，所以将函数手动展开了
-            putToResultSetParser(BigDecimal::class) { rs -> { i -> rs.getBigDecimal(i) } }
-            putToResultSetParser(Byte::class) { rs -> { i -> rs.getByte(i) } }
-            putToResultSetParser(ByteArray::class) { rs -> { i -> rs.getBytes(i) } }
-            putToResultSetParser(Date::class) { rs -> { i -> rs.getTimestamp(i) } }
-            putToResultSetParser(LocalDate::class) { rs -> { i -> rs.getDate(i).toLocalDate() } }
-            putToResultSetParser(LocalTime::class) { rs -> { i -> rs.getTime(i).toLocalTime() } }
-            putToResultSetParser(LocalDateTime::class) { rs -> { i -> rs.getTimestamp(i).toLocalDateTime() } }
-            putToResultSetParser(java.sql.Date::class) { rs -> { i -> rs.getDate(i) } }
-            putToResultSetParser(Double::class) { rs -> { i -> rs.getDouble(i) } }
-            putToResultSetParser(Float::class) { rs -> { i -> rs.getFloat(i) } }
-            putToResultSetParser(Int::class) { rs -> { i -> rs.getInt(i) } }
-            putToResultSetParser(Long::class) { rs -> { i -> rs.getLong(i) } }
-            putToResultSetParser(Time::class) { rs -> { i -> rs.getTime(i) } }
-            putToResultSetParser(Timestamp::class) { rs -> { i -> rs.getTimestamp(i) } }
-            putToResultSetParser(Short::class) { rs -> { i -> rs.getShort(i) } }
-            putToResultSetParser(String::class) { rs -> { i -> rs.getString(i) } }
+            putToResultSetParser(BigDecimal::class)    { rs, i -> rs.getBigDecimal(i) }
+            putToResultSetParser(Byte::class)          { rs, i -> rs.getByte(i) }
+            putToResultSetParser(ByteArray::class)     { rs, i -> rs.getBytes(i) }
+            putToResultSetParser(Date::class)          { rs, i -> rs.getTimestamp(i) }
+            putToResultSetParser(LocalDate::class)     { rs, i -> rs.getDate(i).toLocalDate() }
+            putToResultSetParser(LocalTime::class)     { rs, i -> rs.getTime(i).toLocalTime() }
+            putToResultSetParser(LocalDateTime::class) { rs, i -> rs.getTimestamp(i).toLocalDateTime() }
+            putToResultSetParser(java.sql.Date::class) { rs, i -> rs.getDate(i) }
+            putToResultSetParser(Double::class)        { rs, i -> rs.getDouble(i) }
+            putToResultSetParser(Float::class)         { rs, i -> rs.getFloat(i) }
+            putToResultSetParser(Int::class)           { rs, i -> rs.getInt(i) }
+            putToResultSetParser(Long::class)          { rs, i -> rs.getLong(i) }
+            putToResultSetParser(Time::class)          { rs, i -> rs.getTime(i) }
+            putToResultSetParser(Timestamp::class)     { rs, i -> rs.getTimestamp(i) }
+            putToResultSetParser(Short::class)         { rs, i -> rs.getShort(i) }
+            putToResultSetParser(String::class)        { rs, i -> rs.getString(i) }
         }
 
     @JvmField

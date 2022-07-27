@@ -165,6 +165,11 @@ public class UserQueryPro {
         return queryPro.updateSet(obj, override);
     }
 
+    @Contract(pure = true)
+    public static UpdateField<__Impl.WhereField<Boolean, Boolean>> updateSet(java.util.Map<String, ?> obj) {
+        return queryPro.updateSet(obj);
+    }
+
     public static class __Impl {
         private static final Class<User> CLAZZ = User.class;
         public static final String TABLE_NAME = "user";

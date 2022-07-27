@@ -1,47 +1,330 @@
 
-#### 总体原理简述
+#### 例子
+```java
+// SELECT * FROM `user` WHERE `id` = ? LIMIT 1
+User user = UserQueryPro.selectByPrimaryKey(1);
+
+// SELECT * FROM `user` WHERE `user`.`id` = ?
+List<User> users = UserQueryPro.selectBy().username().equalsTo("hello").run();
+
+// SELECT * FROM `user` WHERE `user`.`id` = ? OR `user`.`age` = ?
+List<User> users2 = UserQueryPro
+        .selectBy().id().is().equalsTo(1) // is 是可选的
+        .or().age().in(10, 11)
+        .run();
+```
+
+#### 简述
 
 总的来说，`QueryPro`的运作流程分为两部分。
-即：
-1. 调用`run`, `runAsMap`等方法之前
-2. 调用`run`, `runAsMap`等方法之后
 
-一句话: 在调用`QueryPro`的第一个静态方法后，`QueryStructure`这个对象就生成了，
-一直到调用`run`之前的所有代码都是合理的修改`QueryStructure`这个结构，
-调用`run`之后，`QueryStructure`就转换为了目标对象并返回。
+1. 在调用之前，`QueryPro`的所有代码都是为了合理的生成并修改`QueryStructure`这个结构，
+
+2. 调用`run`之后，
+通过`QueryStructureToSql`将`QueryStructure`就转成目标sql，
+然后通过`JdbcQSR`执行sql并生成目标对象返回。
 
 ```
 QueryStructure的设计哲学: 易于序列化, 以便多端生成，并传输
 ```
 
-调用`run`之后: 会使用`IQueryStructureResolver`接口将上述结构`QueryStructure`转换为目标对象list。
-`IQueryStructureResolver`默认的实现有`JdbcQueryStructureResolver`
+#### 使用文档
 
-`JdbcQueryStructureResolver`简述:
-```
-             QueryStructureToSql        prepareStatement     mapRow(with BeanProxy)
-QueryStructure ------------> sql & params ----------> ResultSet -----------> List<T>
+##### 1. 生成代码
+```java
+
 ```
 
-**注意，使用QueryProFileMaker的`*`可能有被 **
+##### 2. 查询操作
+```java
+// 使用主键查询
+// SELECT * FROM `user` WHERE `id` = ? LIMIT 1
+User user0 = UserQueryPro.selectByPrimaryKey(1);
 
+// 使用某个字段查询
+// 所有的 is 是可以省略的，但有时候加着更好看
+// SELECT * FROM `user` WHERE `user`.`id` = ?
+List<User> users1_1 = UserQueryPro.selectBy().id().equalsTo(1).run();
+List<User> users1_2 = UserQueryPro.selectBy().id().is().equalsTo(1).run();
+List<User> users1_3 = UserQueryPro.selectBy().id(1).run();
+
+// 使用in查询
+// SELECT * FROM `user` WHERE `user`.`name` in (?, ?)
+List<User> users2_1 = UserQueryPro.selectBy().name().in("hb", "herb").run();
+List<User> users2_2 = UserQueryPro.selectBy().name("hb", "herb").run();
+
+// 使用and查询
+// and是可以省略的，但有时候加着更好看
+// SELECT * FROM `user` WHERE `user`.`name` = ? AND `user`.`age` = ?
+List<User> usersRun3 = UserQueryPro
+        .selectBy().name().is().equalsTo("hb")
+        .and().age().is().equalsTo(18)
+        .run();
+
+// 使用or查询
+// SELECT * FROM `user` WHERE `user`.`id` = ? OR `user`.`age` = ?
+List<User> usersRun5_1 = UserQueryPro.selectBy().id().is().equalsTo(1).or().age().equalsTo(10).run();
+// SELECT * FROM `user` WHERE `user`.`id` = ? OR (`user`.`age` = ? AND `user`.`name` like ?)
+List<User> usersRun5_2 = UserQueryPro
+        .selectBy().id().is().equalsTo(1)
+        .or((it) -> it.age().equalsTo(18).and().name().like("%rb%"))
+        .run();
+// SELECT * FROM `user` WHERE `user`.`id` = ? OR (`user`.`age` = ? AND `user`.`name` like ?)
+List<User> usersRun5_3 = UserQueryPro
+        .selectBy().id().is().equalsTo(1)
+        .or().parLeft().age().equalsTo(18).and().name().like("%rb%").parRight()
+        .run();
+
+// 使用not查询
+// SELECT * FROM `user` WHERE `user`.`id` <> ?
+List<User> usersRun6_1 = UserQueryPro.selectBy().id().is().not().equalsTo(2).run();
+// SELECT * FROM `user` WHERE `user`.`id` not in (?, ?)
+List<User> usersRun6_2 = UserQueryPro.selectBy().id().is().not().in(1, 2).run();
+
+// 忽略大小写
+// SELECT * FROM `user` WHERE UPPER(`user`.`name`) like UPPER(?)
+List<User> usersRun7 = UserQueryPro.selectBy().name().ignoreCase().like("%H%").run();
+
+// is null 查询
+// SELECT * FROM `user` WHERE `user`.`age` is null
+List<User> usersRun8_1 = UserQueryPro.selectBy().age().is().nul().run();
+// SELECT * FROM `user` WHERE `user`.`age` is not null
+List<User> usersRun8_2 = UserQueryPro.selectBy().age().is().not().nul().run();
+
+// like查询
+// SELECT * FROM `user` WHERE `user`.`name` like ? ORDER BY `user`.`id` DESC
+List<User> usersRun9 = UserQueryPro.selectBy().name().like("%h%").orderBy().id().desc().run();
+
+// SELECT * FROM `user` ORDER BY `user`.`id` DESC
+List<User> usersRun10 = UserQueryPro.orderBy().id().desc().run();
+
+// SELECT * FROM `user` ORDER BY `user`.`age` ASC, `user`.`id` DESC
+List<User> usersRun11 = UserQueryPro.orderBy().age().asc().id().desc().run();
+
+// SELECT * FROM `user` ORDER BY `user`.`age` DESC, `user`.`id` ASC LIMIT 1
+List<User> usersRun12 = UserQueryPro.orderBy().age().desc().id().asc().limit(1).run();
+
+// SELECT * FROM `user` LIMIT 1
+User userRun1 = UserQueryPro.selectBy().runLimit1();
+
+// 只需要返回某个字段
+// SELECT `setting`.`id` FROM `setting` WHERE `setting`.`id` = ?
+        List<Long> ids1 = SettingQueryPro.selectBy().id().equalsTo(1).columnLimiter().id();
+
+// SELECT `user`.`id`, `user`.`age` FROM `user` WHERE `user`.`id` = ?
+List<User> usersRun13 = UserQueryPro.selectBy().id().equalsTo(1).columnsLimiter().id().age().run();
+
+// SELECT `user`.`id`, `user`.`name` FROM `user` ORDER BY `user`.`age` DESC, `user`.`id` DESC LIMIT 1
+List<User> usersRun14 = UserQueryPro
+        .orderBy().age().desc().id().desc().limit(1)
+        .columnsLimiter().id().name()
+        .run();
+
+// SELECT * FROM `user` WHERE `user`.`id` = ? AND `user`.`name` = ?
+List<User> usersRun15 = UserQueryPro
+        .selectBy().id().equalsTo(1)
+        .take(it -> True ? it.name().equalsTo("hb") : it.name().equalsTo("hb2"))
+        .run();
+```
+
+##### 3. 插入操作
+```java
+UserQueryPro.insert(...);
+```
+
+##### 4. 更新操作
+```java
+
+```
+
+##### 5. 删除操作
+```java
+// 逻辑删除默认启用，当存在deleted字段时，自动使用deleted字段进行逻辑删除
+// UPDATE `setting` SET `deleted` = ? WHERE `setting`.`id` = ?
+SettingQueryPro.deleteBy().id().is().equalsTo(1).run()
+
+// SELECT * FROM `setting` WHERE  ( `setting`.`id` = ? OR `setting`.`kee` = ? )  AND `setting`.`deleted` = ? LIMIT 1
+SettingQueryPro.selectBy().id().equalsTo(1).or().kee().equalsTo("lang").runLimit1()
+```
+
+##### 6. 直接执行sql
+```java
+
+```
+
+##### 7. 事务
+```java
+
+```
+
+##### 8. 多表关联支持
+目前多表关联查询仍不够优雅，但能用
+```java
+
+```
+
+#### 配置
+`QueryPro`的配置通过`QueryProConfig`进行。  
+`QueryProConfig`的配置有如下五个作用域:  
+`global`(全局), `request`(请求), `thread`(不推荐), `context`(代码块), `code`(private，针对某次查询)
+
+##### 数据源
+如果你使用了`Spring`, `QueryPro`会自动装载由`Spring`管理的`DataSource`。
+当然你也可以手动指定它。
+```java
+DruidDataSource dataSource = new DruidDataSource();
+dataSource.setUrl(url);
+dataSource.setUsername(username);
+dataSource.setPassword(password);
+dataSource.setDriverClassName(drive);
+
+// 针对本次请求，临时切换数据源
+QueryPro.request.setDataSource(dataSource)
+        
+// 针对某段查询，临时切换数据源
+QueryProConfig.context.use((config) -> {
+    config.setDataSource(dataSource);
+
+    User user = UserQueryPro.selectBy().name().equalsTo("username").runLimit1();
+    List<Setting> themes = SettingQueryPro.selectBy().kee().equalsTo("theme").run();
+});
+
+// 针对某次查询，临时切换数据源
+UserQueryPro.setDataSource(dataSource).selectBy().name().equalsTo("username").run();
+```
+##### 逻辑删除
+逻辑删除默认就是启用行为。如果表字段存在`deleted`字段会使用逻辑删除。
+```java
+// 关闭逻辑删除
+QueryProConfig.global.setLogicDelete(false); 
+// 更改逻辑删除的字段，逻辑删除默认使用deleted字段，可以使用setLogicDeleteField更改
+QueryProConfig.global.setLogicDeleteField("removed");
+```
+##### 日志信息
+```java
+QueryProConfig.global
+    .setPrintSql(true) // 打印sql日志，默认开启
+    .setBeautifySql(true) // 美化sql(加入空格，换行等)，默认开启
+    .setPrintCallByInfo(true) // 打印调用QueryPro所在的代码行，默认开启
+    .setPrintResult(true); // 打印返回结果，默认开启
+```
+##### 设置需要忽略字段
+例如，忽略`serialVersionUID`这个字段 (这是默认行为)
+```java
+QueryProConfig.global.shouldIgnoreFields().add("serialVersionUID");
+```
+##### 自定义QueryStructure解析器
+`QueryPro`在处理`QueryStructure`转返回结果时，默认实现并使用了`JdbcQSR`，  
+它使用Jdbc进行查询，不依赖`Mybatis`, `Spring Data`等框架。  
+出于某些目的，你也可以替换它。
+
+```java
+QueryProConfig.global.setQueryStructureResolver(new JdbcQSR());
+```
+##### 处理返回结果
+
+###### 1. 指定返回结果的类型  
+
+`JdbcQSR`会解析需返回结果的类型，
+并尝试将`JDBC`的返回结果`ResultSet`转换成目标类型。  
+
+但是当无法解析出具体的字段类型时，例如：`runAsMap`方法，返回一个`Map`，此时便无法知晓需转换的具体类型是什么，  
+这时`JdbcQSR`会使用`JDBC`自带的`getObject`将返回结果转换成java类型，其行为参考下表，具体可至
+`com.mysql.cj.jdbc.result.ResultSetImpl.getObject`查看
+
+| SQL Type           | Java Type            |
+|--------------------|----------------------|
+| BIT                | byte[], deserialized |
+| BOOLEAN            | Boolean              |
+| TINYINT            | Integer              |
+| TINYINT_UNSIGNED   | Integer              |
+| SMALLINT           | Integer              |
+| SMALLINT_UNSIGNED  | Integer              |
+| MEDIUMINT          | Integer              |
+| MEDIUMINT_UNSIGNED | Integer              |
+| INT                | Integer              |
+| INT_UNSIGNED       | Long                 |
+| BIGINT             | Long                 |
+| BIGINT_UNSIGNED    | BigInteger           |
+| DECIMAL            | BigDecimal           |
+| DECIMAL_UNSIGNED   | BigDecimal           |
+| FLOAT              | Float                |
+| FLOAT_UNSIGNED     | Float                |
+| DOUBLE             | Double               |
+| DOUBLE_UNSIGNED    | Double               |
+| CHAR               | String               |
+| ENUM               | String               |
+| SET                | String               |
+| VARCHAR            | String               |
+| TINYTEXT           | String               |
+| TEXT               | String               |
+| MEDIUMTEXT         | String               |
+| LONGTEXT           | String               |
+| JSON               | String               |
+| GEOMETRY           | byte[]               |
+| BINARY             | byte[], deserialized |
+| VARBINARY          | byte[], deserialized |
+| TINYBLOB           | byte[], deserialized |
+| MEDIUMBLOB         | byte[], deserialized |
+| LONGBLOB           | byte[], deserialized |
+| BLOB               | byte[], deserialized |
+| YEAR               | Date, Short          |
+| DATE               | Date                 |
+| TIME               | Time                 |
+| TIMESTAMP          | Timestamp            |
+| DATETIME           | LocalDateTime        |
+| -                  | String               |
+
+可以看到它会将无符号的长整型`BIGINT_UNSIGNED`类型转为`BigInteger`。  
+但是针对`id`字段，通常我们希望转为`Long`类型， 
+就可以使用如下代码配置一个dbColumn解析器。
+```java
+// 如果没有指定返回结果的类型，将id或_id结尾的无符号BIGINT类型转为Long。(这是默认行为，无需额外配置)
+QueryProConfig.global.dbColumnInfoToJavaType().put(
+        (columnInfo) -> {
+            if (columnInfo.getType().startsWith("BIGINT")) { // 以BIGINT开头，包括了BIGINT_UNSIGNED
+                String label = columnInfo.getLabel();
+                if (label.equals("id") || label.endsWith("_id")) { // 字段名为id或者以_id结尾的
+                    return true;
+                }
+            }
+            return false;
+        },
+        Long.class // 转为Long类型
+);
+```
+
+###### 2.增加某种返回类型的支持
+
+上面说到：`JdbcQSR`会解析需返回结果的类型，  
+并尝试将`JDBC`的返回结果`ResultSet`转换成目标类型。  
+
+这是通过配置中的`ResultSetParsers`实现的，我们可以通过`QueryProConfig.global.addResultSetParser()`添加它。
+默认支持的类型有`BigDecimal`, `Byte`, `ByteArray`, `Date`, `LocalDate`, 
+`LocalTime`, `LocalDateTime`, `java.sql.Date`, `Double`, `Float`, `Int`,
+`Long`, `Time`, `Timestamp`, `Short`, `String` 以及 `枚举类型`。
+
+```java
+// 例如，这两个ResultSetParser一个简单一个略复杂，都已经内置在了`QueryPro`中
+QueryProConfig.global
+        .addResultSetParser(
+            LocalDateTime.class,
+            (resultSet, columIndex) -> resultSet.getTimestamp(columIndex).toLocalDateTime()
+        )
+        .addResultSetParserEx((resultSet, targetClass, columnIndex) -> { // 当需要同时支持多种返回类型时，可以使用addResultSetParserEx
+            if (!targetClass.isEnum()) {
+                return Optional.empty();
+            }
+            return Optional.of(Enum.valueOf((Class) targetClass, resultSet.getString(columnIndex)));
+        });
+```
+
+##### setParam
+
+##### lifecycle
 
 #### 后续规划
 类似这样的语句的处理 UPDATE word SET score = score + 1 WHERE id = 1
-添加时默认的字段
-对条件的支持
 对sum, concat, group_concat, discount等 的支持
-对生命周期的支持
-
-一些优化
-thread配置
-rpc context配置
 QueryStructure 不复制
-添加空列返回测试
 添加带下划线驼峰式的列（更新操作）
-
-# 生命周期及生命周期方法
-
-
-更多日志
-更多的测试用例

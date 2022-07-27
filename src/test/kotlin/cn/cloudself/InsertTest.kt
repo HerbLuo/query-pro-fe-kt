@@ -39,7 +39,7 @@ class InsertTest {
         ).also { assertEquals(it, listOf(8L, 9L)) }
 
         val users = mutableListOf<User>()
-        for (i in 1..10000) {
+        for (i in 1..100000) {
             users.add(User(name = "u$i", age = 18))
         }
         UserQueryPro.insert(users)

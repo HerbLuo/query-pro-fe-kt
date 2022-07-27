@@ -9,30 +9,30 @@ class SqlUtilTest {
     fun test() {
         val sqlAndCount = SqlUtils.splitBySemicolonAndCountQuestionMark(
             """
-            SELECT * FROM user WHERE id = '?';
-            
-            SELECT * 
-            FROM user
-            WHERE id = '?';
-            
-            SELECT id AS '"`?;' FROM user WHERE id = ?;
-            SELECT id AS 'a"a`a?a;a' FROM user WHERE id = ? AND name = '?';
-            SELECT id AS "'`?;" FROM user;
-            SELECT id AS "a'a`a?a;a" FROM user;
-            SELECT id AS `'"?;` FROM user;
-            SELECT id AS `a"a'a?a;a'` FROM user;
-            
-            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user;
-            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user WHERE id = ?;
-            
-            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; # ?
-            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; # */ ?
-            SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; -- */ ?
-            SELECT id AS `a"a'a?a;a'` /*#?*/ FROM user; -- */ ?
-            SELECT id AS `a"a'a?a;a'` /*--?*/ FROM user; -- */ ?
-            SELECT id AS `a"a'a?a;a'` /**?*/ FROM user; -- */ ?
-            SELECT id AS `a"a'a?a;a'` /**?**/ FROM user; -- */ ?
-        """.trimIndent()
+                SELECT * FROM user WHERE id = '?';
+                
+                SELECT * 
+                FROM user
+                WHERE id = '?';
+                
+                SELECT id AS '"`?;' FROM user WHERE id = ?;
+                SELECT id AS 'a"a`a?a;a' FROM user WHERE id = ? AND name = '?';
+                SELECT id AS "'`?;" FROM user;
+                SELECT id AS "a'a`a?a;a" FROM user;
+                SELECT id AS `'"?;` FROM user;
+                SELECT id AS `a"a'a?a;a'` FROM user;
+                
+                SELECT id AS `a"a'a?a;a'` /*?*/ FROM user;
+                SELECT id AS `a"a'a?a;a'` /*?*/ FROM user WHERE id = ?;
+                
+                SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; # ?
+                SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; # */ ?
+                SELECT id AS `a"a'a?a;a'` /*?*/ FROM user; -- */ ?
+                SELECT id AS `a"a'a?a;a'` /*#?*/ FROM user; -- */ ?
+                SELECT id AS `a"a'a?a;a'` /*--?*/ FROM user; -- */ ?
+                SELECT id AS `a"a'a?a;a'` /**?*/ FROM user; -- */ ?
+                SELECT id AS `a"a'a?a;a'` /**?**/ FROM user; -- */ ?
+            """.trimIndent()
         )
 
         var i = 0
