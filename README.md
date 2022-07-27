@@ -48,10 +48,14 @@ List<User> users1_1 = UserQueryPro.selectBy().id().is().equalsTo(1).run();
 List<User> users1_2 = UserQueryPro.selectBy().id().equalsTo(1).run();
 List<User> users1_3 = UserQueryPro.selectBy().id(1).run();
 
-// 使用in查询
+// 使用in, between, lessThan, lessThanOrEqual, graterThan, graterThanOrEqual等查询
 // SELECT * FROM `user` WHERE `user`.`name` in (?, ?)
 List<User> users2_1 = UserQueryPro.selectBy().name().in("hb", "herb").run();
 List<User> users2_2 = UserQueryPro.selectBy().name("hb", "herb").run();
+// SELECT * FROM `user` WHERE `user`.`age` between (?, ?)
+List<User> users2_3 = UserQueryPro.selectBy().age().between(18, 20).run();
+// SELECT * FROM `user` WHERE `user`.`age` < ?
+List<User> users2_5 = UserQueryPro.selectBy().age().lessThan(18).run();
 
 // 使用and查询
 // and是可以省略的，但有时候加着更好看
@@ -80,56 +84,64 @@ List<User> usersRun5_3 = UserQueryPro
 List<User> usersRun6_1 = UserQueryPro.selectBy().id().is().not().equalsTo(2).run();
 // SELECT * FROM `user` WHERE `user`.`id` not in (?, ?)
 List<User> usersRun6_2 = UserQueryPro.selectBy().id().is().not().in(1, 2).run();
+// SELECT * FROM `user` WHERE `user`.`id` not between (?, ?)
+List<User> usersRun6_2 = UserQueryPro.selectBy().id().is().not().between(1, 2).run();
+// SELECT * FROM `user` WHERE `user`.`name` not like ?
+List<User> usersRun6_2 = UserQueryPro.selectBy().name().is().not().like("%H%").run();
 
 // 忽略大小写
 // SELECT * FROM `user` WHERE UPPER(`user`.`name`) like UPPER(?)
-List<User> usersRun7 = UserQueryPro.selectBy().name().ignoreCase().like("%H%").run();
+List<User> users7 = UserQueryPro.selectBy().name().ignoreCase().like("%H%").run();
 
 // is null 查询
 // SELECT * FROM `user` WHERE `user`.`age` is null
-List<User> usersRun8_1 = UserQueryPro.selectBy().age().is().nul().run();
+List<User> users8_1 = UserQueryPro.selectBy().age().is().nul().run();
 // SELECT * FROM `user` WHERE `user`.`age` is not null
-List<User> usersRun8_2 = UserQueryPro.selectBy().age().is().not().nul().run();
+List<User> users8_2 = UserQueryPro.selectBy().age().is().not().nul().run();
 
 // like查询
 // SELECT * FROM `user` WHERE `user`.`name` like ? ORDER BY `user`.`id` DESC
-List<User> usersRun9 = UserQueryPro.selectBy().name().like("%h%").orderBy().id().desc().run();
+List<User> users9 = UserQueryPro.selectBy().name().like("%h%").orderBy().id().desc().run();
 
+// 排序
 // SELECT * FROM `user` ORDER BY `user`.`id` DESC
-List<User> usersRun10 = UserQueryPro.orderBy().id().desc().run();
-
+List<User> users10_1 = UserQueryPro.orderBy().id().desc().run();
 // SELECT * FROM `user` ORDER BY `user`.`age` ASC, `user`.`id` DESC
-List<User> usersRun11 = UserQueryPro.orderBy().age().asc().id().desc().run();
+List<User> users10_2 = UserQueryPro.orderBy().age().asc().id().desc().run();
 
+// 限制返回结果数量
 // SELECT * FROM `user` ORDER BY `user`.`age` DESC, `user`.`id` ASC LIMIT 1
-List<User> usersRun12 = UserQueryPro.orderBy().age().desc().id().asc().limit(1).run();
-
+List<User> users11_1 = UserQueryPro.orderBy().age().desc().id().asc().limit(1).run();
 // SELECT * FROM `user` LIMIT 1
-User userRun1 = UserQueryPro.selectBy().runLimit1();
+User user11_2 = UserQueryPro.selectBy().runLimit1();
 
-// 只需要返回某个字段
+// 只需要返回部分字段
 // SELECT `setting`.`id` FROM `setting` WHERE `setting`.`id` = ?
-List<Long> ids1 = SettingQueryPro.selectBy().id().equalsTo(1).columnLimiter().id();
-
+List<Long> ids12_1 = SettingQueryPro.selectBy().id().equalsTo(1).columnLimiter().id();
 // SELECT `user`.`id`, `user`.`age` FROM `user` WHERE `user`.`id` = ?
-List<User> usersRun13 = UserQueryPro.selectBy().id().equalsTo(1).columnsLimiter().id().age().run();
-
+List<User> users12_2 = UserQueryPro.selectBy().id().equalsTo(1).columnsLimiter().id().age().run();
 // SELECT `user`.`id`, `user`.`name` FROM `user` ORDER BY `user`.`age` DESC, `user`.`id` DESC LIMIT 1
 List<User> usersRun14 = UserQueryPro
         .orderBy().age().desc().id().desc().limit(1)
         .columnsLimiter().id().name()
         .run();
 
+// take方法（方便写if等条件)
 // SELECT * FROM `user` WHERE `user`.`id` = ? AND `user`.`name` = ?
 List<User> usersRun15 = UserQueryPro
         .selectBy().id().equalsTo(1)
         .take(it -> True ? it.name().equalsTo("hb") : it.name().equalsTo("hb2"))
         .run();
+
+// 自定义sql查询
+
 ```
 
 ##### 3. 插入操作
+支持批量插入，当数据量大于20条时，会自动启用`BigMode`，  
+`BigMode`下，当预估sql大于0.5M(实际一般在2M以内, 取决于非ascii字符的数量)或插入的行数大于1000，会自动分多次插入
 ```java
-UserQueryPro.insert(...);
+UserQueryPro.insert(...); // 参数支持 User, Map, Collection<User>, vararg User
 ```
 
 ##### 4. 更新操作
@@ -149,7 +161,9 @@ SettingQueryPro.selectBy().id().equalsTo(1).or().kee().equalsTo("lang").runLimit
 
 ##### 6. 直接执行sql
 ```java
-
+QueryProSql.create().query()
+QueryProSql.create().update()
+QueryProSql.create().exec()
 ```
 
 ##### 7. 事务
