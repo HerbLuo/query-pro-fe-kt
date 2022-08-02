@@ -194,19 +194,11 @@ public class ${ClassName} {
 
             @SuppressWarnings("DuplicatedCode")
             private ColumnsLimiterField${"<"}T, RUN_RES> createColumnsLimiterField(String column) {
-                final QueryStructure oldQueryStructure = getQueryStructure();
-                final QueryStructure newQueryStructure = oldQueryStructure.copy(
-                        oldQueryStructure.getAction(),
-                        oldQueryStructure.getUpdate(),
-                        new ArrayList${"<"}Field>(oldQueryStructure.getFields()) {{
-                            add(createField(column));
-                        }},
-                        oldQueryStructure.getFrom(),
-                        oldQueryStructure.getWhere(),
-                        oldQueryStructure.getOrderBy(),
-                        oldQueryStructure.getLimit()
-                );
-                return new ColumnsLimiterField${"<"}>(newQueryStructure, super.getField_clazz());
+                final QueryStructure queryStructure = getQueryStructure();
+                queryStructure.setFields(new ArrayList${"<"}Field>(queryStructure.getFields()) {{
+                    add(createField(column));
+                }});
+                return new ColumnsLimiterField${"<"}>(queryStructure, super.getField_clazz());
             }
 
         <#list m.columns as field>

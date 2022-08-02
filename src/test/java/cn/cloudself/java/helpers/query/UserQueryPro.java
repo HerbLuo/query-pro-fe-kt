@@ -147,14 +147,6 @@ public class UserQueryPro {
         return queryPro.setPrintSql(printSql);
     }
 
-    public static QueryPro<User, Long, __Impl.WhereField<User, List<User>>, __Impl.OrderByField<User, List<User>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setQueryProFieldComment(boolean queryProFieldComment) {
-        return queryPro.setQueryProFieldComment(queryProFieldComment);
-    }
-
-    public static QueryPro<User, Long, __Impl.WhereField<User, List<User>>, __Impl.OrderByField<User, List<User>>, __Impl.UpdateSetField, __Impl.WhereField<Boolean, Boolean>, __Impl.WhereField<Boolean, Boolean>> setQueryStructureResolver(IQueryStructureResolver queryStructureResolver) {
-        return queryPro.setQueryStructureResolver(queryStructureResolver);
-    }
-
     @Contract(pure = true)
     public static __Impl.UpdateSetField updateSet() {
         return queryPro.updateSet();
@@ -299,19 +291,11 @@ public class UserQueryPro {
 
             @SuppressWarnings("DuplicatedCode")
             private ColumnsLimiterField<T, RUN_RES> createColumnsLimiterField(String column) {
-                final QueryStructure oldQueryStructure = getQueryStructure();
-                final QueryStructure newQueryStructure = oldQueryStructure.copy(
-                        oldQueryStructure.getAction(),
-                        oldQueryStructure.getUpdate(),
-                        new ArrayList<Field>(oldQueryStructure.getFields()) {{
-                            add(createField(column));
-                        }},
-                        oldQueryStructure.getFrom(),
-                        oldQueryStructure.getWhere(),
-                        oldQueryStructure.getOrderBy(),
-                        oldQueryStructure.getLimit()
-                );
-                return new ColumnsLimiterField<>(newQueryStructure, super.getField_clazz());
+                final QueryStructure queryStructure = getQueryStructure();
+                queryStructure.setFields(new ArrayList<Field>(queryStructure.getFields()) {{
+                    add(createField(column));
+                }});
+                return new ColumnsLimiterField<>(queryStructure, super.getField_clazz());
             }
 
             @Contract(pure = true)

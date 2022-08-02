@@ -1,6 +1,6 @@
 package cn.cloudself.query.util
 
-import cn.cloudself.query.QueryProConfig
+import cn.cloudself.query.config.QueryProConfig
 import cn.cloudself.query.exception.UnSupportException
 import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap

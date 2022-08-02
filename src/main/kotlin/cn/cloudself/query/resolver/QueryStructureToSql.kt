@@ -1,6 +1,7 @@
-package cn.cloudself.query.structure_reolsver
+package cn.cloudself.query.resolver
 
 import cn.cloudself.query.*
+import cn.cloudself.query.config.QueryProConfig
 import cn.cloudself.query.exception.MissingParameter
 import cn.cloudself.query.exception.UnSupportException
 import cn.cloudself.query.util.ObjectUtil

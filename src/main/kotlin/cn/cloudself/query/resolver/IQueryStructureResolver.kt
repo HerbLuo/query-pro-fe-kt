@@ -1,7 +1,9 @@
-package cn.cloudself.query
+package cn.cloudself.query.resolver
 
+import cn.cloudself.query.QueryStructure
+import cn.cloudself.query.QueryStructureAction
+import cn.cloudself.query.config.ConfigStore
 import org.intellij.lang.annotations.Language
-import javax.sql.DataSource
 
 interface IQueryStructureResolver {
     /**

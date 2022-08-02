@@ -1,16 +1,14 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.config.CodeStore
 import cn.cloudself.query.exception.IllegalCall
+import cn.cloudself.query.resolver.Resolver
 import cn.cloudself.query.util.LogFactory
 import cn.cloudself.query.util.ObjectUtil
 import cn.cloudself.query.util.PureContract
 import cn.cloudself.query.util.parseClass
 import org.jetbrains.annotations.Contract
 import javax.sql.DataSource
-
-typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
-
-private val logger = LogFactory.getLog(QueryProSql::class.java)
 
 open class QueryPro<
         T: Any,
@@ -28,7 +26,8 @@ open class QueryPro<
     private val createUpdateSetField: CreateQueryField<UPDATE_SET_FIELD>,
     private val createUpdateByField: CreateQueryField<UPDATE_BY_FIELD>,
     private val createDeleteByField: CreateQueryField<DELETE_BY_FIELD>,
-): IQueryProConfigDbWriteable {
+) {
+    private val logger = LogFactory.getLog(QueryPro::class.java)
     private val store = CodeStore(clazz)
     val payload = QueryPayload(store)
 
@@ -40,7 +39,7 @@ open class QueryPro<
     /**
      * 查询操作
      */
-    fun selectBy() = createSelectByField(queryStructure.apply { action = QueryStructureAction.SELECT })
+    fun selectBy() = createSelectByField(queryStructure.copy(action = QueryStructureAction.SELECT ))
 
     fun selectByObj(obj: T): SELECT_BY_FIELD {
         val parsedClass = parseClass(clazz)
@@ -133,9 +132,7 @@ open class QueryPro<
             }
         }
         val update = Update(data, override = true)
-        queryStructure.action = QueryStructureAction.UPDATE
-        queryStructure.update = update
-        return UpdateField(queryStructure, createUpdateByField)
+        return UpdateField(queryStructure.copy(action = QueryStructureAction.UPDATE, update = update), createUpdateByField)
     }
 
     /**
@@ -164,30 +161,30 @@ open class QueryPro<
     @Suppress("UNCHECKED_CAST")
     fun insert(vararg objs: T) = insert(listOf(*objs))
 
+    @SafeVarargs
+    @Suppress("UNCHECKED_CAST")
+    fun insert(vararg objs: Map<String, Any?>) = insert(listOf(*objs) as Collection<T>)
+
     /**
      * 批量插入
      */
     @Suppress("UNCHECKED_CAST")
-    fun insert(collection: Collection<T>) = withConfig(store) {
-        insert(collection, clazz) as List<ID?>
+    fun insert(collection: Collection<T>): List<ID?> {
+        val newQueryStructure = queryStructure.copy(action = QueryStructureAction.INSERT, insert = Insert(collection))
+        return Resolver.create(clazz, newQueryStructure) { payload }
+            .use {
+                insert(collection, clazz) as List<ID?>
+            }
     }
 
-    @SafeVarargs
-    @Suppress("UNCHECKED_CAST")
-    fun insert(vararg objs: Map<String, Any?>) = withConfig(store) {
-        insert(listOf(*objs), clazz) as List<ID?>
-    }
-
-    override fun setDataSource(dataSource: DataSource) = setConfig("dataSource", dataSource)
-    override fun setBeautifySql(beautifySql: Boolean) = setConfig("beautifySql", beautifySql)
-    override fun setPrintSql(printSql: Boolean) = setConfig("printSql", printSql)
-    override fun setPrintCallByInfo(printCallByInfo: Boolean) = setConfig("printCallByInfo", printCallByInfo)
-    override fun setPrintResult(printResult: Boolean) = setConfig("printResult", printResult)
-    override fun setDryRun(dryRun: Boolean) = setConfig("dryRun", dryRun)
-    override fun setQueryProFieldComment(queryProFieldComment: Boolean) = setConfig("queryProFieldComment", queryProFieldComment)
-    override fun setLogicDelete(logicDelete: Boolean) = setConfig("logicDelete", logicDelete)
-    override fun setLogicDeleteField(logicDeleteField: String) = setConfig("logicDeleteField", logicDeleteField)
-    override fun setQueryStructureResolver(queryStructureResolver: IQueryStructureResolver) = setConfig("queryStructureResolver", queryStructureResolver)
+    fun setDataSource(dataSource: DataSource) = setConfig("dataSource", dataSource)
+    fun setBeautifySql(beautifySql: Boolean) = setConfig("beautifySql", beautifySql)
+    fun setPrintSql(printSql: Boolean) = setConfig("printSql", printSql)
+    fun setPrintCallByInfo(printCallByInfo: Boolean) = setConfig("printCallByInfo", printCallByInfo)
+    fun setPrintResult(printResult: Boolean) = setConfig("printResult", printResult)
+    fun setDryRun(dryRun: Boolean) = setConfig("dryRun", dryRun)
+    fun setLogicDelete(logicDelete: Boolean) = setConfig("logicDelete", logicDelete)
+    fun setLogicDeleteField(logicDeleteField: String) = setConfig("logicDeleteField", logicDeleteField)
 
     private fun setConfig(key: String, value: Any?) = this.also { store.set(key, value) }
 }

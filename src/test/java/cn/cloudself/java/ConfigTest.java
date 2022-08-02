@@ -1,15 +1,11 @@
 package cn.cloudself.java;
 
-import cn.cloudself.java.helpers.query.Setting;
-import cn.cloudself.java.helpers.query.SettingQueryPro;
-import cn.cloudself.java.helpers.query.UserQueryPro;
-import cn.cloudself.query.QueryProConfig;
-import cn.cloudself.query.QueryProConfigDb;
-import cn.cloudself.query.structure_reolsver.JdbcQSR;
+import cn.cloudself.query.config.QueryProConfig;
+import cn.cloudself.query.config.QueryProConfigDb;
+import cn.cloudself.query.resolver.JdbcQSR;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static cn.cloudself.helpers.HelpersKt.initLogger;

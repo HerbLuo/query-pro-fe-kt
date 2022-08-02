@@ -1,6 +1,10 @@
 package cn.cloudself.query
 
+import cn.cloudself.query.config.CodeStore
+import cn.cloudself.query.config.QueryProConfig
+import cn.cloudself.query.config.QueryProConfigDb
 import cn.cloudself.query.exception.IllegalParameters
+import cn.cloudself.query.resolver.Resolver
 import cn.cloudself.query.util.LogFactory
 import cn.cloudself.query.util.SqlUtils
 import cn.cloudself.query.util.getCallInfo
@@ -119,7 +123,7 @@ class QueryProSql {
          * @param clazz [SupportedUpdatedBatchClazz]
          */
         fun <T> update(clazz: Class<T>): T {
-            return withConfig(store) {
+            return Resolver.create { store }.use {
                 updateBatch(sqlArr, params, clazz)
             }
         }
@@ -168,7 +172,7 @@ class QueryProSql {
                 logger.debug("{0}\n{1}", getCallInfo(), sql)
                 logger.debug(params)
             }
-            return withConfig(store) {
+            return Resolver.create { store }.use {
                 resolve(sql, params, clazz, QueryStructureAction.SELECT)
             }
         }
@@ -187,7 +191,7 @@ class QueryProSql {
          * 使用单条语句执行更新，创建，删除等非select语句
          */
         fun update(): Int {
-            return withConfig(store) {
+            return Resolver.create { store }.use {
                 resolve(sql, params, Int::class.java, QueryStructureAction.UPDATE)[0]
             }
         }
@@ -198,7 +202,7 @@ class QueryProSql {
          */
         fun exec() {
             val sqlAndCountArr = SqlUtils.splitBySemicolonAndCountQuestionMark(sql)
-            return withConfig(store) {
+            return Resolver.create { store }.use {
                 execBatch(sqlAndCountArr.map { it.first }.toTypedArray())
             }
         }

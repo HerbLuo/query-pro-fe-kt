@@ -5,7 +5,7 @@ import cn.cloudself.java.helpers.query.Setting;
 import cn.cloudself.java.helpers.query.SettingQueryPro;
 import cn.cloudself.java.helpers.query.User;
 import cn.cloudself.java.helpers.query.UserQueryPro;
-import cn.cloudself.query.QueryProConfig;
+import cn.cloudself.query.config.QueryProConfig;
 import cn.cloudself.query.QueryProSql;
 import cn.cloudself.query.QueryProTransaction;
 import org.intellij.lang.annotations.Language;

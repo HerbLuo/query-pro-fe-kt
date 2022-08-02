@@ -5,7 +5,7 @@ import cn.cloudself.helpers.getDataSource
 import cn.cloudself.helpers.initLogger
 import cn.cloudself.helpers.query.User
 import cn.cloudself.helpers.query.UserQueryPro
-import cn.cloudself.query.QueryProConfig
+import cn.cloudself.query.config.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import org.junit.Test
 import kotlin.test.assertEquals

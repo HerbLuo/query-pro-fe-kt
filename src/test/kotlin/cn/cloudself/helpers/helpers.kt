@@ -2,7 +2,7 @@ package cn.cloudself.helpers
 
 import com.alibaba.druid.pool.DruidDataSource
 import javax.sql.DataSource
-import cn.cloudself.query.structure_reolsver.QueryStructureToSql
+import cn.cloudself.query.resolver.QueryStructureToSql
 import cn.cloudself.query.util.SqlUtils
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.core.config.Configurator
@@ -65,7 +65,7 @@ fun getDataSource(dbName: String? = DB_NAME, skipInit: Boolean = false): DataSou
 
 fun expectSqlResult(@Language("SQL") sql: String, params: List<Any?>) {
     QueryStructureToSql.beforeReturnForTest = {
-        assertEquals(it.first.trim(), sql.trim())
+        assertEquals(sql.trim(), it.first.trim())
         val second = it.second
         for (i in params.indices) {
             if (isNumber(params[i])) {
@@ -78,11 +78,11 @@ fun expectSqlResult(@Language("SQL") sql: String, params: List<Any?>) {
     }
 }
 
-fun assertEqualsForJava(obj1: Any?, obj2: Any?) {
-    if (obj1 is List<*> && obj2 is List<*>) {
-        assertEquals(ArrayList(obj1), ArrayList(obj2))
+fun assertEqualsForJava(actual: Any?, expect: Any?) {
+    if (actual is List<*> && expect is List<*>) {
+        assertEquals(ArrayList(expect), ArrayList(actual))
     } else {
-        assertEquals(obj1, obj2)
+        assertEquals(expect, actual)
     }
 }
 

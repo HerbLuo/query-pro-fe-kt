@@ -2,7 +2,7 @@ package cn.cloudself.query
 
 import cn.cloudself.query.exception.IllegalCall
 import cn.cloudself.query.exception.IllegalImplements
-import cn.cloudself.query.util.parseClass
+import cn.cloudself.query.resolver.Resolver
 import java.util.*
 
 enum class QueryFieldType {
@@ -12,13 +12,6 @@ enum class QueryFieldType {
 }
 
 typealias CreateQueryField<F> = (queryStructure: QueryStructure) -> F
-
-internal fun <R> withConfig(store: HashMapStore, resolve: IQueryStructureResolver.() -> R): R {
-    val resolver = QueryProConfig.final.queryStructureResolver()
-    return resolver.withConfig(store.toMap()) {
-        resolve(it)
-    }
-}
 
 @Suppress("PropertyName")
 abstract class FinalSelectField<
@@ -33,21 +26,23 @@ abstract class FinalSelectField<
     protected abstract fun create_field(qs: QueryStructure): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED>
     protected abstract fun getPayload(): QueryPayload
 
+    private val resolver = Resolver.create(field_clazz, queryStructure, ::getPayload)
+
     fun limit(limit: Int): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
         return limit(0, limit)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun limit(start: Int, limit: Int): FinalSelectField<T, RUN_RES, COLUMN_LIMITER_FILED, COLUMNS_LIMITER_FILED> {
-        return create_field(queryStructure.copy(limit = start to limit))
+        queryStructure.limit = start to limit
+        return create_field(queryStructure)
     }
 
     protected open fun <T: Any>getColumn(field: Field, clazz: Class<T>): List<T?> {
-        val newQueryStructure = queryStructure.copy(fields = queryStructure.fields + field)
-        val rows = create_field(newQueryStructure).runAsMap()
+        queryStructure.fields = queryStructure.fields + field
+        val rows = create_field(queryStructure).runAsMap()
         return rows.map {
             val f = it[field.column] ?: return@map null
-
             val fieldJavaClass = f.javaClass
             if (clazz.isAssignableFrom(f.javaClass)) {
                 @Suppress("UNCHECKED_CAST")
@@ -77,11 +72,8 @@ abstract class FinalSelectField<
         if (queryStructure.action != QueryStructureAction.SELECT) {
             throw IllegalCall("非SELECT语句不能使用count方法")
         }
-        val queryStructureForCount = queryStructure.copy(fields = listOf(Field(column = "count(*)")))
-
-        return withConfig(getPayload().config) {
-            resolve(preRun(queryStructureForCount), Int::class.java)[0]
-        }
+        queryStructure.fields = listOf(Field(column = "count(*)"))
+        return resolver.resolve(Int::class.java)[0]
     }
 
     fun runLimit1Opt(): Optional<T> {
@@ -89,7 +81,8 @@ abstract class FinalSelectField<
     }
 
     fun runLimit1(): T? {
-        val results = create_field(queryStructure.copy(limit = 0 to 1)).runAsList()
+        queryStructure.limit = 0 to 1
+        val results = create_field(queryStructure).queryAll()
         return if (results.isEmpty()) null else results[0]
     }
 
@@ -97,10 +90,10 @@ abstract class FinalSelectField<
         @Suppress("UNCHECKED_CAST")
         return when (queryStructure.action) {
             QueryStructureAction.SELECT -> {
-                runAsList() as RUN_RES
+                queryAll() as RUN_RES
             }
             QueryStructureAction.DELETE, QueryStructureAction.UPDATE -> {
-                val results = runAsList()
+                val results = queryAll()
                 if (results.isEmpty())
                     throw IllegalImplements("DELETE, UPDATE需返回长度为1的List<Boolean>")
                 else
@@ -112,59 +105,18 @@ abstract class FinalSelectField<
         }
     }
 
-    fun selectAll() = run()
+    fun runAsMap(): List<Map<String, Any?>> = resolver.resolve(mutableMapOf<String, Any>().javaClass)
 
-    fun selectOne() = runLimit1()
-
-    fun selectOneOpt() = runLimit1Opt()
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun runAsList(): List<T> {
-        return withConfig(getPayload().config) {
-            resolve(preRun(queryStructure), field_clazz)
-        }
-    }
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun runAsMap(): List<Map<String, Any?>> {
-        return withConfig(getPayload().config) {
-            resolve(preRun(queryStructure), mutableMapOf<String, Any>().javaClass)
-        }
-    }
+    private fun queryAll(): List<T> = resolver.resolve(field_clazz)
 
     fun pageable(): Pageable<T> {
         return Pageable.create(
             { count() },
-            { start, limit -> withConfig(getPayload().config) {
-                resolve(queryStructure.copy(limit = start to limit), field_clazz) }
+            { start, limit ->
+                queryStructure.limit = start to limit
+                resolver.resolve(field_clazz)
             }
         )
-    }
-
-    private fun preRun(qs: QueryStructure): QueryStructure {
-        var queryStructure = qs
-        if (QueryProConfig.final.logicDelete()) {
-            val logicDeleteField = QueryProConfig.final.logicDeleteField()
-            queryStructure = if (queryStructure.action == QueryStructureAction.DELETE) {
-                val update = Update(data = mutableMapOf(logicDeleteField to true), override = false)
-                queryStructure.copy(action = QueryStructureAction.UPDATE, update = update)
-            } else {
-                val mainTable = queryStructure.from.main
-                val hasDeletedField = parseClass(field_clazz).columns[logicDeleteField] != null
-                if (hasDeletedField) {
-                    val hasOrClause = queryStructure.where.find { it.operator == OP_OR } != null
-                    val noDeletedWhereClause = WhereClause(Field(mainTable, logicDeleteField), "=", false)
-                    if (hasOrClause) {
-                        queryStructure.copy(where = listOf(WhereClause(operator = "("))  + queryStructure.where + WhereClause(operator = ")") + noDeletedWhereClause)
-                    } else {
-                        queryStructure.copy(where = queryStructure.where + noDeletedWhereClause)
-                    }
-                } else {
-                    queryStructure
-                }
-            }
-        }
-        return queryStructure
     }
 }
 

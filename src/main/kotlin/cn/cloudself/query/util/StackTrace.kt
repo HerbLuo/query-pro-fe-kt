@@ -1,6 +1,6 @@
 package cn.cloudself.query.util
 
-import cn.cloudself.query.QueryProConfig
+import cn.cloudself.query.config.QueryProConfig
 
 fun getCallInfo() =
     if (QueryProConfig.final.printCallByInfo()) {

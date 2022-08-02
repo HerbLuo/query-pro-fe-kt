@@ -3,11 +3,16 @@ package cn.cloudself.query
 data class QueryStructure(
     var action: QueryStructureAction = QueryStructureAction.SELECT,
     var update: Update? = null,
+    var insert: Insert? = null,
     var fields: List<Field> = listOf(),
     var from: QueryStructureFrom = QueryStructureFrom(),
     var where: List<WhereClause> = listOf(),
     var orderBy: List<OrderByClause> = listOf(),
     var limit: Pair<Int, Int>? = null,
+)
+
+data class Insert(
+    var data: Collection<Any>? = null,
 )
 
 data class Update(

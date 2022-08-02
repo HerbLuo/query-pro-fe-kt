@@ -1,6 +1,9 @@
-package cn.cloudself.query.structure_reolsver
+package cn.cloudself.query.resolver
 
 import cn.cloudself.query.*
+import cn.cloudself.query.config.ConfigStore
+import cn.cloudself.query.config.DbColumnInfo
+import cn.cloudself.query.config.QueryProConfig
 import cn.cloudself.query.exception.ConfigException
 import cn.cloudself.query.exception.IllegalParameters
 import cn.cloudself.query.exception.UnSupportException
@@ -27,17 +30,7 @@ class JdbcQSR: IQueryStructureResolver {
     }
 
     override fun <T> resolve(queryStructure: QueryStructure, clazz: Class<T>): List<T> {
-        var transformedQueryStructure = queryStructure
-        if (transformedQueryStructure.action == QueryStructureAction.UPDATE) {
-            for (transformer in QueryProConfig.final.lifecycle().beforeUpdateTransformers) {
-                transformedQueryStructure = transformer(clazz, transformedQueryStructure).getOrElse {
-                    logger.warn("beforeUpdate钩子阻止了本次操作" as Any, it)
-                    return emptyList()
-                }
-            }
-        }
-
-        val (sql, params) = QueryStructureToSql(transformedQueryStructure).toSqlWithIndexedParams()
+        val (sql, params) = QueryStructureToSql(queryStructure).toSqlWithIndexedParams()
 
         val callInfo = getCallInfo()
 
@@ -52,14 +45,14 @@ class JdbcQSR: IQueryStructureResolver {
         if (QueryProConfig.final.dryRun()) {
             logger.info("dry run mode, skip querying.")
             @Suppress("UNCHECKED_CAST")
-            return if (transformedQueryStructure.action == QueryStructureAction.SELECT) {
+            return if (queryStructure.action == QueryStructureAction.SELECT) {
                 listOf()
             } else {
                 listOf(true) as List<T>
             }
         }
 
-        val result = resolvePri(sql, params.toTypedArray(), clazz, transformedQueryStructure.action)
+        val result = resolvePri(sql, params.toTypedArray(), clazz, queryStructure.action)
         if (QueryProConfig.final.printResult()) {
             logger.info("result: $result")
         }
@@ -77,16 +70,7 @@ class JdbcQSR: IQueryStructureResolver {
         val parsedClass = bean.getParsedClass()
         val columns = parsedClass.columns.values
 
-        var preHandledObjs: Collection<Any> = objs
-        for (beforeInsert in QueryProConfig.final.lifecycle().beforeInsertTransformers) {
-            @Suppress("UNCHECKED_CAST", "UNCHECKED_CAST")
-            preHandledObjs = beforeInsert(beanProxy as BeanProxy<Any, Any>, preHandledObjs).getOrElse {
-                logger.warn("beforeInsert钩子阻止了本次操作" as Any, it)
-                return emptyList()
-            }
-        }
-
-        val paramsArr = preHandledObjs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }
+        val paramsArr = objs.map { obj -> columns.map { col -> col.getter(obj) }.toTypedArray() }
         val paramsSize = paramsArr.size
         val uniqueInsert = paramsSize == 1
 

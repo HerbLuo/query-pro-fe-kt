@@ -1,5 +1,6 @@
 package cn.cloudself.query
 
+typealias CreateQuery<QUERY> = (queryStructure: QueryStructure) -> QUERY
 typealias CreateFieldGenerator<FIELD_GENERATOR> = () -> FIELD_GENERATOR
 
 abstract class FieldGenerator {

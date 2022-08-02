@@ -4,12 +4,14 @@ import cn.cloudself.helpers.expectSqlResult
 import cn.cloudself.helpers.getDataSource
 import cn.cloudself.helpers.initLogger
 import cn.cloudself.helpers.query.*
-import cn.cloudself.query.QueryProConfig
+import cn.cloudself.query.config.QueryProConfig
 import cn.cloudself.query.QueryProSql
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class SelectTest {
+    private fun assertEquals(actual: Any?, expect: Any?) {
+        kotlin.test.assertEquals(expect, actual)
+    }
     private fun prepareData() {
         QueryProSql.createBatchBySqlGroup(
             """
@@ -126,7 +128,7 @@ class SelectTest {
             .selectByObj(Setting(userId = 1, kee = "theme"))
             .runLimit1()
             ?.id
-            .also { settingId -> assertEquals(settingId, 2) }
+            .also { settingId -> assertEquals(settingId, 2L) }
 
         expectSqlResult(
             "SELECT `setting`.`kee`, `setting`.`value` FROM `setting` LEFT JOIN `user` ON `setting`.`user_id` = `user`.`id` " +
